@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz 30 Results</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+    </style>
+</head>
+<body>
+    <h1>Quiz 30 Results</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Phone Number</th>
+                <th>Q1</th>
+                <th>Q2</th>
+                <th>Q3</th>
+                <th>Q4</th>
+                <th>Q5</th>
+                <th>Q6</th>
+                <th>Q7</th>
+                <th>Q8</th>
+                <th>Q9</th>
+                <th>Q10</th>
+                <th>Q11</th>
+                <th>Q12</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for result in results %}
+            <tr>
+                <td>{{ result.name }}</td>
+                <td>{{ result.phone_number }}</td>
+                <td>{{ result.Q1 }}</td>
+                <td>{{ result.Q2 }}</td>
+                <td>{{ result.Q3 }}</td>
+                <td>{{ result.Q4 }}</td>
+                <td>{{ result.Q5 }}</td>
+                <td>{{ result.Q6 }}</td>
+                <td>{{ result.Q7 }}</td>
+                <td>{{ result.Q8 }}</td>
+                <td>{{ result.Q9 }}</td>
+                <td>{{ result.Q10 }}</td>
+                <td>{{ result.Q11 }}</td>
+                <td>{{ result.Q12 }}</td>
+                <td>{{ result.timestamp }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Quiz Data</h2>
+    <pre>{{ quiz_data[30] | tojson(indent=2) }}</pre>
+</body>
+</html>

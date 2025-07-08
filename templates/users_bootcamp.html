@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <h1>User List</h1>
+    <ul class="user-list">
+        {% for user in users %}
+        <li>
+            <!-- Ensure user.random_number is available and valid -->
+            {% if user.random_number %}
+            <a href="{{ url_for('user_details', user_id=user.id, random_number=user.random_number) }}">{{ user.name }} ({{ user.phone_number }})</a>
+            {% else %}
+            <a href="{{ url_for('user_details', user_id=user.id) }}">{{ user.name }} ({{ user.phone_number }})</a>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

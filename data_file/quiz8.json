@@ -1,0 +1,40 @@
+{
+  "questions": [
+    {
+      "question": "Which financial statement shows a company's financial position at a specific point in time?",
+      "options": [
+        "A) Income Statement",
+        "B) Balance Sheet",
+        "C) Cash Flow Statement"
+      ],
+      "answer": "b"
+    },
+    {
+      "question": "What is recorded in a sales book?",
+      "options": [
+        "A) Cash sales",
+        "B) Credit sales",
+        "C) Both cash and credit sales"
+      ],
+      "answer": "c"
+    },
+    {
+      "question": "What is the main purpose of a purchase book?",
+      "options": [
+        "A) To record cash purchases",
+        "B) To record credit purchases",
+        "C) To record sales returns"
+      ],
+      "answer": "b"
+    },
+    {
+      "question": "What information is typically included in a sales invoice?",
+      "options": [
+        "A) Supplier details",
+        "B) Customer details",
+        "C) Employee details"
+      ],
+      "answer": "b"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Record-Keeping Quiz Results</h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Phone Number</th>
+            <th>Correct Answers</th>
+            <th>Wrong Answers</th>
+            <th>Quiz</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for quiz, users in user_data.items() %}
+        <h2>{{ quiz }}</h2>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.name }}</td>
+            <td>{{ user.phone_number }}</td>
+            <td>{{ user.correct_answers }}</td>
+            <td>{{ user.wrong_answers }}</td>
+            <td>{{ user.quiz }}</td>
+        </tr>
+        {% endfor %}
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

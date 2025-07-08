@@ -1,0 +1,50 @@
+{
+  "questions": [
+    {
+      "question": "Sound bookkeeping is the basis for all financial management.",
+      "options": [
+        "A) True",
+        "B) False"
+      ],
+      "answer": "a"
+    },
+    {
+      "question": "When business owners pay themselves, it is called ____",
+      "options": [
+        "A) Owner’s draw",
+        "B) Check cashing",
+        "C) Ownership transfer"
+      ],
+      "answer": "a"
+    },
+    {
+      "question": "Which book is used to record goods bought to the shop.",
+      "options": [
+        "A) Purchase book",
+        "B) Drawings book",
+        "C) Sales book"
+      ],
+      "answer": "a"
+    },
+    {
+      "question": "What are the usefulness of business budgeting?",
+      "options": [
+        "A) Track all your business expenses",
+        "B) Plan for the future",
+        "C) Economize when you need to",
+        "D) All of the above"
+      ],
+      "answer": "d"
+    },
+    {
+      "question": "Which of the following is not books of accounting?",
+      "options": [
+        "A) Profit and loss",
+        "B) Balance sheets",
+        "C) Cash flow statement",
+        "D) Computer book"
+      ],
+      "answer": "d"
+    }
+  ]
+}

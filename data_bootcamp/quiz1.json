@@ -1,0 +1,49 @@
+{
+  "questions": [
+    {
+      "question": "Which business structure provides the most personal liability protection?",
+      "options": [
+        "A) Sole Proprietorship",
+        "B) Partnership",
+        "C) Limited Liability Company"
+      ],
+      "answer": "c"
+    },
+    {
+      "question": "What is the minimum number of directors required for a private limited company in Nigeria?",
+      "options": [
+        "A) 1 director",
+        "B) 2 directors",
+        "C) 3 directors"
+      ],
+      "answer": "a"
+    },
+    {
+      "question": "Under which business structure is your personal property at risk if the business fails?",
+      "options": [
+        "A) Limited Liability Company",
+        "B) Sole Proprietorship",
+        "C) Public Limited Company"
+      ],
+      "answer": "b"
+    },
+    {
+      "question": "Which of these is NOT a factor to consider when choosing a business structure?",
+      "options": [
+        "A) Tax implications",
+        "B) Cost of registration",
+        "C) The color of your business logo"
+      ],
+      "answer": "c"
+    },
+    {
+      "question": "In Nigeria, which organization is responsible for business registration?",
+      "options": [
+        "A) FIRS",
+        "B) CAC",
+        "C) LIRS"
+      ],
+      "answer": "b"
+    }
+  ]
+}

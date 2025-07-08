@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Quiz Results</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>New Quiz Results (Quiz 11 and above)</h1>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Phone Number</th>
+            <th>Quiz Number</th>
+            {% for i in range(1, 8) %}
+                <th>Q{{ i }}</th>
+            {% endfor %}
+            <th>Timestamp</th>
+        </tr>
+        {% for result in results %}
+        <tr>
+            <td>{{ result.name }}</td>
+            <td>{{ result.phone_number }}</td>
+            <td>{{ result.quiz_number }}</td>
+            {% for i in range(1, 8) %}
+                <td>
+                {% set q = 'Q' ~ i %}
+                {% set quiz = quiz_data.get(result.quiz_number, {}) %}
+                {% set question = quiz.get('questions', [])[i-1] if quiz.get('questions') and i <= quiz.get('questions')|length else None %}
+                {% if question and result[q] in ['A', 'B', 'C'] %}
+                    {% set index = 'ABC'.index(result[q]) %}
+                    {% if index < question['options']|length %}
+                        {{ question['options'][index][3:] }}  {# Remove 'X) ' prefix #}
+                    {% else %}
+                        {{ result[q] }}
+                    {% endif %}
+                {% else %}
+                    {{ result[q] }}
+                {% endif %}
+                </td>
+            {% endfor %}
+            <td>{{ result.timestamp }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <!-- Debug: Display raw results -->
+    <h2>Debug: Raw Results</h2>
+    <pre>{{ results | tojson }}</pre>
+</body>
+</html>

@@ -1,0 +1,50 @@
+
+{
+  "questions": [
+    {
+      "question": "Mrs. Nike runs an online shoe store. A customer bought from him once and never returned. What is the BEST way to get them to buy again?",
+      "options": [
+        "A) Wait and hope they return",
+        "B) Offer a discount for their next purchase",
+        "C) Stop selling to new customers"
+      ],
+      "answer": "b"
+    },
+    {
+      "question": "A skincare brand wants to increase repeat purchases. What's a simple follow-up message they can send?",
+      "options": [
+        "A) \"Your glow serum must be finishing soon! Would you like a refill? Order today & get free delivery.\"",
+        "B) \"Hope you enjoyed your purchase. Have a great day.\"",
+        "C) \"Thanks for buying. We are closed now.\""
+      ],
+      "answer": "a"
+    },
+    {
+      "question": "What is a great way to introduce new products to past buyers?",
+      "options": [
+        "A) Increasing the price for past customers",
+        "B) Never informing them about new products",
+        "C) Sending a WhatsApp message like \"We just launched a new wig style! Want a sneak peek?\""
+      ],
+      "answer": "c"
+    },
+    {
+      "question": "Sarah owns a fashion brand. How can she use email marketing to build customer loyalty?",
+      "options": [
+        "A) Send only one email per year",
+        "B) Email all customers the same generic message",
+        "C) Send personalized recommendations based on past purchases"
+      ],
+      "answer": "c"
+    },
+    {
+      "question": "A restaurant wants to use WhatsApp to keep customers returning. Which idea is BEST?",
+      "options": [
+        "A) Create a WhatsApp group for weekly meal deals",
+        "B) Only post their menu on their website",
+        "C) Avoid sending customers any messages"
+      ],
+      "answer": "a"
+    }
+  ]
+}

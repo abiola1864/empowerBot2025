@@ -1,0 +1,52 @@
+
+
+
+{
+  "questions": [
+    {
+      "question": "What should you consider first when planning market expansion?",
+      "options": [
+        "A) Location analysis",
+        "B) Business logo",
+        "C) Staff uniform"
+      ],
+      "answer": "A"
+    },
+    {
+      "question": "Which is most important for entering a new market?",
+      "options": [
+        "A) Expensive advertising",
+        "B) Market research",
+        "C) Hiring relatives"
+      ],
+      "answer": "B"
+    },
+    {
+      "question": "How should you approach product line expansion?",
+      "options": [
+        "A) Copy competitors exactly",
+        "B) Analyze customer needs",
+        "C) Ignore market trends"
+      ],
+      "answer": "B"
+    },
+    {
+      "question": "What's most important when selecting a new business location?",
+      "options": [
+        "A) Paint color",
+        "B) Customer accessibility",
+        "C) Staff preference"
+      ],
+      "answer": "B"
+    },
+    {
+      "question": "When is the best time to expand your business?",
+      "options": [
+        "A) When you're losing money",
+        "B) When you have stable operations",
+        "C) When competitors close"
+      ],
+      "answer": "B"
+    }
+  ]
+}

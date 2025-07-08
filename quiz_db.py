@@ -1,0 +1,105 @@
+import sqlite3
+import logging
+
+def get_db_connection():
+    conn = sqlite3.connect('quiz_data.db')
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_quiz_db():
+    conn = get_db_connection()
+    try:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS questions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                question TEXT NOT NULL,
+                options TEXT NOT NULL,
+                answer TEXT NOT NULL
+            )
+        """)
+        conn.commit()
+
+        # Insert questions if the table is empty
+        if conn.execute("SELECT COUNT(*) FROM questions").fetchone()[0] == 0:
+            questions = get_initial_quiz_questions()
+            for q in questions:
+                conn.execute(
+                    "INSERT INTO questions (question, options, answer) VALUES (?, ?, ?)",
+                    (q['question'], ','.join(q['options']), q['answer'])
+                )
+            conn.commit()
+    except sqlite3.Error as e:
+        logging.error(f"Error initializing quiz database: {e}")
+    finally:
+        conn.close()
+
+def get_quiz_questions():
+    conn = get_db_connection()
+    try:
+        questions = conn.execute("SELECT * FROM questions").fetchall()
+        return [
+            {
+                "question": q['question'],
+                "options": q['options'].split(','),
+                "answer": q['answer']
+            } for q in questions
+        ]
+    except sqlite3.Error as e:
+        logging.error(f"Error fetching quiz questions: {e}")
+        return []
+    finally:
+        conn.close()
+
+def get_initial_quiz_questions():
+    return [
+        {
+            "question": "What is a sales journal and why is it important? Type A, B or C to choose.",
+            "options": ["A) A record of all sales transactions", "B) A record of employee details", "C) A record of company policies"],
+            "answer": "a"
+        },
+        {
+            "question": "How do you record transactions in a cash book? Type A, B or C to choose.",
+            "options": ["A) By listing daily sales", "B) By recording all cash receipts and payments", "C) By noting down employee attendance"],
+            "answer": "b"
+        },
+        {
+            "question": "What are the basic principles of record-keeping? Type A, B or C to choose.",
+            "options": ["A) Consistency, accuracy, timeliness", "B) Creativity, flexibility, intuition", "C) Privacy, secrecy, mystery"],
+            "answer": "a"
+        },
+        {
+            "question": "How do you calculate gross profit (loss)? Type A, B or C to choose.",
+            "options": ["A) Revenue - Expenses", "B) Sales - Cost of Goods Sold", "C) Assets - Liabilities"],
+            "answer": "b"
+        },
+        {
+            "question": "How do you calculate net profit (loss)? Type A, B or C to choose.",
+            "options": ["A) Revenue - Expenses", "B) Sales - Cost of Goods Sold", "C) Gross Profit - Expenses"],
+            "answer": "c"
+        },
+        {
+            "question": "What is a debtor and why are they important? Type A, B or C to choose.",
+            "options": ["A) A customer who owes money", "B) A supplier who provides goods", "C) An employee who works overtime"],
+            "answer": "a"
+        },
+        {
+            "question": "What are drawings in the context of record-keeping? Type A, B or C to choose.",
+            "options": ["A) Cash withdrawals by the owner", "B) Business profits", "C) Inventory purchases"],
+            "answer": "a"
+        },
+        {
+            "question": "Why is it important to separate business and personal finances? Type A, B or C to choose.",
+            "options": ["A) For tax purposes", "B) To track business performance accurately", "C) Both A and B"],
+            "answer": "c"
+        },
+        {
+            "question": "How do you track expenses effectively? Type A, B or C to choose.",
+            "options": ["A) By guessing monthly costs", "B) By keeping all receipts", "C) By recording every transaction meticulously"],
+            "answer": "c"
+        },
+        {
+            "question": "What are the benefits of maintaining accurate financial records? Type A, B or C to choose.",
+            "options": ["A) Better decision-making", "B) Easier access to loans", "C) Both A and B"],
+            "answer": "c"
+        }
+    ]

@@ -1,0 +1,40 @@
+{
+    "questions": [
+        {
+            "question": "How can you boost your posts on Facebook to reach more potential customers for free?",
+            "options": [
+                "A) By using hashtags in your posts",
+                "B) By tagging influencers",
+                "C) By paying a subscription fee"
+            ],
+            "answer": "a"
+        },
+        {
+            "question": "Hashtags are ........",
+            "options": [
+                "A) Keywords used in posts to categorize content and improve searchability",
+                "B) Emojis used to express emotions in posts",
+                "C) Stickers added to posts for decoration"
+            ],
+            "answer": "a"
+        },
+        {
+            "question": "Why should you go live on Facebook to promote your business?",
+            "options": [
+                "A) Real-time interaction with customers and increased sales",
+                "B) Access to exclusive Facebook features",
+                "C) Improved search engine rankings"
+            ],
+            "answer": "a"
+        },
+        {
+            "question": "What kind of Facebook profile do you need as a business owner to run ads?",
+            "options": [
+                "A) Facebook Page",
+                "B) A Facebook account",
+                "C) An anonymous account"
+            ],
+            "answer": "a"
+        }
+    ]
+}

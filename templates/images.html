@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Images</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <h1>Weekly Record Updates</h1>
+    <table class="record-table">
+        <thead>
+            <tr>
+                <th>Phone Number</th>
+                <th>Name</th>
+                <th>Images</th>
+                <th>Upload Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in records %}
+            <tr>
+                <td>{{ record.phone_number }}</td>
+                <td>{{ record.name }}</td>
+                <td>
+                    <img src="{{ url_for('serve_image', filename=record.media_url) }}" alt="User Image" class="thumbnail" onclick="showModal('{{ url_for('serve_image', filename=record.media_url) }}')">
+                </td>
+                <td>{{ record.upload_date }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Modal -->
+    <div id="imageModal" class="modal">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <img class="modal-content" id="modalImage">
+    </div>
+
+    <script>
+        function showModal(imageUrl) {
+            document.getElementById('modalImage').src = imageUrl;
+            document.getElementById('imageModal').style.display = "block";
+        }
+
+        function closeModal() {
+            document.getElementById('imageModal').style.display = "none";
+        }
+    </script>
+</body>
+</html>

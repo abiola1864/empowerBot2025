@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>View User Data1</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #555;
+            margin-top: 40px;
+            margin-bottom: 10px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+            color: #333;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .dropdown {
+            margin-bottom: 20px;
+        }
+        .dropdown select {
+            padding: 5px 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #fff;
+            cursor: pointer;
+        }
+        .dropdown select:focus {
+            outline: none;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+        .dropdown-caption {
+            font-size: 14px;
+            color: #666;
+            margin-right: 10px;
+        }
+        .sort-dropdown {
+            float: right;
+        }
+    </style>
+</head>
+<body>
+    <h1>Students Data</h1>
+    <div class="dropdown">
+        <span class="dropdown-caption">Select Quiz:</span>
+        <select id="quizDropdown" onchange="showSelectedQuiz(this.value)">
+            <option value="all">All Quizzes</option>
+            {% for quiz_name in user_data.keys() %}
+            <option value="{{ quiz_name }}">{{ quiz_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="sort-dropdown">
+        <span class="dropdown-caption">Sort by:</span>
+        <select id="sortDropdown" onchange="sortData(this.value)">
+            <option value="">Select an option</option>
+            <option value="correctAsc">Score (Ascending)</option>
+            <option value="correctDesc">Score (Descending)</option>
+            <option value="nameAsc">Name (Ascending)</option>
+            <option value="nameDesc">Name (Descending)</option>
+            <option value="wrongAsc">Wrong Answers (Ascending)</option>
+            <option value="wrongDesc">Wrong Answers (Descending)</option>
+        </select>
+    </div>
+    {% for quiz_name, quiz_users in user_data.items() %}
+    <div id="{{ quiz_name }}" class="quiz-table">
+        <h2>{{ quiz_name }}</h2>
+        <table>
+            <tr>
+                <th>S/N</th>
+                <th>Phone Number</th>
+                <th>Name</th>
+                <th>Wrong Answers Qst No.</th>
+                <th>Score</th>
+            </tr>
+            {% for user in quiz_users %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ user.phone_number }}</td>
+                <td>{{ user.name }}</td>
+                <td>{{ user.wrong_answers }}</td>
+                <td>{{ user.correct_answers }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    {% endfor %}
+    <script>
+        function showSelectedQuiz(quizName) {
+            const quizTables = document.querySelectorAll('.quiz-table');
+            quizTables.forEach(table => {
+                if (quizName === 'all' || table.id === quizName) {
+                    table.style.display = 'block';
+                } else {
+                    table.style.display = 'none';
+                }
+            });
+        }
+
+        function sortData(sortOption) {
+            const tables = document.querySelectorAll('table');
+            tables.forEach(table => {
+                const rows = Array.from(table.rows).slice(1);
+                if (sortOption.includes('Asc')) {
+                    rows.sort((a, b) => {
+                        const aValue = sortOption.includes('correct') ? parseInt(a.cells[4].textContent) : 
+                                       (sortOption.includes('wrong') ? a.cells[3].textContent.split(',').length : 
+                                       a.cells[2].textContent.toLowerCase());
+                        const bValue = sortOption.includes('correct') ? parseInt(b.cells[4].textContent) : 
+                                       (sortOption.includes('wrong') ? b.cells[3].textContent.split(',').length : 
+                                       b.cells[2].textContent.toLowerCase());
+                        return aValue > bValue ? 1 : -1;
+                    });
+                } else if (sortOption.includes('Desc')) {
+                    rows.sort((a, b) => {
+                        const aValue = sortOption.includes('correct') ? parseInt(a.cells[4].textContent) : 
+                                       (sortOption.includes('wrong') ? a.cells[3].textContent.split(',').length : 
+                                       a.cells[2].textContent.toLowerCase());
+                        const bValue = sortOption.includes('correct') ? parseInt(b.cells[4].textContent) : 
+                                       (sortOption.includes('wrong') ? b.cells[3].textContent.split(',').length : 
+                                       b.cells[2].textContent.toLowerCase());
+                        return aValue < bValue ? 1 : -1;
+                    });
+                }
+                rows.forEach((row, index) => {
+                    row.cells[0].textContent = index + 1;
+                    table.tBodies[0].appendChild(row);
+                });
+            });
+        }
+
+        // Show all quizzes by default
+        showSelectedQuiz('all');
+    </script>
+</body>
+</html>

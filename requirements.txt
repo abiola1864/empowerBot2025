@@ -1,0 +1,10 @@
+requests==2.26.0
+timed==0.2.0 
+python-dotenv==0.19.2
+werkzeug==2.0.3
+flask==2.0.3
+fuzzywuzzy==0.18.0
+google-cloud-aiplatform==1.12.1  
+google-cloud-iam==2.11.0          
+google-api-core==1.34.0
+protobuf==3.19.5                    

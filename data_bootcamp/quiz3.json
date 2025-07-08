@@ -1,0 +1,61 @@
+{
+  "questions": [
+    {
+      "question": "Which financial record should be updated daily?",
+      "options": [
+        "A) Annual report",
+        "B) Sales record",
+        "C) Marketing plan"
+      ],
+      "answer": "B"
+    },
+    {
+      "question": "What should you do with business receipts?",
+      "options": [
+        "A) Throw them away",
+        "B) Keep them for at least 6 years",
+        "C) Ignore them"
+      ],
+      "answer": "B"
+    },
+    {
+      "question": "A cash book records:",
+      "options": [
+        "A) Only money received",
+        "B) Both money received and spent",
+        "C) Only profit"
+      ],
+      "answer": "B"
+    },
+    {
+      "question": "Which of these is NOT a basic accounting record?",
+      "options": [
+        "A) Sales record",
+        "B) Customer complaints",
+        "C) Purchase record"
+      ],
+      "answer": "B"
+    },
+    {
+      "question": "How often should you balance your cash book?",
+      "options": [
+        "A) Monthly",
+        "B) Weekly",
+        "C) Daily"
+      ],
+      "answer": "C"
+    }
+  ]
+}
+
+
+
+
+
+
+
+
+
+
+
+

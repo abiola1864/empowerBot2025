@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Dashboard</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f7f9;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+    .dashboard-container {
+      max-width: 1200px;
+      width: 100%;
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+    .filter-container {
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    select {
+      padding: 8px 12px;
+      font-size: 14px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    .table-container {
+      margin-top: 20px;
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed; /* Fixed layout enables consistent column widths */
+      font-size: 14px;
+    }
+    th, td {
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+      white-space: normal;
+      word-wrap: break-word;
+      max-width: 120px;
+    }
+    th {
+      background: #f2f2f2;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <h2>User Dashboard</h2>
+
+    <div class="filter-container">
+      <label for="locationFilter"><strong>Filter by Location:</strong> </label>
+      <select id="locationFilter" onchange="filterByLocation()">
+        <option value="all">All</option>
+        {% for loc in locations %}
+          <option value="{{ loc }}">{{ loc }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="table-container">
+      <table id="userTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Phone Number</th>
+            <th>Name</th>
+            <th>Age</th>
+            <th>Gender</th>
+            <th>Business Type</th>
+            <th>Location</th>
+            <th>Business Size</th>
+            <th>Financial Status</th>
+            <th>Main Challenge</th>
+            <th>Record Keeping</th>
+            <th>Growth Goal</th>
+            <th>Funding Need</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+          <tr data-location="{{ user.location | e }}">
+            <td>{{ user.id }}</td>
+            <td>{{ user.phone_number }}</td>
+            <td>{{ user.name }}</td>
+            <td>{{ user.age }}</td>
+            <td>{{ user.gender }}</td>
+            <td>{{ user.business_type }}</td>
+            <td>{{ user.location }}</td>
+            <td>{{ user.business_size }}</td>
+            <td>{{ user.financial_status }}</td>
+            <td>{{ user.main_challenge }}</td>
+            <td>{{ user.record_keeping }}</td>
+            <td>{{ user.growth_goal }}</td>
+            <td>{{ user.funding_need }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    function filterByLocation() {
+      const filter = document.getElementById('locationFilter').value.toLowerCase();
+      const table = document.getElementById('userTable');
+      const trs = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+      for (let i = 0; i < trs.length; i++) {
+        const tr = trs[i];
+        const location = tr.getAttribute('data-location').toLowerCase();
+
+        if (filter === 'all' || location === filter) {
+          tr.style.display = '';
+        } else {
+          tr.style.display = 'none';
+        }
+      }
+    }
+  </script>
+</body>
+</html>
