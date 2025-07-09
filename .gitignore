@@ -3,7 +3,7 @@ __pycache__/
 node_modules/
 uploads/
 *.log
-*.db
-*.json
-server*.py
+# *.db
+# *.json
+# server*.py
 .env
