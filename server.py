@@ -1,5 +1,20 @@
 import os
 import logging
+import base64
+
+# Decode base64 and save as a temp file
+b64_creds = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_B64")
+if not b64_creds:
+    raise ValueError("Missing Google credentials in environment!")
+
+creds_path = "/tmp/google_creds.json"
+with open(creds_path, "wb") as f:
+    f.write(base64.b64decode(b64_creds))
+
+# Set the path for Google SDK to use
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = creds_path
+
+
 import requests
 import sqlite3
 import json
