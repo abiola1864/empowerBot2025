@@ -7,3 +7,5 @@ uploads/
 # *.json
 # server*.py
 .env
+.env
+*.json
