@@ -4,3 +4,6 @@ node_modules/
 uploads/
 *.log
 *.db
+*.json
+server*.py
+.env
