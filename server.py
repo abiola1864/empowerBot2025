@@ -3689,27 +3689,18 @@ def populate_database_from_json_files():
 
  
 
-
-@app.route('/webhook', methods=['GET', 'POST'])
+ 
+@app.route('/webhook', methods=['POST'])
 def webhook():
-    if request.method == 'GET':
-        VERIFY_TOKEN = os.getenv("WEBHOOK_VERIFY_TOKEN")
-        mode = request.args.get("hub.mode")
-        token = request.args.get("hub.verify_token")
-        challenge = request.args.get("hub.challenge")
-
-        if mode == "subscribe" and token == VERIFY_TOKEN:
-            return challenge, 200
-        else:
-            return "Verification token mismatch", 403
-
-    # Continue POST handling
     data = request.get_json()
-    # your message handling here
+    logging.info(f"Received webhook: {data}")
+    if data['object'] == 'whatsapp_business_account':
+        for entry in data['entry']:
+            for change in entry['changes']:
+                if change['field'] == 'messages' and 'messages' in change['value']:
+                    for message in change['value']['messages']:
+                        handle_message(message)
     return 'OK', 200
-
-
-
 
 
 # def handle_button_response(phone_number, button_id, button_text, user, conn):
