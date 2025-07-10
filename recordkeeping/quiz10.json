@@ -1,0 +1,40 @@
+{
+  "questions": [
+    {
+      "question": "What is an inventory book used for?",
+      "options": [
+        "A) Recording cash sales",
+        "B) Recording inventory transactions",
+        "C) Managing accounts payable"
+      ],
+      "answer": "b"
+    },
+    {
+      "question": "What is the purpose of a physical inventory count?",
+      "options": [
+        "A) To determine the cost of goods sold",
+        "B) To verify the accuracy of inventory records",
+        "C) To calculate depreciation"
+      ],
+      "answer": "b"
+    },
+    {
+      "question": "What is a bank statement?",
+      "options": [
+        "A) A document showing all bank transactions over a period",
+        "B) A summary of credit sales",
+        "C) A record of cash purchases"
+      ],
+      "answer": "a"
+    },
+    {
+      "question": "What is bank reconciliation?",
+      "options": [
+        "A) Comparing cash receipts with sales records",
+        "B) Matching bank statement transactions with the company's records",
+        "C) Recording all bank deposits"
+      ],
+      "answer": "b"
+    }
+  ]
+}

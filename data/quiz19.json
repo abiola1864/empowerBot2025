@@ -1,0 +1,39 @@
+{
+  "questions": [
+    {
+      "question": "Did you upload your records?",
+      "options": ["A) Yes", "B) No"],
+      "answer": "Thank you for your response."
+    },
+    {
+      "question": "How many weeks of records did you upload?",
+      "options": ["A) 1-3 days", "B) 1-2 weeks", "C) 3-4 weeks"],
+      "answer": "Thank you for your response."
+    },
+    {
+      "question": "Which records did you upload?",
+      "options": ["A) Sales book", "B) Expenses book", "C) Both"],
+      "answer": "Thank you for your response."
+    },
+    {
+      "question": "Will you upload your 3-4 weeks of records by July 31, 2024? (tomorrow)",
+      "options": ["A) Yes", "B) No", "C) Unsure"],
+      "answer": "Thank you for your response."
+    },
+    {
+      "question": "Do you have 2-3 weeks of your business bank statements to submit?",
+      "options": ["A) Will upload this week", "B) Will send to LSETF during loan application", "C) I will try"],
+      "answer": "Thank you for your response."
+    },
+    {
+      "question": "Do you have 3-4 weeks of your business bank statements to submit?",
+      "options": ["A) Will upload this week", "B) Will send to LSETF during loan application", "C) I will try"],
+      "answer": "Thank you for your response."
+    },
+    {
+      "question": "Will you upload your 2-3 weeks of records by July 31, 2024? (tomorrow)",
+      "options": ["A) Yes", "B) No", "C) Unsure"],
+      "answer": "Thank you for your response."
+    }
+  ]
+}

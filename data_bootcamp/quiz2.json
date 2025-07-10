@@ -1,0 +1,61 @@
+{
+  "questions": [
+    {
+      "question": "What is the first step in separating personal and business finances?",
+      "options": [
+        "A) Create a business plan",
+        "B) Open a separate business account",
+        "C) Get an accountant"
+      ],
+      "answer": "B"
+    },
+    {
+      "question": "How often should you review your business records?",
+      "options": [
+        "A) Daily",
+        "B) Only during tax season",
+        "C) When there's a problem"
+      ],
+      "answer": "A"
+    },
+    {
+      "question": "Which document is most important for tax compliance?",
+      "options": [
+        "A) Business cards",
+        "B) Receipt book",
+        "C) Company profile"
+      ],
+      "answer": "B"
+    },
+    {
+      "question": "What should you do if you can't understand your financial records?",
+      "options": [
+        "A) Ignore them",
+        "B) Seek professional help",
+        "C) Close the business"
+      ],
+      "answer": "B"
+    },
+    {
+      "question": "How should you handle business expenses?",
+      "options": [
+        "A) Pay from personal account",
+        "B) Keep all receipts and record them",
+        "C) Pay cash only"
+      ],
+      "answer": "B"
+    }
+  ]
+}
+
+
+
+
+
+
+
+
+
+
+
+

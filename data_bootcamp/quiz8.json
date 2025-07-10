@@ -1,0 +1,54 @@
+{
+  "questions": [
+    {
+      "question": "What should a staff contract include?",
+      "options": [
+        "A) Employee's favorite color",
+        "B) Job responsibilities",
+        "C) Employee's friends list"
+      ],
+      "answer": "B"
+    },
+    {
+      "question": "How often should you evaluate staff performance?",
+      "options": [
+        "A) Never",
+        "B) Only when there's a problem",
+        "C) Regularly scheduled intervals"
+      ],
+      "answer": "C"
+    },
+    {
+      "question": "What is a key aspect of risk management?",
+      "options": [
+        "A) Avoiding all business activities",
+        "B) Having prevention strategies",
+        "C) Ignoring problems"
+      ],
+      "answer": "B"
+    },
+    {
+      "question": "What should be included in a business continuity plan?",
+      "options": [
+        "A) Holiday schedule",
+        "B) Emergency procedures",
+        "C) Office party plans"
+      ],
+      "answer": "B"
+    },
+    {
+      "question": "How should you handle equipment maintenance?",
+      "options": [
+        "A) Wait until it breaks",
+        "B) Have a regular schedule",
+        "C) Replace yearly"
+      ],
+      "answer": "B"
+    }
+  ]
+}
+
+
+
+
+

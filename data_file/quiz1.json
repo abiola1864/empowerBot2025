@@ -1,0 +1,31 @@
+{
+    "questions": [
+        {
+            "question": "What is Digital marketing as defined in the video?",
+            "options": [
+                "A) Marketing using traditional methods",
+                "B) Promoting your business online to make money",
+                "C) Selling products through physical stores only"
+            ],
+            "answer": "b"
+        },
+        {
+            "question": "Name three social media platforms mentioned in the video that can be used for business promotion",
+            "options": [
+                "A) Twitter, LinkedIn, Piggyvest",
+                "B) Google my business, TikTok, WhatsApp",
+                "C) Facebook, Instagram, Youtube"
+            ],
+            "answer": "b"
+        },
+        {
+            "question": "Which type of account will allow you to promote your business on Facebook",
+            "options": [
+                "A) Facebook profile",
+                "B) Facebook ad account",
+                "C) Facebook page"
+            ],
+            "answer": "c"
+        }
+    ]
+}

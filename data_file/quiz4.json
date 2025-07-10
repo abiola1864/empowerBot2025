@@ -1,0 +1,84 @@
+{
+  "questions": [
+    {
+      "question": "What type of account do you need for Instagram as an entrepreneur?",
+      "options": [
+        "A) Personal",
+        "B) Creator",
+        "C) Business"
+      ],
+      "answer": "c"
+    },
+    {
+      "question": "If your answer to the above was 'Business', why?",
+      "options": [
+        "A) It unlocks powerful features like audience insights and contact buttons",
+        "B) It allows you to post longer videos",
+        "C) It gives you access to exclusive Instagram filters"
+      ],
+      "answer": "a"
+    },
+    {
+      "question": "If your answer was 'Creator', why?",
+      "options": [
+        "A) It gives you ability to create videos in the app",
+        "B) It allows you to create ads and sponsorships",
+        "C) It allows you to use special filters"
+      ],
+      "answer": "b"
+    },
+    {
+      "question": "Instagram Stories are important to business owners for these reasons, EXCEPT",
+      "options": [
+        "A) They're perfect for sharing behind-the-scenes, fun content, or special offers",
+        "B) You can publish your stories to news platforms from your IG Story",
+        "C) Stories are a way to keep your followers engaged"
+      ],
+      "answer": "b"
+    },
+    {
+      "question": "What is that new feature mentioned in the TikTok video that gives creators insight into topics people are searching for on TikTok?",
+      "options": [
+        "A) TikTok Trends",
+        "B) TikTok Analytics",
+        "C) TikTok Creator Search Insights"
+      ],
+      "answer": "c"
+    },
+    {
+      "question": "What is the maximum length of a standard Instagram reel?",
+      "options": [
+        "A) 15 seconds",
+        "B) 30 seconds",
+        "C) 90 seconds"
+      ],
+      "answer": "c"
+    },
+    {
+      "question": "Which of these apps are not under Meta?",
+      "options": [
+        "A) Whatsapp",
+        "B) Facebook",
+        "C) Tiktok"
+      ],
+      "answer": "c"
+    },
+    {
+      "question": "Can you pay for Instagram ads using your Nigerian cards?",
+      "options": [
+        "A) Yes",
+        "B) No"
+      ],
+      "answer": "b"
+    },
+    {
+      "question": "How many types of Instagram ads do we have?",
+      "options": [
+        "A) One",
+        "B) Two",
+        "C) Three"
+      ],
+      "answer": "c"
+    }
+  ]
+}

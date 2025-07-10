@@ -1,0 +1,40 @@
+{
+    "questions": [
+        {
+            "question": "What is the purpose of creating a catalog on WhatsApp Business, as demonstrated in the videos?",
+            "options": [
+                "A) To share memes and jokes with customers",
+                "B) To showcase products/services and facilitate sales",
+                "C) To connect with friends and family"
+            ],
+            "answer": "b"
+        },
+        {
+            "question": "What is the name of your inventory on WhatsApp Business?",
+            "options": [
+                "A) Inventory Plus",
+                "B) Market",
+                "C) Catalog"
+            ],
+            "answer": "c"
+        },
+        {
+            "question": "What is the WhatsApp Status feature, and how is it useful for business owners?",
+            "options": [
+                "A) It allows you to share disappearing text, photos, and videos about your products/services",
+                "B) It's similar to Facebook feed but permanent",
+                "C) It's only for personal updates, not business promotion"
+            ],
+            "answer": "a"
+        },
+        {
+            "question": "What questions should you ask WhatsApp TV owners or influencers before working with them, as advised in the videos?",
+            "options": [
+                "A) Their favorite color and food",
+                "B) Details about their followers, engagement, evidence of work, and promotion methods",
+                "C) Their hobbies and interests"
+            ],
+            "answer": "b"
+        }
+    ]
+}

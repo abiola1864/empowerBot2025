@@ -1,0 +1,40 @@
+{
+  "questions": [
+    {
+      "question": "What is the first step to creating a Google My Business profile?",
+      "options": [
+        "A) Create a Facebook account",
+        "B) Create a Twitter account",
+        "C) Create a Google account"
+      ],
+      "answer": "c"
+    },
+    {
+      "question": "What is another name for Google My Business?",
+      "options": [
+        "A) Google Business Profile",
+        "B) Google Your Business",
+        "C) Google Business For You"
+      ],
+      "answer": "a"
+    },
+    {
+      "question": "What are the benefits of having a Google My Business account?",
+      "options": [
+        "A) Increase in personal connections",
+        "B) Get discovered in Google Search and Maps",
+        "C) Sell products directly on Google"
+      ],
+      "answer": "b"
+    },
+    {
+      "question": "What is the difference between reach and impressions?",
+      "options": [
+        "A) Reach measures the number of times a post is displayed; impressions measure unique views.",
+        "B) Reach measures engagement; impressions measure visibility.",
+        "C) Impressions measure unique views; reach measures the total number of times a post is displayed."
+      ],
+      "answer": "b"
+    }
+  ]
+}

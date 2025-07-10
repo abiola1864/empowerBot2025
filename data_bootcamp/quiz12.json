@@ -1,0 +1,94 @@
+{
+  "questions": [
+    {
+      "question": "Assuming you just launched a new business selling organic skincare products, what would be your first step in building a strong brand?",
+      "options": [
+        "A) Create a fancy logo before anything else",
+        "B) Define what makes your products unique and develop a brand message",
+        "C) Copy the branding of a popular skincare brand"
+      ],
+      "answer": "b"
+    },
+    {
+      "question": "Imagine you own a restaurant known for delicious home-cooked meals. Customers always say, 'Your meals taste just like grandma's cooking!' What aspect of branding does this represent?",
+      "options": [
+        "A) Logo design",
+        "B) Brand perception (what people think and feel about your business)",
+        "C) Store location"
+      ],
+      "answer": "b"
+    },
+    {
+      "question": "You’re helping a friend start a shoe business. She asks, 'What’s the difference between a brand and branding?' What’s the best way to explain it to her?",
+      "options": [
+        "A) A brand is what customers think about your business, while branding is what you do to shape their perception",
+        "B) A brand is the name of the business, and branding is the color of the logo",
+        "C) A brand is a physical store, and branding is how you decorate it"
+      ],
+      "answer": "a"
+    },
+    {
+      "question": "Assuming you run a bakery, how can branding help you sell more cakes?",
+      "options": [
+        "A) By changing your logo and name every month to attract attention",
+        "B) By baking random flavors without a unique identity",
+        "C) By using consistent packaging, messaging, and quality to build trust with customers"
+      ],
+      "answer": "c"
+    },
+    {
+      "question": "Your cousin is opening a clothing brand and needs help choosing brand colors. She wants people to associate her brand with trust and professionalism. Which color should she consider?",
+      "options": [
+        "A) Red",
+        "B) Blue",
+        "C) Yellow"
+      ],
+      "answer": "b"
+    },
+    {
+      "question": "Imagine you’re launching a travel agency. What should be your Unique Selling Proposition (USP) to stand out?",
+      "options": [
+        "A) 'We sell travel tickets'",
+        "B) 'Travel with us, or don’t—your choice!'",
+        "C) 'We help travelers book stress-free vacations with exclusive discounts and 24/7 support'"
+      ],
+      "answer": "c"
+    },
+    {
+      "question": "Assume you walk into a supermarket to buy soft drinks. You see Coca-Cola and an unknown brand with the same price. Why are you likely to pick Coca-Cola?",
+      "options": [
+        "A) Because Coca-Cola bottles are heavier",
+        "B) Because supermarkets hide the unknown brand",
+        "C) Because it has been consistently branded to build trust and recognition"
+      ],
+      "answer": "c"
+    },
+    {
+      "question": "You are designing a logo for your new tech startup. What is the most important thing to consider?",
+      "options": [
+        "A) It should have at least five colors to stand out",
+        "B) It should be simple and easy to recognize",
+        "C) It should change every month to keep things fresh"
+      ],
+      "answer": "b"
+    },
+    {
+      "question": "You have two phone brands to choose from: One is a trusted brand known for durability, and the other is a new, unknown brand with no reputation. Which one are you more likely to buy, and why?",
+      "options": [
+        "A) The unknown brand because it’s a mystery",
+        "B) The trusted brand because branding builds customer confidence",
+        "C) The unknown brand because popular brands are overrated"
+      ],
+      "answer": "b"
+    },
+    {
+      "question": "Assuming you own a hair salon and want to make your brand stand out, which strategy would work best?",
+      "options": [
+        "A) Offering services randomly without a consistent brand message",
+        "B) Creating a brand identity with a unique logo, colors, and customer experience",
+        "C) Changing your business name frequently to get attention"
+      ],
+      "answer": "b"
+    }
+  ]
+}
