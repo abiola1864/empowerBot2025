@@ -7592,12 +7592,16 @@ def generate_generic_message(user_id, conn):
 if __name__ == '__main__':
     print("Initializing database...")
     init_db()
-   
+
     print("Populating database with quiz data...")
     populate_database_from_json_files()
-    
-    
-    #send_daily_summary()
-    #start_keep_alive()
+
+    # send_daily_summary()
+    # start_keep_alive()
+
     print("Starting Flask app...")
-    app.run(port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5000))  # Render provides this
+    app.run(host='0.0.0.0', port=port, debug=True)
+
+
+
