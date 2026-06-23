@@ -1,1 +1,5 @@
 .pyenv/
+.vscode/
+__pycache__/
+clean_env/
+fresh_env/
