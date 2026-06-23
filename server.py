@@ -7492,6 +7492,18 @@ def send_quiz_question(phone_number, question_index, conn, quiz_name, retries=3)
          #   send_message(phone_number, "Remember, you can type 'records' at any time to switch to record keeping mode.")
         current_question = QUIZ_QUESTIONS[question_index]
         options = current_question['options']
+
+        # send media if stored in MongoDB
+        if USE_MONGODB:
+            try:
+                from db_mongo import get_mongo_db
+                _mdb = get_mongo_db()
+                _qdoc = _mdb.questions.find_one({"quiz": quiz_name, "question_number": question_index + 1})
+                if _qdoc and _qdoc.get('media_url'):
+                    send_image_message(phone_number, _qdoc['media_url'],
+                        caption="Reference image for question " + str(question_index + 1))
+            except Exception as _me:
+                logging.warning(f"Could not send media: {_me}")
         question_message = f"Question {question_index + 1} out of {len(QUIZ_QUESTIONS)}:\n\n{current_question['question']}\n\n"
         for option in options:
             question_message += f"{option}\n"
@@ -7606,6 +7618,25 @@ def send_message(phone_number, message, is_ai=False):
    
   
   
+
+def send_image_message(phone_number, image_url, caption=""):
+    """Send an image to a WhatsApp user via URL link."""
+    url = f"https://graph.facebook.com/v11.0/{YOUR_PHONE_NUMBER_ID}/messages"
+    headers = {"Authorization": f"Bearer {WHATSAPP_TOKEN}", "Content-Type": "application/json"}
+    data = {
+        "messaging_product": "whatsapp",
+        "to": phone_number,
+        "type": "image",
+        "image": {"link": image_url, "caption": caption}
+    }
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        logging.info(f"Image sent to {phone_number}: {response.status_code}")
+        return response.status_code == 200
+    except Exception as e:
+        logging.error(f"Error sending image to {phone_number}: {e}")
+        return False
+
 
 def start_quiz(phone_number, conn, quiz_name, question_index):
     logging.info(f"Starting quiz {quiz_name} for {phone_number} at question {question_index}")
@@ -8535,83 +8566,115 @@ def engagement_metrics_route():
     try:
         if USE_MONGODB:
             from db_mongo import get_mongo_db
-            from bson import ObjectId
             mongo_db = get_mongo_db()
 
-            total_users = mongo_db.users.count_documents({})
+            total_users   = mongo_db.users.count_documents({})
             total_responses = mongo_db.responses.count_documents({})
-            ai_chats = mongo_db.conversation_history.count_documents({'is_ai': True})
+            ai_chats      = mongo_db.conversation_history.count_documents({'is_ai': True})
 
-            week_ago = datetime.utcnow() - timedelta(days=7)
-            active_ids = mongo_db.responses.distinct('user_id', {'timestamp': {'$gte': week_ago}})
+            week_ago      = datetime.utcnow() - timedelta(days=7)
+            active_ids    = mongo_db.responses.distinct('user_id', {'timestamp': {'$gte': week_ago}})
             active_this_week = len(active_ids)
 
-            today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+            today_start   = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
             messages_today = mongo_db.processed_messages.count_documents({'processed_at': {'$gte': today_start}})
 
             # Location breakdown
             loc_pipeline = [
                 {'$group': {'_id': '$location', 'count': {'$sum': 1}}},
-                {'$sort': {'count': -1}},
-                {'$limit': 10}
+                {'$sort': {'count': -1}}, {'$limit': 10}
             ]
             locations = list(mongo_db.users.aggregate(loc_pipeline))
 
-            # Quiz stats (correct vs incorrect per quiz)
+            # Quiz stats
             quiz_pipeline = [
                 {'$group': {
                     '_id': '$quiz',
-                    'total': {'$sum': 1},
+                    'total':   {'$sum': 1},
                     'correct': {'$sum': {'$cond': ['$correct', 1, 0]}}
                 }},
                 {'$sort': {'_id': 1}}
             ]
             quiz_stats = list(mongo_db.responses.aggregate(quiz_pipeline))
 
-            # Per-user stats for the table
-            user_pipeline = [
+            # Per-user aggregate stats
+            user_agg = [
                 {'$group': {
                     '_id': '$user_id',
-                    'quizzes_taken': {'$addToSet': '$quiz'},
-                    'total_responses': {'$sum': 1},
+                    'quizzes_list':      {'$addToSet': '$quiz'},
+                    'total_responses':   {'$sum': 1},
                     'correct_responses': {'$sum': {'$cond': ['$correct', 1, 0]}},
-                    'last_active': {'$max': '$timestamp'}
+                    'last_active':       {'$max': '$timestamp'}
                 }}
             ]
-            user_stats = {r['_id']: r for r in mongo_db.responses.aggregate(user_pipeline)}
+            u_stats = {r['_id']: r for r in mongo_db.responses.aggregate(user_agg)}
 
-            users_raw = list(mongo_db.users.find({}, {'_id': 1, 'name': 1, 'location': 1}))
+            # AI chats per user
+            ai_agg = [
+                {'$match': {'is_ai': False}},
+                {'$group': {'_id': '$user_id', 'ai_chats': {'$sum': 1}}}
+            ]
+            ai_per_user = {r['_id']: r['ai_chats'] for r in mongo_db.conversation_history.aggregate(ai_agg)}
+
+            # All users
+            users_raw = list(mongo_db.users.find({}, {
+                '_id': 1, 'name': 1, 'phone_number': 1, 'location': 1,
+                'business_type': 1, 'business_size': 1, 'financial_status': 1,
+                'main_challenge': 1, 'state': 1
+            }))
+
             users_table = []
             for u in users_raw:
                 uid = str(u['_id'])
-                stats = user_stats.get(uid, {})
-                total_r = stats.get('total_responses', 0)
+                stats = u_stats.get(uid, {})
+                total_r   = stats.get('total_responses', 0)
                 correct_r = stats.get('correct_responses', 0)
+                qlist     = sorted(stats.get('quizzes_list', []))
+                chats     = ai_per_user.get(uid, 0)
+                last_act  = stats.get('last_active')
+                correct_pct = round(correct_r / total_r * 100, 1) if total_r > 0 else 0
+
+                # Engagement score (0–100): responses 30%, quiz diversity 25%, accuracy 25%, AI use 20%
+                q_score   = min(len(qlist) / 10 * 100, 100) * 0.25
+                r_score   = min(total_r / 30 * 100, 100) * 0.30
+                a_score   = correct_pct * 0.25
+                c_score   = min(chats / 5 * 100, 100) * 0.20
+                eng_score = round(q_score + r_score + a_score + c_score, 1)
+
                 users_table.append({
-                    'name': u.get('name', '—'),
-                    'location': (u.get('location') or '—').strip().strip('"'),
-                    'quizzes_taken': len(stats.get('quizzes_taken', [])),
-                    'total_responses': total_r,
-                    'correct_pct': round(correct_r / total_r * 100, 1) if total_r > 0 else 0,
-                    'last_active': stats.get('last_active', '').isoformat() if stats.get('last_active') else None
+                    'name':             u.get('name', '—'),
+                    'phone_number':     u.get('phone_number', ''),
+                    'location':         (u.get('location') or '—').strip().strip('"'),
+                    'business_type':    u.get('business_type', '—'),
+                    'business_size':    u.get('business_size', '—'),
+                    'financial_status': u.get('financial_status', '—'),
+                    'main_challenge':   u.get('main_challenge', '—'),
+                    'quizzes_taken':    len(qlist),
+                    'quizzes_list':     qlist,
+                    'total_responses':  total_r,
+                    'correct_responses': correct_r,
+                    'correct_pct':      correct_pct,
+                    'ai_chats':         chats,
+                    'last_active':      last_act.isoformat() if last_act else None,
+                    'engagement_score': eng_score,
                 })
 
-            users_table.sort(key=lambda u: u['total_responses'], reverse=True)
+            users_table.sort(key=lambda u: u['engagement_score'], reverse=True)
 
             return jsonify({
-                'total_users': total_users,
-                'active_this_week': active_this_week,
-                'total_responses': total_responses,
-                'ai_chats': ai_chats,
-                'messages_today': messages_today,
-                'locations': locations,
-                'quiz_stats': quiz_stats,
-                'users': users_table,
+                'total_users':       total_users,
+                'active_this_week':  active_this_week,
+                'total_responses':   total_responses,
+                'ai_chats':          ai_chats,
+                'messages_today':    messages_today,
+                'locations':         locations,
+                'quiz_stats':        quiz_stats,
+                'users':             users_table,
             })
 
         else:
             conn = get_db_connection()
-            total_users = conn.execute('SELECT COUNT(*) FROM users').fetchone()[0]
+            total_users     = conn.execute('SELECT COUNT(*) FROM users').fetchone()[0]
             total_responses = conn.execute('SELECT COUNT(*) FROM responses').fetchone()[0]
             conn.close()
             return jsonify({
@@ -8621,9 +8684,101 @@ def engagement_metrics_route():
             })
 
     except Exception as e:
-        import traceback as tb
+        import traceback as _tb
         logging.error(f'engagement_metrics_route error: {e}')
-        logging.error(tb.format_exc())
+        logging.error(_tb.format_exc())
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/engagement/csv', methods=['GET'])
+def engagement_csv_route():
+    """Return all user engagement data as a downloadable CSV."""
+    try:
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            import csv, io
+            mongo_db = get_mongo_db()
+
+            user_agg = [
+                {'$group': {
+                    '_id': '$user_id',
+                    'quizzes_list':      {'$addToSet': '$quiz'},
+                    'total_responses':   {'$sum': 1},
+                    'correct_responses': {'$sum': {'$cond': ['$correct', 1, 0]}},
+                    'last_active':       {'$max': '$timestamp'}
+                }}
+            ]
+            u_stats = {r['_id']: r for r in mongo_db.responses.aggregate(user_agg)}
+
+            ai_agg = [
+                {'$match': {'is_ai': False}},
+                {'$group': {'_id': '$user_id', 'ai_chats': {'$sum': 1}}}
+            ]
+            ai_per_user = {r['_id']: r['ai_chats'] for r in mongo_db.conversation_history.aggregate(ai_agg)}
+
+            users_raw = list(mongo_db.users.find({}, {
+                '_id': 1, 'name': 1, 'phone_number': 1, 'location': 1,
+                'business_type': 1, 'business_size': 1, 'financial_status': 1,
+                'main_challenge': 1, 'growth_goal': 1, 'funding_need': 1, 'record_keeping': 1
+            }))
+
+            output = io.StringIO()
+            cols = ['name', 'phone_number', 'location', 'business_type', 'business_size',
+                    'financial_status', 'main_challenge', 'growth_goal', 'funding_need',
+                    'record_keeping', 'quizzes_taken', 'quizzes_completed',
+                    'total_responses', 'correct_responses', 'correct_pct',
+                    'ai_chats', 'last_active', 'engagement_score']
+            writer = csv.DictWriter(output, fieldnames=cols, extrasaction='ignore')
+            writer.writeheader()
+
+            for u in users_raw:
+                uid   = str(u['_id'])
+                stats = u_stats.get(uid, {})
+                total_r   = stats.get('total_responses', 0)
+                correct_r = stats.get('correct_responses', 0)
+                qlist     = sorted(stats.get('quizzes_list', []))
+                chats     = ai_per_user.get(uid, 0)
+                last_act  = stats.get('last_active')
+                correct_pct = round(correct_r / total_r * 100, 1) if total_r > 0 else 0
+                q_score   = min(len(qlist) / 10 * 100, 100) * 0.25
+                r_score   = min(total_r / 30 * 100, 100) * 0.30
+                a_score   = correct_pct * 0.25
+                c_score   = min(chats / 5 * 100, 100) * 0.20
+                eng_score = round(q_score + r_score + a_score + c_score, 1)
+                writer.writerow({
+                    'name':             u.get('name', ''),
+                    'phone_number':     u.get('phone_number', ''),
+                    'location':         (u.get('location') or '').strip().strip('"'),
+                    'business_type':    u.get('business_type', ''),
+                    'business_size':    u.get('business_size', ''),
+                    'financial_status': u.get('financial_status', ''),
+                    'main_challenge':   u.get('main_challenge', ''),
+                    'growth_goal':      u.get('growth_goal', ''),
+                    'funding_need':     u.get('funding_need', ''),
+                    'record_keeping':   u.get('record_keeping', ''),
+                    'quizzes_taken':    len(qlist),
+                    'quizzes_completed': ';'.join(qlist),
+                    'total_responses':  total_r,
+                    'correct_responses': correct_r,
+                    'correct_pct':      correct_pct,
+                    'ai_chats':         chats,
+                    'last_active':      last_act.isoformat() if last_act else '',
+                    'engagement_score': eng_score,
+                })
+
+            from flask import Response as FlaskResponse
+            filename = 'empowerbot_engagement_' + datetime.utcnow().strftime('%Y%m%d') + '.csv'
+            return FlaskResponse(
+                output.getvalue(),
+                mimetype='text/csv',
+                headers={'Content-Disposition': f'attachment; filename={filename}'}
+            )
+
+        else:
+            return jsonify({'error': 'CSV export only supported with MongoDB'}), 400
+
+    except Exception as e:
+        logging.error(f'engagement_csv_route error: {e}')
         return jsonify({'error': str(e)}), 500
 
 
