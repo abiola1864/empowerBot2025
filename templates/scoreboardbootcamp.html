@@ -1,0 +1,1853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ELP/LSETF 2025 Bootcamp Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+/* ═══════════════════════════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════════════════════════ */
+:root {
+  --bg:           #0d1117;
+  --bg2:          #161b22;
+  --bg3:          #21262d;
+  --bg4:          #2d333b;
+  --border:       #30363d;
+  --border2:      #444c56;
+  --text:         #e6edf3;
+  --text2:        #7d8590;
+  --text3:        #656d76;
+  --text4:        #484f58;
+  --green:        #2da44e;
+  --green2:       #2ea043;
+  --green-bg:     rgba(45,164,78,.12);
+  --green-border: rgba(45,164,78,.3);
+  --blue:         #1f6feb;
+  --blue-bg:      rgba(31,111,235,.12);
+  --blue-border:  rgba(31,111,235,.3);
+  --red:          #da3633;
+  --red-bg:       rgba(218,54,51,.12);
+  --red-border:   rgba(218,54,51,.3);
+  --orange:       #fb8500;
+  --orange-bg:    rgba(251,133,0,.12);
+  --orange-border:rgba(251,133,0,.3);
+  --purple:       #8957e5;
+  --purple-bg:    rgba(137,87,229,.12);
+  --yellow:       #d29922;
+  --radius-sm:    6px;
+  --radius:       8px;
+  --radius-lg:    12px;
+  --radius-xl:    16px;
+  --shadow:       0 1px 3px rgba(0,0,0,.3), 0 1px 2px rgba(0,0,0,.2);
+  --shadow-md:    0 4px 12px rgba(0,0,0,.3), 0 2px 4px rgba(0,0,0,.2);
+  --shadow-lg:    0 8px 24px rgba(0,0,0,.4), 0 4px 8px rgba(0,0,0,.2);
+  --transition:   all 0.2s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESET + BASE
+═══════════════════════════════════════════════════════════════ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-size: 14px;
+}
+
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+button { font-family: inherit; }
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: 13px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════════════════════════ */
+.layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  grid-template-rows: 64px 1fr;
+  grid-template-areas:
+    "header header"
+    "sidebar main";
+  min-height: 100vh;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════════════════════════ */
+.header {
+  grid-area: header;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  gap: 16px;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.header-brand-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--green-bg);
+  border: 1px solid var(--green-border);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--green);
+  flex-shrink: 0;
+}
+
+.header-brand-text {}
+.header-title { font-size: 15px; font-weight: 600; color: var(--text); }
+.header-subtitle { font-size: 11px; color: var(--text3); margin-top: 1px; }
+
+.header-kpis {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.header-kpi {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 7px 16px;
+  text-align: center;
+  min-width: 90px;
+  transition: var(--transition);
+}
+
+.header-kpi:hover {
+  border-color: var(--border2);
+  background: var(--bg4);
+}
+
+.header-kpi-value {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.header-kpi-label {
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.header-kpi-value.green { color: var(--green); }
+.header-kpi-value.blue  { color: var(--blue);  }
+.header-kpi-value.orange{ color: var(--orange); }
+
+/* ═══════════════════════════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════════════════════════ */
+.sidebar {
+  grid-area: sidebar;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  padding: 20px 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.sidebar-section {
+  margin-bottom: 28px;
+}
+
+.sidebar-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-section-title svg {
+  flex-shrink: 0;
+}
+
+/* Form fields */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+
+.form-label {
+  font-size: 12px;
+  color: var(--text2);
+  font-weight: 500;
+}
+
+.form-input,
+.form-select {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 9px 12px;
+  width: 100%;
+  transition: var(--transition);
+  appearance: none;
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(31,111,235,.15);
+}
+
+.form-input:hover,
+.form-select:hover {
+  border-color: var(--border2);
+}
+
+/* Filter buttons */
+.filter-btn-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.filter-btn {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 9px 12px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--radius);
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.filter-btn:hover {
+  background: var(--bg4);
+  border-color: var(--border2);
+  color: var(--text);
+}
+
+.filter-btn.active {
+  background: var(--blue-bg);
+  border-color: var(--blue-border);
+  color: var(--blue);
+  font-weight: 500;
+}
+
+.filter-btn-icon {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+/* Sidebar stats */
+.sidebar-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.sidebar-stat {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+  text-align: center;
+}
+
+.sidebar-stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 3px;
+}
+
+.sidebar-stat-label {
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MAIN CONTENT
+═══════════════════════════════════════════════════════════════ */
+.main {
+  grid-area: main;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CARDS
+═══════════════════════════════════════════════════════════════ */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+}
+
+.card:hover {
+  border-color: var(--border2);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+
+.card-title {
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+}
+
+.card-title svg { flex-shrink: 0; }
+
+.card-subtitle {
+  font-size: 12px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TOP ANALYTICS ROW
+═══════════════════════════════════════════════════════════════ */
+.analytics-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Performance metrics grid */
+.performance-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.metric-box {
+  text-align: center;
+  padding: 14px 10px;
+  background: var(--bg3);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  transition: var(--transition);
+  cursor: default;
+}
+
+.metric-box:hover {
+  border-color: var(--border2);
+  background: var(--bg4);
+}
+
+.metric-value {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 5px;
+}
+
+.metric-value.pass   { color: var(--green2); }
+.metric-value.fail   { color: var(--red);    }
+.metric-value.neutral{ color: var(--blue);   }
+.metric-value.warn   { color: var(--orange); }
+
+.metric-label {
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RECENT ACTIVITY PANEL
+═══════════════════════════════════════════════════════════════ */
+.activity-subtitle {
+  font-size: 12px;
+  color: var(--text3);
+  margin-bottom: 12px;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  transition: var(--transition);
+}
+
+.activity-item:last-child { border-bottom: none; }
+.activity-item:hover { background: none; }
+
+.activity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.activity-dot.quiz  { background: var(--blue); }
+.activity-dot.image { background: var(--green); }
+.activity-dot.join  { background: var(--purple); }
+
+.activity-info { flex: 1; min-width: 0; }
+
+.activity-name {
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text);
+}
+
+.activity-meta {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 1px;
+}
+
+.activity-badge {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.activity-badge.pass {
+  background: var(--green-bg);
+  color: var(--green2);
+  border: 1px solid var(--green-border);
+}
+
+.activity-badge.fail {
+  background: var(--red-bg);
+  color: var(--red);
+  border: 1px solid var(--red-border);
+}
+
+.no-activity {
+  text-align: center;
+  color: var(--text3);
+  font-size: 13px;
+  padding: 24px 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SCORE DISTRIBUTION BAR
+═══════════════════════════════════════════════════════════════ */
+.dist-bar-section {
+  margin-top: 4px;
+}
+
+.dist-bar-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text3);
+  margin-bottom: 6px;
+}
+
+.dist-bar-outer {
+  height: 10px;
+  background: var(--bg3);
+  border-radius: 5px;
+  overflow: hidden;
+  display: flex;
+}
+
+.dist-bar-segment {
+  height: 100%;
+  transition: width 0.6s ease;
+}
+
+.dist-bar-legend {
+  display: flex;
+  gap: 14px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.dist-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text2);
+}
+
+.dist-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LOCATION BREAKDOWN
+═══════════════════════════════════════════════════════════════ */
+.location-row {
+  display: grid;
+  grid-template-columns: 120px 1fr 60px 50px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.location-row:last-child { border-bottom: none; }
+
+.location-name {
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.location-bar-outer {
+  height: 6px;
+  background: var(--bg3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.location-bar-inner {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--blue);
+  transition: width 0.6s ease;
+}
+
+.location-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  text-align: right;
+}
+
+.location-pct {
+  font-size: 11px;
+  color: var(--text3);
+  text-align: right;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LEADERBOARD
+═══════════════════════════════════════════════════════════════ */
+.leaderboard-container {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.leaderboard-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.leaderboard-title {
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.results-badge {
+  background: var(--blue-bg);
+  color: var(--blue);
+  border: 1px solid var(--blue-border);
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.table-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.search-input {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 7px 12px 7px 32px;
+  width: 200px;
+  transition: var(--transition);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23656d76' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 10px center;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(31,111,235,.12);
+}
+
+.view-toggle {
+  display: flex;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.view-toggle button {
+  background: none;
+  border: none;
+  padding: 7px 14px;
+  color: var(--text2);
+  cursor: pointer;
+  font-size: 12px;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.view-toggle button:hover { color: var(--text); background: var(--bg4); }
+.view-toggle button.active { background: var(--blue); color: white; }
+
+.icon-btn {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  padding: 7px 14px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.icon-btn:hover { border-color: var(--green); color: var(--green); }
+.icon-btn svg { flex-shrink: 0; }
+
+/* ═══════════════════════════════════════════════════════════════
+   TABLE
+═══════════════════════════════════════════════════════════════ */
+.table-container {
+  position: relative;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  max-height: 560px;
+  overflow-y: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+thead th {
+  background: var(--bg3);
+  color: var(--text3);
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 10px 12px;
+  text-align: left;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: var(--transition);
+  user-select: none;
+  border-bottom: 1px solid var(--border);
+}
+
+thead th:hover {
+  background: var(--bg4);
+  color: var(--text);
+}
+
+thead th.sorted { color: var(--blue); }
+
+.sort-arrow {
+  display: inline-block;
+  margin-left: 4px;
+  opacity: 0.3;
+  font-size: 10px;
+  transition: opacity 0.2s;
+}
+
+thead th.sorted .sort-arrow { opacity: 1; }
+
+tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  transition: background 0.1s;
+}
+
+tbody tr {
+  cursor: pointer;
+}
+
+tbody tr:hover td {
+  background: var(--bg3);
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TABLE CELL COMPONENTS
+═══════════════════════════════════════════════════════════════ */
+.rank-cell {
+  font-weight: 600;
+  color: var(--text2);
+  font-size: 12px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.expand-arrow {
+  font-size: 9px;
+  opacity: 0.4;
+  transition: transform 0.2s, opacity 0.2s;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.expand-arrow.open {
+  transform: rotate(90deg);
+  opacity: 0.8;
+}
+
+.name-cell {
+  font-weight: 500;
+  color: var(--text);
+}
+
+.score-fraction {
+  font-size: 12px;
+  color: var(--text2);
+  white-space: nowrap;
+}
+
+.pct-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 120px;
+}
+
+.pct-bar-track {
+  flex: 1;
+  height: 6px;
+  background: var(--bg3);
+  border-radius: 3px;
+  overflow: hidden;
+  min-width: 48px;
+}
+
+.pct-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+.pct-label {
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 44px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.status-badge {
+  padding: 3px 9px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.status-badge.pass {
+  background: var(--green-bg);
+  color: var(--green2);
+  border: 1px solid var(--green-border);
+}
+
+.status-badge.fail {
+  background: var(--red-bg);
+  color: var(--red);
+  border: 1px solid var(--red-border);
+}
+
+.status-badge.na {
+  background: var(--bg3);
+  color: var(--text3);
+  border: 1px solid var(--border);
+}
+
+.location-pill {
+  font-size: 11px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 20px;
+  color: var(--text2);
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.date-cell {
+  font-size: 12px;
+  color: var(--text3);
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   EXPANDABLE DETAIL ROW
+═══════════════════════════════════════════════════════════════ */
+.detail-row {
+  display: none;
+}
+
+.detail-row.open {
+  display: table-row;
+}
+
+.detail-row td {
+  background: var(--bg) !important;
+  border-bottom: 2px solid var(--border2);
+  padding: 0;
+}
+
+.detail-inner {
+  padding: 16px 20px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.detail-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  transition: var(--transition);
+}
+
+.detail-card:hover {
+  border-color: var(--border2);
+}
+
+.detail-card-label {
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.detail-card-value {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  word-break: break-all;
+}
+
+.detail-mini-bar {
+  margin-top: 10px;
+}
+
+.detail-mini-bar-label {
+  font-size: 11px;
+  color: var(--text3);
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.detail-mini-track {
+  height: 6px;
+  background: var(--bg3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.detail-mini-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LOADING STATE
+═══════════════════════════════════════════════════════════════ */
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: var(--text3);
+  gap: 12px;
+  font-size: 13px;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--text3);
+}
+
+.empty-state-icon {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 12px;
+  opacity: 0.3;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TOAST NOTIFICATION
+═══════════════════════════════════════════════════════════════ */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--bg2);
+  border: 1px solid var(--green-border);
+  color: var(--text);
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  transform: translateY(100px);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(.34,1.56,.64,1);
+  z-index: 9999;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 300px;
+}
+
+.toast.visible {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.toast.error {
+  border-color: var(--red-border);
+}
+
+.toast-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+}
+
+.toast.error .toast-dot { background: var(--red); }
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════════════ */
+@media (max-width: 1200px) {
+  .analytics-row { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 1024px) {
+  .layout {
+    grid-template-columns: 1fr;
+    grid-template-areas: "header" "main";
+  }
+  .sidebar { display: none; }
+}
+
+@media (max-width: 768px) {
+  .header-kpis { display: none; }
+  .performance-grid { grid-template-columns: 1fr 1fr; }
+  .table-controls { flex-direction: column; align-items: flex-start; }
+  .search-input { width: 100%; }
+  .detail-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 480px) {
+  .main { padding: 12px; }
+  .leaderboard-header { flex-direction: column; align-items: flex-start; }
+  thead th:nth-child(n+6), tbody td:nth-child(n+6) { display: none; }
+}
+
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ═══════════════════════════════════════════════════════
+     HEADER
+════════════════════════════════════════════════════════ -->
+<header class="header">
+  <div class="header-brand">
+    <div class="header-brand-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+    </div>
+    <div class="header-brand-text">
+      <div class="header-title">ELP/LSETF 2025 Bootcamp Dashboard</div>
+      <div class="header-subtitle">Live programme data &middot; Powered by EmpowerBot</div>
+    </div>
+  </div>
+  <div class="header-kpis">
+    <div class="header-kpi">
+      <div class="header-kpi-value green" id="hdr-total">0</div>
+      <div class="header-kpi-label">Participants</div>
+    </div>
+    <div class="header-kpi">
+      <div class="header-kpi-value blue" id="hdr-avg">0%</div>
+      <div class="header-kpi-label">Avg Score</div>
+    </div>
+    <div class="header-kpi">
+      <div class="header-kpi-value orange" id="hdr-passrate">0%</div>
+      <div class="header-kpi-label">Pass Rate</div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════
+     SIDEBAR
+════════════════════════════════════════════════════════ -->
+<aside class="sidebar">
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+      </svg>
+      Configuration
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="pass_percentage">Pass Percentage (%)</label>
+      <input class="form-input" type="number" id="pass_percentage" value="60" min="0" max="100">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="min_quizzes">Minimum Quizzes</label>
+      <input class="form-input" type="number" id="min_quizzes" value="1" min="1">
+    </div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+      Location Filter
+    </div>
+    <div class="form-group">
+      <select class="form-select" id="locationFilter">
+        <option value="all">All Locations</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+      </svg>
+      Quiz Ranges
+    </div>
+    <div class="filter-btn-list" id="filterButtons"></div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7"/>
+        <rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/>
+        <rect x="3" y="14" width="7" height="7"/>
+      </svg>
+      Quick Stats
+    </div>
+    <div class="sidebar-stats">
+      <div class="sidebar-stat">
+        <div class="sidebar-stat-value" id="sb-pass" style="color:var(--green2)">0</div>
+        <div class="sidebar-stat-label">Passed</div>
+      </div>
+      <div class="sidebar-stat">
+        <div class="sidebar-stat-value" id="sb-fail" style="color:var(--red)">0</div>
+        <div class="sidebar-stat-label">Failed</div>
+      </div>
+      <div class="sidebar-stat">
+        <div class="sidebar-stat-value" id="sb-quizzes" style="color:var(--blue)">0</div>
+        <div class="sidebar-stat-label">Quizzes</div>
+      </div>
+      <div class="sidebar-stat">
+        <div class="sidebar-stat-value" id="sb-images" style="color:var(--purple)">0</div>
+        <div class="sidebar-stat-label">Images</div>
+      </div>
+    </div>
+  </div>
+
+</aside>
+
+<!-- ═══════════════════════════════════════════════════════
+     MAIN
+════════════════════════════════════════════════════════ -->
+<main class="main">
+
+  <!-- Analytics Row -->
+  <div class="analytics-row">
+
+    <!-- Performance Overview -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+            Performance Overview
+          </div>
+          <div class="card-subtitle">Across current filter selection</div>
+        </div>
+      </div>
+      <div class="performance-grid">
+        <div class="metric-box">
+          <div class="metric-value pass" id="passCount">0</div>
+          <div class="metric-label">Passed</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-value fail" id="failCount">0</div>
+          <div class="metric-label">Failed</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-value neutral" id="totalQuizzes">0</div>
+          <div class="metric-label">Total Quizzes</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-value neutral" id="avgPercentage">0%</div>
+          <div class="metric-label">Avg Score</div>
+        </div>
+      </div>
+      <div class="dist-bar-section" style="margin-top:16px;">
+        <div class="dist-bar-labels">
+          <span>Score distribution</span>
+          <span id="dist-label-text"></span>
+        </div>
+        <div class="dist-bar-outer" id="dist-bar">
+          <div class="dist-bar-segment" id="dist-high" style="background:var(--green2);width:0%"></div>
+          <div class="dist-bar-segment" id="dist-mid"  style="background:var(--blue);width:0%"></div>
+          <div class="dist-bar-segment" id="dist-low"  style="background:var(--red);width:0%"></div>
+        </div>
+        <div class="dist-bar-legend">
+          <div class="dist-legend-item"><div class="dist-legend-dot" style="background:var(--green2)"></div>80%+ (<span id="leg-high">0</span>)</div>
+          <div class="dist-legend-item"><div class="dist-legend-dot" style="background:var(--blue)"></div>60-79% (<span id="leg-mid">0</span>)</div>
+          <div class="dist-legend-item"><div class="dist-legend-dot" style="background:var(--red)"></div>Below 60% (<span id="leg-low">0</span>)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            Recent Activity
+          </div>
+          <div class="card-subtitle">Latest quiz submissions and image uploads</div>
+        </div>
+      </div>
+      <div id="recentActivity">
+        <div class="no-activity">Loading activity&hellip;</div>
+      </div>
+      <div style="margin-top:14px;">
+        <div class="dist-bar-labels" style="margin-bottom:8px;">
+          <span style="font-size:11px;color:var(--text3);">Location breakdown</span>
+        </div>
+        <div id="locationBreakdown"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Leaderboard -->
+  <div class="leaderboard-container">
+    <div class="leaderboard-header">
+      <div class="leaderboard-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+          <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+          <path d="M4 22h16"/>
+          <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+          <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+          <path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>
+        </svg>
+        Leaderboard
+        <span class="results-badge" id="resultsCount">0 results</span>
+      </div>
+      <div class="table-controls">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search by name&hellip;">
+        <div class="view-toggle">
+          <button class="active" onclick="setView('compact', this)">Compact</button>
+          <button onclick="setView('detailed', this)">Detailed</button>
+        </div>
+        <button class="icon-btn" onclick="exportCSV()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Export CSV
+        </button>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <div class="loading-indicator" id="loadingIndicator" style="display:none;">
+        <div class="spinner"></div>
+        Loading data&hellip;
+      </div>
+      <div class="table-wrapper" id="tableWrapper">
+        <table id="scoreboardTable">
+          <thead>
+            <tr>
+              <th onclick="sortTable(0)">Rank <span class="sort-arrow">&#8597;</span></th>
+              <th onclick="sortTable(1)">Name <span class="sort-arrow">&#8597;</span></th>
+              <th onclick="sortTable(2)">Score <span class="sort-arrow">&#8597;</span></th>
+              <th onclick="sortTable(3)">Percentage <span class="sort-arrow">&#8597;</span></th>
+              <th onclick="sortTable(4)">Quizzes <span class="sort-arrow">&#8597;</span></th>
+              <th onclick="sortTable(5)">Status <span class="sort-arrow">&#8597;</span></th>
+              <th onclick="sortTable(6)">Location <span class="sort-arrow">&#8597;</span></th>
+              <th onclick="sortTable(7)">Last Quiz <span class="sort-arrow">&#8597;</span></th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<div class="toast" id="toast">
+  <div class="toast-dot"></div>
+  <span id="toast-msg"></span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════════════════ -->
+<script>
+
+/* ── State ──────────────────────────────────────────────────── */
+let allScores      = [];
+let allLocations   = [];
+let quizRanges     = [];
+let currentRange   = 'all';
+let currentLocation= 'all';
+let currentView    = 'compact';
+let sortCol        = 3;
+let sortDir        = -1;
+let searchTerm     = '';
+let debounceTimer;
+let toastTimer;
+
+/* ── Init ───────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function () {
+  setupEventListeners();
+  loadData();
+});
+
+/* ── Event Listeners ────────────────────────────────────────── */
+function setupEventListeners() {
+  document.getElementById('pass_percentage').addEventListener('input', function () {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(loadData, 600);
+  });
+  document.getElementById('min_quizzes').addEventListener('input', function () {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(loadData, 600);
+  });
+  document.getElementById('locationFilter').addEventListener('change', function (e) {
+    currentLocation = e.target.value;
+    applyFiltersAndRender();
+  });
+  document.getElementById('searchInput').addEventListener('input', function (e) {
+    searchTerm = e.target.value.toLowerCase().trim();
+    applyFiltersAndRender();
+  });
+}
+
+/* ── Load Data ──────────────────────────────────────────────── */
+function loadData() {
+  showLoading();
+
+  var pp = document.getElementById('pass_percentage').value || 60;
+  var mq = document.getElementById('min_quizzes').value || 1;
+  var url = '/scoreboardbootcamp?pass_percentage=' + pp + '&min_quizzes=' + mq;
+
+  fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(function (data) {
+      if (data.error) throw new Error(data.error);
+
+      allScores = (data.scores || []).map(function (s) {
+        return Object.assign({}, s, {
+          location: (s.location || 'Unknown').trim().replace(/^"+|"+$/g, '')
+        });
+      });
+
+      allLocations = (data.locations || []).filter(function (l) {
+        return l && l.trim() && l.trim() !== 'null';
+      });
+
+      // Always include Agege even before participants register
+      if (allLocations.indexOf('Agege') === -1) {
+        allLocations.unshift('Agege');
+      }
+
+      quizRanges = data.quiz_ranges || ['all'];
+
+      buildLocationDropdown();
+      buildRangeButtons();
+      applyFiltersAndRender();
+      showToast('Dashboard loaded — ' + allScores.length + ' participants');
+    })
+    .catch(function (e) {
+      console.error('Load error:', e);
+      showToast('Error: ' + e.message, true);
+      hideLoading();
+    });
+}
+
+/* ── Build Location Dropdown ────────────────────────────────── */
+function buildLocationDropdown() {
+  var sel = document.getElementById('locationFilter');
+  var prev = sel.value;
+
+  while (sel.options.length > 0) sel.remove(0);
+
+  var opt = document.createElement('option');
+  opt.value = 'all';
+  opt.textContent = 'All Locations';
+  sel.appendChild(opt);
+
+  allLocations.forEach(function (loc) {
+    var o = document.createElement('option');
+    o.value = loc;
+    o.textContent = loc;
+    sel.appendChild(o);
+  });
+
+  if (allLocations.indexOf(prev) !== -1) {
+    sel.value = prev;
+    currentLocation = prev;
+  } else {
+    sel.value = 'all';
+    currentLocation = 'all';
+  }
+}
+
+/* ── Build Range Buttons ────────────────────────────────────── */
+function buildRangeButtons() {
+  var container = document.getElementById('filterButtons');
+  container.innerHTML = '';
+
+  quizRanges.forEach(function (range) {
+    var btn = document.createElement('button');
+    btn.className = 'filter-btn' + (range === currentRange ? ' active' : '');
+    btn.dataset.range = range;
+    btn.innerHTML =
+      '<span class="filter-btn-icon"></span>' +
+      (range === 'all' ? 'All Quizzes' : 'Quiz ' + range);
+    btn.addEventListener('click', function () {
+      currentRange = this.dataset.range;
+      document.querySelectorAll('.filter-btn').forEach(function (b) {
+        b.classList.toggle('active', b.dataset.range === currentRange);
+      });
+      applyFiltersAndRender();
+    });
+    container.appendChild(btn);
+  });
+}
+
+/* ── Apply Filters ──────────────────────────────────────────── */
+function applyFiltersAndRender() {
+  var filtered = allScores.slice();
+
+  if (currentLocation !== 'all') {
+    filtered = filtered.filter(function (s) {
+      return s.location.toLowerCase() === currentLocation.toLowerCase();
+    });
+  }
+
+  if (searchTerm) {
+    filtered = filtered.filter(function (s) {
+      return (s.name || '').toLowerCase().indexOf(searchTerm) !== -1;
+    });
+  }
+
+  filtered = sortScores(filtered);
+
+  updateStats(filtered);
+  renderRecentActivity(filtered);
+  renderLocationBreakdown(filtered);
+  renderTable(filtered);
+  updateResultsLabel(filtered.length);
+  hideLoading();
+}
+
+/* ── Sort ───────────────────────────────────────────────────── */
+function sortScores(list) {
+  return list.slice().sort(function (a, b) {
+    var ad = a[currentRange] || {};
+    var bd = b[currentRange] || {};
+    var av, bv;
+    switch (sortCol) {
+      case 1: av = (a.name || '').toLowerCase(); bv = (b.name || '').toLowerCase(); break;
+      case 2: av = ad.total_correct_answers || 0; bv = bd.total_correct_answers || 0; break;
+      case 3: av = ad.percentage || 0;            bv = bd.percentage || 0;            break;
+      case 4: av = ad.quizzes_taken || 0;         bv = bd.quizzes_taken || 0;         break;
+      case 5: av = ad.pass_fail || '';            bv = bd.pass_fail || '';            break;
+      case 6: av = a.location || '';              bv = b.location || '';              break;
+      case 7: av = ad.last_quiz_date || '';       bv = bd.last_quiz_date || '';       break;
+      default:av = ad.percentage || 0;            bv = bd.percentage || 0;
+    }
+    if (av > bv) return sortDir;
+    if (av < bv) return -sortDir;
+    return 0;
+  });
+}
+
+/* ── Update Stats ───────────────────────────────────────────── */
+function updateStats(filtered) {
+  var pass = 0, fail = 0, totalPct = 0, totalQ = 0, totalImgs = 0;
+  var high = 0, mid = 0, low = 0;
+
+  filtered.forEach(function (s) {
+    var d = s[currentRange] || {};
+    var pct = d.percentage || 0;
+    if (d.pass_fail === 'Pass') pass++;
+    else if (d.pass_fail === 'Fail') fail++;
+    totalPct += pct;
+    totalQ   += d.quizzes_taken || 0;
+    totalImgs += s.images_uploaded || 0;
+    if (pct >= 80) high++;
+    else if (pct >= 60) mid++;
+    else low++;
+  });
+
+  var n   = filtered.length;
+  var avg = n > 0 ? (totalPct / n).toFixed(1) : 0;
+  var pr  = n > 0 ? ((pass / n) * 100).toFixed(1) : 0;
+
+  // Header KPIs
+  document.getElementById('hdr-total').textContent    = n;
+  document.getElementById('hdr-avg').textContent       = avg + '%';
+  document.getElementById('hdr-passrate').textContent  = pr + '%';
+
+  // Performance cards
+  document.getElementById('passCount').textContent     = pass;
+  document.getElementById('failCount').textContent     = fail;
+  document.getElementById('totalQuizzes').textContent  = totalQ;
+  document.getElementById('avgPercentage').textContent = avg + '%';
+
+  // Sidebar quick stats
+  document.getElementById('sb-pass').textContent    = pass;
+  document.getElementById('sb-fail').textContent    = fail;
+  document.getElementById('sb-quizzes').textContent = totalQ;
+  document.getElementById('sb-images').textContent  = totalImgs;
+
+  // Distribution bar
+  if (n > 0) {
+    document.getElementById('dist-high').style.width = ((high / n) * 100) + '%';
+    document.getElementById('dist-mid').style.width  = ((mid  / n) * 100) + '%';
+    document.getElementById('dist-low').style.width  = ((low  / n) * 100) + '%';
+  }
+  document.getElementById('leg-high').textContent = high;
+  document.getElementById('leg-mid').textContent  = mid;
+  document.getElementById('leg-low').textContent  = low;
+}
+
+/* ── Recent Activity ────────────────────────────────────────── */
+function renderRecentActivity(filtered) {
+  var el = document.getElementById('recentActivity');
+
+  var sorted = filtered.slice().sort(function (a, b) {
+    var ad = (a[currentRange] || {}).last_quiz_date || '';
+    var bd = (b[currentRange] || {}).last_quiz_date || '';
+    return bd.localeCompare(ad);
+  }).slice(0, 6);
+
+  if (!sorted.length) {
+    el.innerHTML = '<div class="no-activity">No activity yet</div>';
+    return;
+  }
+
+  var html = '<div class="activity-list">';
+  sorted.forEach(function (s) {
+    var d   = s[currentRange] || {};
+    var pct = (d.percentage || 0).toFixed(0);
+    var pf  = d.pass_fail || 'N/A';
+    var cls = pf === 'Pass' ? 'pass' : pf === 'Fail' ? 'fail' : '';
+    var date= d.last_quiz_date || 'N/A';
+    html += '<div class="activity-item">' +
+      '<div class="activity-dot quiz"></div>' +
+      '<div class="activity-info">' +
+        '<div class="activity-name">' + (s.name || 'Unknown') + '</div>' +
+        '<div class="activity-meta">Quiz ' + (d.quizzes_taken || 0) + ' done &middot; Score: ' + pct + '%</div>' +
+      '</div>' +
+      (cls ? '<span class="activity-badge ' + cls + '">' + pf + '</span>' : '') +
+    '</div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+/* ── Location Breakdown ─────────────────────────────────────── */
+function renderLocationBreakdown(filtered) {
+  var el = document.getElementById('locationBreakdown');
+  if (!el) return;
+
+  var counts = {};
+  filtered.forEach(function (s) {
+    var loc = s.location || 'Unknown';
+    counts[loc] = (counts[loc] || 0) + 1;
+  });
+
+  var total = filtered.length || 1;
+  var locs  = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; }).slice(0, 5);
+
+  if (!locs.length) { el.innerHTML = ''; return; }
+
+  var html = '';
+  locs.forEach(function (loc) {
+    var n   = counts[loc];
+    var pct = ((n / total) * 100).toFixed(0);
+    html += '<div class="location-row">' +
+      '<div class="location-name">' + loc + '</div>' +
+      '<div class="location-bar-outer"><div class="location-bar-inner" style="width:' + pct + '%"></div></div>' +
+      '<div class="location-count">' + n + '</div>' +
+      '<div class="location-pct">' + pct + '%</div>' +
+    '</div>';
+  });
+  el.innerHTML = html;
+}
+
+/* ── Render Table ───────────────────────────────────────────── */
+function renderTable(rows) {
+  var tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+
+  if (!rows.length) {
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td colspan="8"><div class="empty-state">' +
+      '<div class="empty-state-icon">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
+      '</div>No participants found</div></td>';
+    tbody.appendChild(tr);
+    return;
+  }
+
+  rows.forEach(function (score, index) {
+    var d    = score[currentRange] || { percentage:0, total_correct_answers:0, total_possible:0, quizzes_taken:0, pass_fail:'N/A', last_quiz_date:'N/A' };
+    var pct  = d.percentage || 0;
+    var fill = pct >= 80 ? 'var(--green2)' : pct >= 60 ? 'var(--blue)' : 'var(--red)';
+    var rank = index === 0 ? '&#127945;' : index === 1 ? '&#127946;' : index === 2 ? '&#127947;' : '#' + (index + 1);
+    var sc   = (d.pass_fail || 'na').toLowerCase();
+    var rowId= 'detail-' + index;
+
+    var mainRow = document.createElement('tr');
+    mainRow.className = 'data-row';
+    mainRow.innerHTML =
+      '<td><div class="rank-cell"><span class="expand-arrow" id="arrow-' + index + '">&#9654;</span>' + rank + '</div></td>' +
+      '<td class="name-cell">' + (score.name || 'N/A') + '</td>' +
+      '<td class="score-fraction">' + (d.total_correct_answers || 0) + '/' + (d.total_possible || 0) + '</td>' +
+      '<td><div class="pct-cell"><div class="pct-bar-track"><div class="pct-bar-fill" style="width:' + pct + '%;background:' + fill + '"></div></div><span class="pct-label" style="color:' + fill + '">' + pct.toFixed(1) + '%</span></div></td>' +
+      '<td>' + (d.quizzes_taken || 0) + '</td>' +
+      '<td><span class="status-badge ' + sc + '">' + (d.pass_fail || 'N/A') + '</span></td>' +
+      '<td><span class="location-pill">' + (score.location || 'Unknown') + '</span></td>' +
+      '<td class="date-cell">' + (d.last_quiz_date || 'N/A') + '</td>';
+
+    mainRow.addEventListener('click', (function (s, d2, idx) {
+      return function () { toggleDetailRow(s, d2, idx); };
+    })(score, d, index));
+
+    tbody.appendChild(mainRow);
+
+    // Detail row
+    var detailRow = document.createElement('tr');
+    detailRow.className = 'detail-row';
+    detailRow.id = rowId;
+
+    detailRow.innerHTML = '<td colspan="8"><div class="detail-inner">' +
+      '<div class="detail-grid">' +
+        makeDetailCard('Phone Number', score.phone_number || 'N/A') +
+        makeDetailCard('Location',     score.location     || 'N/A') +
+        makeDetailCard('Last Quiz Date',d.last_quiz_date  || 'N/A') +
+        makeDetailCard('Last Image Date',score.last_image_date || 'N/A') +
+        makeDetailCard('Images Uploaded', score.images_uploaded || 0) +
+        makeDetailCard('Unique Upload Days', score.unique_upload_days || 0) +
+      '</div>' +
+      '<div class="detail-mini-bar">' +
+        '<div class="detail-mini-bar-label"><span>Score progress</span><span>' + pct.toFixed(1) + '%</span></div>' +
+        '<div class="detail-mini-track"><div class="detail-mini-fill" style="width:' + pct + '%;background:' + fill + '"></div></div>' +
+      '</div>' +
+    '</div></td>';
+
+    tbody.appendChild(detailRow);
+  });
+}
+
+function makeDetailCard(label, value) {
+  return '<div class="detail-card">' +
+    '<div class="detail-card-label">' + label + '</div>' +
+    '<div class="detail-card-value">' + value + '</div>' +
+    '</div>';
+}
+
+/* ── Toggle Detail Row ──────────────────────────────────────── */
+function toggleDetailRow(score, d, index) {
+  var rowId    = 'detail-' + index;
+  var detailRow= document.getElementById(rowId);
+  var arrow    = document.getElementById('arrow-' + index);
+  if (!detailRow) return;
+
+  var isOpen = detailRow.classList.contains('open');
+
+  // Close all open rows first
+  document.querySelectorAll('.detail-row.open').forEach(function (r) {
+    r.classList.remove('open');
+  });
+  document.querySelectorAll('.expand-arrow.open').forEach(function (a) {
+    a.classList.remove('open');
+  });
+
+  if (!isOpen) {
+    detailRow.classList.add('open');
+    if (arrow) arrow.classList.add('open');
+  }
+}
+
+/* ── Sort Table ─────────────────────────────────────────────── */
+function sortTable(col) {
+  if (sortCol === col) {
+    sortDir *= -1;
+  } else {
+    sortCol = col;
+    sortDir = -1;
+  }
+
+  document.querySelectorAll('thead th').forEach(function (th, i) {
+    th.classList.toggle('sorted', i === col);
+    var arr = th.querySelector('.sort-arrow');
+    if (arr) {
+      arr.innerHTML = i === col ? (sortDir === -1 ? '&#8595;' : '&#8593;') : '&#8597;';
+    }
+  });
+
+  applyFiltersAndRender();
+}
+
+/* ── View Toggle ────────────────────────────────────────────── */
+function setView(view, btn) {
+  currentView = view;
+  document.querySelectorAll('.view-toggle button').forEach(function (b) {
+    b.classList.remove('active');
+  });
+  btn.classList.add('active');
+  showToast('Switched to ' + view + ' view');
+}
+
+/* ── Update Results Label ───────────────────────────────────── */
+function updateResultsLabel(count) {
+  var locText = currentLocation === 'all' ? 'all locations' : currentLocation;
+  var rngText = currentRange    === 'all' ? 'all quizzes'   : 'quiz ' + currentRange;
+  document.getElementById('resultsCount').textContent =
+    count + ' result' + (count !== 1 ? 's' : '') + ' · ' + locText + ' · ' + rngText;
+}
+
+/* ── Export CSV ─────────────────────────────────────────────── */
+function exportCSV() {
+  var headers = ['Rank','Name','Phone','Score','Percentage','Quizzes Taken','Status','Location','Last Quiz Date','Images Uploaded','Unique Upload Days'];
+  var filtered = allScores.filter(function (s) {
+    return currentLocation === 'all' || s.location.toLowerCase() === currentLocation.toLowerCase();
+  });
+  var sorted = sortScores(filtered);
+  var rows = sorted.map(function (s, i) {
+    var d = s[currentRange] || {};
+    return [
+      i + 1,
+      s.name             || '',
+      s.phone_number     || '',
+      (d.total_correct_answers || 0) + '/' + (d.total_possible || 0),
+      (d.percentage || 0).toFixed(1) + '%',
+      d.quizzes_taken    || 0,
+      d.pass_fail        || 'N/A',
+      s.location         || '',
+      d.last_quiz_date   || 'N/A',
+      s.images_uploaded  || 0,
+      s.unique_upload_days || 0
+    ];
+  });
+
+  var csv = [headers].concat(rows).map(function (row) {
+    return row.map(function (c) { return '"' + String(c).replace(/"/g, '""')+'"'; }).join(',');
+  }).join('\n');
+
+  var a    = document.createElement('a');
+  var date = new Date().toISOString().slice(0, 10);
+  a.href     = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'bootcamp_' + currentLocation + '_' + date + '.csv';
+  a.click();
+  showToast('CSV exported — ' + rows.length + ' rows');
+}
+
+/* ── Loading ────────────────────────────────────────────────── */
+function showLoading() {
+  document.getElementById('loadingIndicator').style.display = 'flex';
+}
+
+function hideLoading() {
+  document.getElementById('loadingIndicator').style.display = 'none';
+}
+
+/* ── Toast ──────────────────────────────────────────────────── */
+function showToast(msg, isError) {
+  var el  = document.getElementById('toast');
+  var txt = document.getElementById('toast-msg');
+  clearTimeout(toastTimer);
+  txt.textContent = msg;
+  el.className = 'toast' + (isError ? ' error' : '');
+  // Force reflow
+  void el.offsetWidth;
+  el.classList.add('visible');
+  toastTimer = setTimeout(function () {
+    el.classList.remove('visible');
+  }, 3000);
+}
+
+</script>
+</body>
+</html>

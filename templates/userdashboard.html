@@ -1,0 +1,4638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Dashboard</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f7f9;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+    .dashboard-container {
+      max-width: 1200px;
+      width: 100%;
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+    .filter-container {
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    select {
+      padding: 8px 12px;
+      font-size: 14px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    .table-container {
+      margin-top: 20px;
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed; /* Fixed layout enables consistent column widths */
+      font-size: 14px;
+    }
+    th, td {
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+      white-space: normal;
+      word-wrap: break-word;
+      max-width: 120px;
+    }
+    th {
+      background: #f2f2f2;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <h2>User Dashboard</h2>
+
+    <div class="filter-container">
+      <label for="locationFilter"><strong>Filter by Location:</strong> </label>
+      <select id="locationFilter" onchange="filterByLocation()">
+        <option value="all">All</option>
+        
+          <option value="&#34;Others&#34;">&#34;Others&#34;</option>
+        
+          <option value="API error occurred. Please try again later.">API error occurred. Please try again later.</option>
+        
+          <option value="Agege">Agege</option>
+        
+          <option value="Alimosho">Alimosho</option>
+        
+          <option value="Crops farming">Crops farming</option>
+        
+          <option value="Epe">Epe</option>
+        
+          <option value="Ikorodu">Ikorodu</option>
+        
+          <option value="Ikorodu North">Ikorodu North</option>
+        
+          <option value="Lagos">Lagos</option>
+        
+          <option value="Livestock Farm">Livestock Farm</option>
+        
+          <option value="Morikaz Agege">Morikaz Agege</option>
+        
+          <option value="Others">Others</option>
+        
+      </select>
+    </div>
+
+    <div class="table-container">
+      <table id="userTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Phone Number</th>
+            <th>Name</th>
+            <th>Age</th>
+            <th>Gender</th>
+            <th>Business Type</th>
+            <th>Location</th>
+            <th>Business Size</th>
+            <th>Financial Status</th>
+            <th>Main Challenge</th>
+            <th>Record Keeping</th>
+            <th>Growth Goal</th>
+            <th>Funding Need</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41f1</td>
+            <td>2348145180976</td>
+            <td>Dawodu Olaoluwa</td>
+            <td>29years old</td>
+            <td>male</td>
+            <td>Automobile business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>hi, this is empowerlocals, you can edit this intro message!</td>
+            <td>Not enough cash</td>
+            <td>Phone notes</td>
+            <td>New location</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4212</td>
+            <td>2347037348015</td>
+            <td>Onuche Reuben</td>
+            <td>40</td>
+            <td>okey</td>
+            <td>Purchasing and Supply Business</td>
+            <td>Ikorodu</td>
+            <td>i don&#39;t  understand this term</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4234</td>
+            <td>2349047648683</td>
+            <td>Oyelaja Omolola</td>
+            <td>21years old</td>
+            <td>female</td>
+            <td>Hairdressing business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Need business skills</td>
+            <td>Notebook</td>
+            <td>Better equipment</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4236</td>
+            <td>2349026439634</td>
+            <td>Lukmon Shola</td>
+            <td>28</td>
+            <td>male</td>
+            <td>Photography business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Need better technology</td>
+            <td>Phone notes</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4243</td>
+            <td>2347061890689</td>
+            <td>Nome Ogonnaya</td>
+            <td>35</td>
+            <td>male</td>
+            <td>Catfish business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Growing profit monthly</td>
+            <td>Need better technology</td>
+            <td>Notebook</td>
+            <td>Increase profit</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4247</td>
+            <td>2349061495562</td>
+            <td>Abdulqudus Opeyemi</td>
+            <td>22</td>
+            <td>male</td>
+            <td>Consulting &amp; Technology Business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Breaking even</td>
+            <td>Not enough cash</td>
+            <td>No records kept</td>
+            <td>Increase profit</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4264</td>
+            <td>2348037210942</td>
+            <td>Olalekan Jesuloluwa</td>
+            <td>61</td>
+            <td>male</td>
+            <td>ICT Services business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Getting customers</td>
+            <td>Spreadsheets</td>
+            <td>More sales</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4278</td>
+            <td>2347038222877</td>
+            <td>Adeleye Moses</td>
+            <td>45 years</td>
+            <td>male</td>
+            <td>Educational business</td>
+            <td>Ikorodu</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Better equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41e6</td>
+            <td>2348163738168</td>
+            <td>Deborah Babatunde</td>
+            <td>26</td>
+            <td>female</td>
+            <td>Marketing business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Breaking even</td>
+            <td>Need better technology</td>
+            <td>Notebook</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41ec</td>
+            <td>2348125631210</td>
+            <td>Adeosun Olamide</td>
+            <td>35 years</td>
+            <td>female</td>
+            <td>Multipurpose business</td>
+            <td>Ikorodu</td>
+            <td>6-15 workers</td>
+            <td>Growing profit monthly</td>
+            <td>Need business skills</td>
+            <td>Phone notes</td>
+            <td>New products</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41f3</td>
+            <td>2348085707234</td>
+            <td>Tokunbo Salako</td>
+            <td>35</td>
+            <td>female</td>
+            <td>Clothing business</td>
+            <td>Ikorodu</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4232</td>
+            <td>2348148000070</td>
+            <td>Balogun Eniola</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>Ikorodu</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4242</td>
+            <td>2349052625737</td>
+            <td>Nkemjika Umemneku</td>
+            <td>39 years</td>
+            <td>female</td>
+            <td>Food Processing business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Need better technology</td>
+            <td>Spreadsheets</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4252</td>
+            <td>2348136477672</td>
+            <td>Chichetaram Okonye</td>
+            <td>30</td>
+            <td>female</td>
+            <td>Medical Supply business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Growing profit monthly</td>
+            <td>Need better technology</td>
+            <td>Notebook</td>
+            <td>No records kept</td>
+            <td>More sales</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c425c</td>
+            <td>2348035922772</td>
+            <td>Grace Oni</td>
+            <td>43</td>
+            <td>female</td>
+            <td>Education business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Breaking even</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4266</td>
+            <td>2348035613004</td>
+            <td>Idowu Olawale</td>
+            <td>50</td>
+            <td>male</td>
+            <td>Building Materials and Logistics business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Spreadsheets</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c426a</td>
+            <td>2349055747131</td>
+            <td>Akinola Oladayo</td>
+            <td>43</td>
+            <td>male</td>
+            <td>Advertising business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Profit varies a lot</td>
+            <td>Getting customers</td>
+            <td>Spreadsheets</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4291</td>
+            <td>2348136631289</td>
+            <td>Folarin Olufunmilola</td>
+            <td>36</td>
+            <td>female</td>
+            <td>Cosmetics business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Growing profit monthly</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4292</td>
+            <td>2347069466924</td>
+            <td>Olawole Olamidotun</td>
+            <td>30</td>
+            <td>male</td>
+            <td>Printing business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>No records kept</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu North">
+            <td>696515164d36cc5f124c4296</td>
+            <td>2348035643118</td>
+            <td>Ife Acho Amaka → Ife Amaka</td>
+            <td>i&#39;m 45</td>
+            <td>i&#39;m a female</td>
+            <td>Fishing business</td>
+            <td>Ikorodu North</td>
+            <td>about 2 people</td>
+            <td>Profit varies a lot</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>More sales</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41fb</td>
+            <td>2348027743080</td>
+            <td>Ibukun Ouluwaremi</td>
+            <td>39</td>
+            <td>female</td>
+            <td>Farm Business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Spreadsheets</td>
+            <td>Increase profit</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="None">
+            <td>696515164d36cc5f124c4213</td>
+            <td>2348137412306</td>
+            <td>Good Evening</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c422a</td>
+            <td>2348143946520</td>
+            <td>Kawojue Oluwatobi</td>
+            <td>24</td>
+            <td>None</td>
+            <td>None</td>
+            <td>Ikorodu</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c422c</td>
+            <td>2348061241576</td>
+            <td>Ladele Ismail</td>
+            <td>36</td>
+            <td>male</td>
+            <td>Aquaculture business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Growing profit monthly</td>
+            <td>Not enough cash</td>
+            <td>Phone notes</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c423d</td>
+            <td>2348067921235</td>
+            <td>Christiana Lewis</td>
+            <td>43</td>
+            <td>female</td>
+            <td>Restaurant business</td>
+            <td>Ikorodu</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4260</td>
+            <td>2348064707203</td>
+            <td>Deborah Funmilayo</td>
+            <td>32 years old</td>
+            <td>female</td>
+            <td>Electrical Supply Business</td>
+            <td>Ikorodu</td>
+            <td>6-15 workers</td>
+            <td>Good profit often</td>
+            <td>Not enough cash</td>
+            <td>Phone notes</td>
+            <td>More sales</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4267</td>
+            <td>2348168847066</td>
+            <td>Liadi Abiodun</td>
+            <td>40</td>
+            <td>male</td>
+            <td>Poultry business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Too many competitors</td>
+            <td>Notebook</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c426e</td>
+            <td>2348183501785</td>
+            <td>Arisekola Yusuf</td>
+            <td>30</td>
+            <td>male</td>
+            <td>Printing business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>No records kept</td>
+            <td>New products</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4273</td>
+            <td>2348026275558</td>
+            <td>Saminu Lukman</td>
+            <td>i&#39;m 42 years old</td>
+            <td>male</td>
+            <td>Barbering and POS Services business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Need business skills</td>
+            <td>Notebook</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4275</td>
+            <td>2347064382892</td>
+            <td>Basirat Folorunsho</td>
+            <td>34yrs</td>
+            <td>female</td>
+            <td>POS business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>New products</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4286</td>
+            <td>2347082092734</td>
+            <td>Azeez Adeniyi</td>
+            <td>32</td>
+            <td>male</td>
+            <td>Agricultural business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Need business skills</td>
+            <td>No records kept</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c428a</td>
+            <td>2348066187487</td>
+            <td>Mercy Ifedayo</td>
+            <td>27</td>
+            <td>female</td>
+            <td>Agriculture business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Breaking even</td>
+            <td>access to fund and working space</td>
+            <td>In my head</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c428e</td>
+            <td>2347045949785</td>
+            <td>Damilola Ajayi</td>
+            <td>39</td>
+            <td>female</td>
+            <td>Food business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Breaking even</td>
+            <td>Not enough cash</td>
+            <td>In my head</td>
+            <td>Better equipment</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4294</td>
+            <td>2348142452130</td>
+            <td>Smart Ifedayo</td>
+            <td>27</td>
+            <td>female</td>
+            <td>Agricultural business</td>
+            <td>Ikorodu</td>
+            <td>Ikorodu</td>
+            <td>Breaking even</td>
+            <td>Not enough cash</td>
+            <td>Phone notes</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c429b</td>
+            <td>2347066123932</td>
+            <td>There is no name in the input &#34;see it above.&#34;  Therefore, no name can be returned.</td>
+            <td>mayowa adegbite</td>
+            <td>38 female</td>
+            <td>Agro-processing business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Breaking even</td>
+            <td>Not enough cash</td>
+            <td>Phone notes</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41f0</td>
+            <td>2348138556141</td>
+            <td>Olayinka Oyeniyi</td>
+            <td>32</td>
+            <td>male</td>
+            <td>Decoration business</td>
+            <td>Ikorodu</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41f2</td>
+            <td>2348188198519</td>
+            <td>Olabiyi Danssou</td>
+            <td>olabisi danssou not olabiyi danssou 
+
+35 years old</td>
+            <td>female</td>
+            <td>None</td>
+            <td>Ikorodu</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41f9</td>
+            <td>2348068499197</td>
+            <td>Ogunrinu</td>
+            <td>32yrs</td>
+            <td>male</td>
+            <td>Logistics business</td>
+            <td>Ikorodu</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4201</td>
+            <td>2348167082990</td>
+            <td>Adenike Ajiboye</td>
+            <td>29</td>
+            <td>female</td>
+            <td>Task Management Business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Spreadsheets</td>
+            <td>More sales</td>
+            <td>For marketing</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4226</td>
+            <td>2349055552757</td>
+            <td>Mobolaji Subair</td>
+            <td>45</td>
+            <td>male</td>
+            <td>Event Management business</td>
+            <td>Ikorodu</td>
+            <td>6-15 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Need better technology</td>
+            <td>Spreadsheets</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="None">
+            <td>696515164d36cc5f124c423e</td>
+            <td>2348110024018</td>
+            <td></td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c426f</td>
+            <td>2348165496440</td>
+            <td>Olayemi Abiodun</td>
+            <td>i am 44years old</td>
+            <td>female</td>
+            <td>Education business</td>
+            <td>Ikorodu</td>
+            <td>ikorodu north local government</td>
+            <td>6-15 workers</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Better equipment</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4277</td>
+            <td>2347050944697</td>
+            <td>Adebayo Olusesan</td>
+            <td>44years</td>
+            <td>male</td>
+            <td>Bookstore business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c427a</td>
+            <td>2348139150642</td>
+            <td>Olaide Bisiriyu</td>
+            <td>39</td>
+            <td>female</td>
+            <td>Hairstyling and Wig Retail Business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Need better technology</td>
+            <td>Accounting software</td>
+            <td>Keep stable</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41fa</td>
+            <td>2348033370377</td>
+            <td>Akinwale Akintunde</td>
+            <td>55 year old</td>
+            <td>male</td>
+            <td>Office Supplies and Equipment Business</td>
+            <td>Ikorodu</td>
+            <td>two words</td>
+            <td>fine</td>
+            <td>capital</td>
+            <td>via sales and repairs</td>
+            <td>to have a convenient permanent businesses venue infront of my own resident.</td>
+            <td>to equip my training center to boost my incomes</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41fc</td>
+            <td>2348130095123</td>
+            <td>Yetunde Odunfa</td>
+            <td>37</td>
+            <td>female</td>
+            <td>Education and Sale of Edibles → Edible business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Not enough cash</td>
+            <td>Accounting software</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41fe</td>
+            <td>2348136364172</td>
+            <td>Ayomiposi Omolola</td>
+            <td>35 year</td>
+            <td>ok</td>
+            <td>Agriculture business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Getting customers</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4206</td>
+            <td>2348030457145</td>
+            <td>Aanuoluwapo Adetola</td>
+            <td>41</td>
+            <td>female</td>
+            <td>Financial Services Business</td>
+            <td>Ikorodu</td>
+            <td>6-15 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Spreadsheets</td>
+            <td>More sales</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Alimosho">
+            <td>696515164d36cc5f124c4208</td>
+            <td>2348160879454</td>
+            <td>Hammed Kayode</td>
+            <td>05/04/1987</td>
+            <td>male</td>
+            <td>IT Business</td>
+            <td>Alimosho</td>
+            <td>1-5 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Increase profit</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4219</td>
+            <td>2348106342311</td>
+            <td>Adebanjo Adeniji</td>
+            <td>28</td>
+            <td>male</td>
+            <td>Service unavailable. Please try again later.</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Getting customers</td>
+            <td>In my head</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="None">
+            <td>696515164d36cc5f124c421b</td>
+            <td>2349024708433</td>
+            <td>API error: 429 Client Error: Too Many Requests for url: https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=AIzaSyCRIdvn8eqAHhRmsIjqiotrU99DveyEUKM. Please try again later or contact support.</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c421c</td>
+            <td>2348108511517</td>
+            <td>Olufunke James</td>
+            <td>27</td>
+            <td>female</td>
+            <td>Clothing business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Increase profit</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4222</td>
+            <td>2349078876410</td>
+            <td>Ikeoluwa Opeyemi</td>
+            <td>28</td>
+            <td>male</td>
+            <td>Poultry business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Getting customers</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4227</td>
+            <td>2347085582188</td>
+            <td>Shaji Aduragbemi</td>
+            <td>36</td>
+            <td>male</td>
+            <td>Laundry business</td>
+            <td>Ikorodu</td>
+            <td>ok</td>
+            <td>6-15 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Not enough cash</td>
+            <td>Accounting software</td>
+            <td>Increase profit</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4244</td>
+            <td>2348022107316</td>
+            <td>Tawakalitu Ajoke</td>
+            <td>42yrs</td>
+            <td>female</td>
+            <td>Manufacturing business</td>
+            <td>Ikorodu</td>
+            <td>3</td>
+            <td>very well</td>
+            <td>finance status</td>
+            <td>In my head</td>
+            <td>New products</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4258</td>
+            <td>2348101452677</td>
+            <td>Daniel Ayodeji</td>
+            <td>32 years</td>
+            <td>male</td>
+            <td>Shoemaking business</td>
+            <td>Ikorodu</td>
+            <td>3</td>
+            <td>Small profit months</td>
+            <td>Need business skills</td>
+            <td>Notebook</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c425f</td>
+            <td>2347034778107</td>
+            <td>Anthony Opene</td>
+            <td>40yrs old</td>
+            <td>male</td>
+            <td>Undecided business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Need business skills</td>
+            <td>No records kept</td>
+            <td>More sales</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4271</td>
+            <td>2348132304321</td>
+            <td>Abdulraheem Oyindamola</td>
+            <td>28</td>
+            <td>female</td>
+            <td>Design and Tech Training Business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Getting customers</td>
+            <td>Accounting software</td>
+            <td>More sales</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4272</td>
+            <td>2348056837770</td>
+            <td>Gabriel Egringya</td>
+            <td>38</td>
+            <td>male</td>
+            <td>Agriculture business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Good profit often</td>
+            <td>Need better technology</td>
+            <td>Spreadsheets</td>
+            <td>Keep stable</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4274</td>
+            <td>2349071404203</td>
+            <td>Mary Emmanuel</td>
+            <td>29</td>
+            <td>female</td>
+            <td>Technology business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Breaking even</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Better equipment</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4283</td>
+            <td>2347064943105</td>
+            <td>Ogunmola Eniola</td>
+            <td>32</td>
+            <td>female</td>
+            <td>Technology business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Spreadsheets</td>
+            <td>Keep stable</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c429c</td>
+            <td>2348032315661</td>
+            <td>Aweejo Florence</td>
+            <td>same here am 33 years old</td>
+            <td>female</td>
+            <td>Bakery business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>No records kept</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41e5</td>
+            <td>2348128915733</td>
+            <td>Ogbonna Olusola</td>
+            <td>40yrs</td>
+            <td>female</td>
+            <td>Lingerie business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>for now</td>
+            <td>Breaking even</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Keep stable</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41ee</td>
+            <td>2348186248217</td>
+            <td>Ajogun Azeezat</td>
+            <td>39 yrs</td>
+            <td>female</td>
+            <td>Fashion business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>my main challenge as at now is fabrics and tools like industrial sewing machine.because i want to go into ready to wear business</td>
+            <td>No records kept</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="None">
+            <td>696515164d36cc5f124c420b</td>
+            <td>2348094818884</td>
+            <td></td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c420e</td>
+            <td>2348167733931</td>
+            <td>Empowerlocals</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>Ikorodu</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4214</td>
+            <td>2348163446684</td>
+            <td>Adeyemi Babatunde</td>
+            <td>28</td>
+            <td>make</td>
+            <td>Painting business</td>
+            <td>Ikorodu</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4221</td>
+            <td>2347052678437</td>
+            <td>Abdul Adekola</td>
+            <td>20 years old</td>
+            <td>male</td>
+            <td>Electrical Installation business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Breaking even</td>
+            <td>Need business skills</td>
+            <td>Accounting software</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c424b</td>
+            <td>2348068489205</td>
+            <td>Ojo Ayo</td>
+            <td>46</td>
+            <td>male</td>
+            <td>Transportation business</td>
+            <td>Ikorodu</td>
+            <td>one</td>
+            <td>not really donig well because of money</td>
+            <td>money</td>
+            <td>don&#39;t understand by tracking</td>
+            <td>i need money to fix my truck</td>
+            <td>to buy engine and others things</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41e7</td>
+            <td>2348034078186</td>
+            <td>Abdullahi Lanre</td>
+            <td>39</td>
+            <td>male</td>
+            <td>Transportation and Logistics Business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Accounting software</td>
+            <td>More sales</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41f8</td>
+            <td>2348029889662</td>
+            <td>Kolawole Enitan</td>
+            <td>39 year</td>
+            <td>female</td>
+            <td>Provisions business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Phone notes</td>
+            <td>New location</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c420a</td>
+            <td>2348104385574</td>
+            <td>Gloria Akpan</td>
+            <td>35</td>
+            <td>female</td>
+            <td>Clothing business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>quiz1</td>
+            <td>hi, this is empowerlocals, you can edit this intro message!</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4225</td>
+            <td>2348068283485</td>
+            <td>Uchenna Bosah</td>
+            <td>38</td>
+            <td>female</td>
+            <td>Agriculture business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Losing money monthly</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c422d</td>
+            <td>2348128177930</td>
+            <td>Muhammed Opeyemi</td>
+            <td>27</td>
+            <td>female</td>
+            <td>Livestock business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>records quiz</td>
+            <td>Notebook</td>
+            <td>Better equipment</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c422e</td>
+            <td>2348050296139</td>
+            <td>Israel Ogundare</td>
+            <td>24</td>
+            <td>male.</td>
+            <td>Generic business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Getting customers</td>
+            <td>Phone notes</td>
+            <td>Better equipment</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4235</td>
+            <td>2348123024013</td>
+            <td>Desmond Jenifer</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>Ikorodu</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c424d</td>
+            <td>2348087346067</td>
+            <td>Ediri Odubu</td>
+            <td>35</td>
+            <td>male</td>
+            <td>Accessories business</td>
+            <td>Ikorodu</td>
+            <td>6-15 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c425b</td>
+            <td>2348078478438</td>
+            <td>Hameed Owolabi</td>
+            <td>49</td>
+            <td>male</td>
+            <td>Real Estate business</td>
+            <td>Ikorodu</td>
+            <td>6-15 workers</td>
+            <td>Losing money monthly</td>
+            <td>Need business skills</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c425e</td>
+            <td>2347038273495</td>
+            <td>Ojufun Adebanke</td>
+            <td>27</td>
+            <td>female</td>
+            <td>Fashion business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Profit varies a lot</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Better equipment</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4282</td>
+            <td>2348187185630</td>
+            <td>Ebenuwah Udokanma</td>
+            <td>46years old.</td>
+            <td>male.</td>
+            <td>Farming business</td>
+            <td>Ikorodu</td>
+            <td>four.</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>New location</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="None">
+            <td>696515164d36cc5f124c4288</td>
+            <td>2348080662649</td>
+            <td></td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41ea</td>
+            <td>2348177212297</td>
+            <td>Ajiboye Abidemi</td>
+            <td>am ajibowu not ajiboye</td>
+            <td>38years female</td>
+            <td>Multipurpose Store</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Growing profit monthly</td>
+            <td>Too many competitors</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41f6</td>
+            <td>2348038031755</td>
+            <td>Odefunsho Olanike</td>
+            <td>40years</td>
+            <td>female</td>
+            <td>Textile business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Profit varies a lot</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>New products</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4200</td>
+            <td>2347035471849</td>
+            <td>Adekunle Adetomiwa</td>
+            <td>23</td>
+            <td>female</td>
+            <td>Trading business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Getting customers</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4204</td>
+            <td>2348027210204</td>
+            <td>Omoleye Vincent</td>
+            <td>34</td>
+            <td>male</td>
+            <td>Salon business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>New products</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4209</td>
+            <td>2348027984864</td>
+            <td></td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>Ikorodu</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4210</td>
+            <td>2349158668855</td>
+            <td>Empowerlocals</td>
+            <td>37</td>
+            <td>male</td>
+            <td>Trading business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>New products</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4224</td>
+            <td>2348129763297</td>
+            <td>Haruna Omotunde</td>
+            <td>29 yrs</td>
+            <td>female</td>
+            <td>Livestock business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Need business skills</td>
+            <td>In my head</td>
+            <td>New products</td>
+            <td>For marketing</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4233</td>
+            <td>2347068214300</td>
+            <td>Animashaun Oluwaseyi</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>Ikorodu</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c424a</td>
+            <td>2348177136154</td>
+            <td>Olayode Sadiq</td>
+            <td>46</td>
+            <td>male</td>
+            <td>Real Estate business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Losing money monthly</td>
+            <td>Not enough cash</td>
+            <td>Accounting software</td>
+            <td>More sales</td>
+            <td>Urgent money</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4255</td>
+            <td>2348030962024</td>
+            <td>Owoeye Oluwasegun</td>
+            <td>38</td>
+            <td>male</td>
+            <td>Distribution business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Spreadsheets</td>
+            <td>Increase profit</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c426d</td>
+            <td>2349011283505</td>
+            <td>Victor Ibrahim</td>
+            <td>28</td>
+            <td>male</td>
+            <td>Agricultural business</td>
+            <td>Ikorodu</td>
+            <td>6-15 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Phone notes</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4295</td>
+            <td>2347064269859</td>
+            <td>Balogun Damilola</td>
+            <td>39</td>
+            <td>female</td>
+            <td>Entrepreneurial business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Need business skills</td>
+            <td>Notebook</td>
+            <td>Better equipment</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4299</td>
+            <td>2349059876802</td>
+            <td>Gbolaru Adewale</td>
+            <td>03-03-1983</td>
+            <td>male</td>
+            <td>Poultry processing business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Breaking even</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41ef</td>
+            <td>2348051494836</td>
+            <td>Akinwande Adeyemi</td>
+            <td>35</td>
+            <td>male</td>
+            <td>Food business</td>
+            <td>Ikorodu</td>
+            <td>6-15 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Need better technology</td>
+            <td>Notebook</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41ff</td>
+            <td>2347066350953</td>
+            <td>Ajulo Adesewa</td>
+            <td>35</td>
+            <td>female</td>
+            <td>None</td>
+            <td>Ikorodu</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4207</td>
+            <td>2348131953737</td>
+            <td>Okorie Lois</td>
+            <td>35</td>
+            <td>female</td>
+            <td>Fashion business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4237</td>
+            <td>2349036941185</td>
+            <td>Eshinlokun Ayodeji</td>
+            <td>29</td>
+            <td>male</td>
+            <td>Clothing business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4251</td>
+            <td>2348105621982</td>
+            <td>Adeosun Olakunle</td>
+            <td>40</td>
+            <td>male</td>
+            <td>Real Estate business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Getting customers</td>
+            <td>No records kept</td>
+            <td>More sales</td>
+            <td>For marketing</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4256</td>
+            <td>2347015609353</td>
+            <td>Adebimpe Bakare</td>
+            <td>40</td>
+            <td>female</td>
+            <td>Telecommunications business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Breaking even</td>
+            <td>funding</td>
+            <td>Notebook</td>
+            <td>Keep stable</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4265</td>
+            <td>2348183552352</td>
+            <td>Ibrahim Sadiat</td>
+            <td>27</td>
+            <td>female</td>
+            <td>Palm oil business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Need business skills</td>
+            <td>Phone notes</td>
+            <td>More sales</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c427f</td>
+            <td>2347033220913</td>
+            <td>Empowerlocals</td>
+            <td>hi, this is ojuifun tope gabriel you can edit this intro message!</td>
+            <td>hi, this is empowerlocals, you can edit this intro messages</td>
+            <td>Personal Branding business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Breaking even</td>
+            <td>Getting customers</td>
+            <td>Notebook</td>
+            <td>Increase profit</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4281</td>
+            <td>2347054910685</td>
+            <td>Lawal Adenike</td>
+            <td>33</td>
+            <td>female</td>
+            <td>Accounting business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Profit varies a lot</td>
+            <td>Getting customers</td>
+            <td>Spreadsheets</td>
+            <td>More sales</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c428f</td>
+            <td>2347047464346</td>
+            <td>Patrick Oghenetega</td>
+            <td>22</td>
+            <td>male</td>
+            <td>Food Production business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Spreadsheets</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="None">
+            <td>696515164d36cc5f124c4290</td>
+            <td>2349129966688</td>
+            <td></td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Lagos">
+            <td>696515164d36cc5f124c4298</td>
+            <td>2348054912544</td>
+            <td>Daniel Adeagbo</td>
+            <td>33</td>
+            <td>male</td>
+            <td>Educational content business</td>
+            <td>Lagos</td>
+            <td>2</td>
+            <td>Breaking even</td>
+            <td>Need business skills</td>
+            <td>Notebook</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4203</td>
+            <td>2348022191928</td>
+            <td>Oyeleke Atinuke</td>
+            <td>49</td>
+            <td>female</td>
+            <td>Food Processing Business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>ok</td>
+            <td>In my head</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4217</td>
+            <td>2349025093330</td>
+            <td>I apologize, but I&#39;m having difficulty generating a response at the moment. Please try again later or contact support if the issue persists.</td>
+            <td>19 years</td>
+            <td>female</td>
+            <td>None</td>
+            <td>Ikorodu</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c422b</td>
+            <td>2348033182961</td>
+            <td>Edu Oladehinde</td>
+            <td>43</td>
+            <td>male</td>
+            <td>Solar Energy business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Getting customers</td>
+            <td>Notebook</td>
+            <td>Increase profit</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4231</td>
+            <td>2348033024049</td>
+            <td>Tina Osunde</td>
+            <td>63</td>
+            <td>female</td>
+            <td>Aquaculture and Horticulture Business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Need better technology</td>
+            <td>Notebook</td>
+            <td>Better equipment</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Epe">
+            <td>696515164d36cc5f124c423a</td>
+            <td>2348023943199</td>
+            <td>Vicbon Consult</td>
+            <td>45</td>
+            <td>male</td>
+            <td>Seafood Processing business</td>
+            <td>Epe</td>
+            <td>1-5 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Need business skills</td>
+            <td>Spreadsheets</td>
+            <td>More sales</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="None">
+            <td>696515164d36cc5f124c423f</td>
+            <td>2349163465171</td>
+            <td>Hi&#34; → &#34;Hi</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4246</td>
+            <td>2347047399564</td>
+            <td>Zina Baedee</td>
+            <td>i&#39;m  20</td>
+            <td>female</td>
+            <td>Food business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4249</td>
+            <td>2348160228045</td>
+            <td>Omowonuola Fagbemi</td>
+            <td>26</td>
+            <td>female</td>
+            <td>Technology business</td>
+            <td>Ikorodu</td>
+            <td>6-15 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Not enough cash</td>
+            <td>Accounting software</td>
+            <td>Keep stable</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4254</td>
+            <td>2348065531326</td>
+            <td>Adegbenro Oiza</td>
+            <td>51years</td>
+            <td>female</td>
+            <td>Poultry business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Spreadsheets</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c425d</td>
+            <td>2348062885979</td>
+            <td>Oladejo Sadia</td>
+            <td>34</td>
+            <td>female</td>
+            <td>Clothing business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="None">
+            <td>696515164d36cc5f124c4293</td>
+            <td>2348069311519</td>
+            <td>Alamu Oyindamola</td>
+            <td>34</td>
+            <td>female</td>
+            <td>Food Processing business</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4202</td>
+            <td>2348056084415</td>
+            <td>Akeula Olanrewaju</td>
+            <td>45</td>
+            <td>None</td>
+            <td>None</td>
+            <td>Ikorodu</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4205</td>
+            <td>2347031208584</td>
+            <td>Moses Tomisona</td>
+            <td>33</td>
+            <td>female</td>
+            <td>Fashion business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Getting customers</td>
+            <td>Not enough cash</td>
+            <td>Better equipment</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4211</td>
+            <td>2348168895864</td>
+            <td>Ubaru Emmanuel</td>
+            <td>39</td>
+            <td>None</td>
+            <td>None</td>
+            <td>Ikorodu</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4223</td>
+            <td>2348060400595</td>
+            <td>Olaoluwa A</td>
+            <td>39</td>
+            <td>male</td>
+            <td>Farming business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4245</td>
+            <td>2348066698882</td>
+            <td>Abiodun Quadri</td>
+            <td>43 years</td>
+            <td>male</td>
+            <td>Smokeless Cooking Stove Business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Good profit often</td>
+            <td>Not enough cash</td>
+            <td>Spreadsheets</td>
+            <td>More sales</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c427b</td>
+            <td>2348024023643</td>
+            <td>Salau Olamilekan</td>
+            <td>36 years</td>
+            <td>female</td>
+            <td>Import/Export business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41f4</td>
+            <td>2348023385211</td>
+            <td>Betsy Mamudu</td>
+            <td>46 years</td>
+            <td>female</td>
+            <td>Food business</td>
+            <td>Ikorodu</td>
+            <td>3</td>
+            <td>Profit varies a lot</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4218</td>
+            <td>2348090250410</td>
+            <td>Omolounnu Oluwafemi</td>
+            <td>27</td>
+            <td>make</td>
+            <td>Technology business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Growing profit monthly</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c421a</td>
+            <td>2347032532858</td>
+            <td>Adesanya</td>
+            <td>23</td>
+            <td>male</td>
+            <td>Technology business</td>
+            <td>Ikorodu</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c421d</td>
+            <td>2347062806841</td>
+            <td>Olokumlade Elizabeth</td>
+            <td>38yrs</td>
+            <td>female</td>
+            <td>None</td>
+            <td>Ikorodu</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4228</td>
+            <td>2349026067703</td>
+            <td>Solomon Oluwasegun</td>
+            <td>i&#39;m 40 years of age</td>
+            <td>male</td>
+            <td>Agribusiness</td>
+            <td>Ikorodu</td>
+            <td>5 people</td>
+            <td>trying to improve the it&#39;s build up</td>
+            <td>capital and mobility</td>
+            <td>with the little i&#39;m capable to raise,is what i managed</td>
+            <td>Epe</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4239</td>
+            <td>2349058455556</td>
+            <td>Arimiyau Olanrewaju</td>
+            <td>39years</td>
+            <td>male</td>
+            <td>Farming business</td>
+            <td>Ikorodu</td>
+            <td>2</td>
+            <td>no balance</td>
+            <td>financial and more knowledge</td>
+            <td>Notebook</td>
+            <td>Better equipment</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="None">
+            <td>696515164d36cc5f124c423c</td>
+            <td>2347062031625</td>
+            <td></td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c424c</td>
+            <td>2347087983894</td>
+            <td>Edet Ntuen</td>
+            <td>35</td>
+            <td>male</td>
+            <td>Food business</td>
+            <td>Ikorodu</td>
+            <td>6-15 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4250</td>
+            <td>2348039571971</td>
+            <td>Empowerlocals</td>
+            <td>oladimu daniel gbenga</td>
+            <td>male</td>
+            <td>Agroprocessing business</td>
+            <td>Ikorodu</td>
+            <td>6-15 workers</td>
+            <td>6-15 workers</td>
+            <td>Not enough cash</td>
+            <td>Getting customers</td>
+            <td>Increase profit</td>
+            <td>New products</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4259</td>
+            <td>2348066919420</td>
+            <td>Adebanjo Kunle</td>
+            <td>49years old</td>
+            <td>male</td>
+            <td>Aquaculture business</td>
+            <td>Ikorodu</td>
+            <td>6-15 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c425a</td>
+            <td>2348053063982</td>
+            <td>Balogun Abiodun</td>
+            <td>44</td>
+            <td>male</td>
+            <td>Pest Control, Administrative Services, and Real Estate Management business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Growing profit monthly</td>
+            <td>Not enough cash</td>
+            <td>Spreadsheets</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c428d</td>
+            <td>2347066670662</td>
+            <td>Gbolabo Alimi</td>
+            <td>39</td>
+            <td>male</td>
+            <td>Media and Security Systems Installation business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Not enough cash</td>
+            <td>Phone notes</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41f5</td>
+            <td>2347081922903</td>
+            <td>Adedeji Olufunmilola</td>
+            <td>i am 33 years old.</td>
+            <td>adedeji dorcas olufunmilola
+i am 33 years old female</td>
+            <td>Accessories and Beauty Business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Good profit often</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Keep stable</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c420c</td>
+            <td>2348121653595</td>
+            <td>Olubukola Oloruntoyin</td>
+            <td>40 years</td>
+            <td>female</td>
+            <td>Beverage business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Growing profit monthly</td>
+            <td>Need better technology</td>
+            <td>Notebook</td>
+            <td>Keep stable</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c420d</td>
+            <td>2348129593326</td>
+            <td>Opeyemi</td>
+            <td>26</td>
+            <td>female</td>
+            <td>Software business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Breaking even</td>
+            <td>Not enough cash</td>
+            <td>Spreadsheets</td>
+            <td>More sales</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4220</td>
+            <td>2347050562397</td>
+            <td>Kawojue Konyinsola</td>
+            <td>am 18</td>
+            <td>am a female</td>
+            <td>Hairdressing business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>In my head</td>
+            <td>More sales</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4248</td>
+            <td>2347043506388</td>
+            <td>Nkechi Uzordima</td>
+            <td>29</td>
+            <td>female</td>
+            <td>Farming business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Need better technology</td>
+            <td>Notebook</td>
+            <td>New location</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4261</td>
+            <td>2349091235815</td>
+            <td>Oluwatobi Taiwo</td>
+            <td>30</td>
+            <td>male</td>
+            <td>Printing business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Good profit often</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4263</td>
+            <td>2348113370455</td>
+            <td>Oderinde Ronke</td>
+            <td>52yrs</td>
+            <td>female</td>
+            <td>Clothing business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Losing money monthly</td>
+            <td>Not enough cash</td>
+            <td>No records kept</td>
+            <td>More sales</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Livestock Farm">
+            <td>696515164d36cc5f124c4276</td>
+            <td>2349019597919</td>
+            <td>Smart Ifedayo</td>
+            <td>27</td>
+            <td>female</td>
+            <td>Agriculture business</td>
+            <td>Livestock Farm</td>
+            <td>hi, this is empowerlocals, you can edit this intro message!</td>
+            <td>hi</td>
+            <td>Not enough cash</td>
+            <td>this is smart mercy. am ready for 5th quiz</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4284</td>
+            <td>2348114131011</td>
+            <td>Ofosa Wellington</td>
+            <td>ofose not ofosa</td>
+            <td>male</td>
+            <td>Educational Content and Laboratory Equipment business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Need better technology</td>
+            <td>Spreadsheets</td>
+            <td>Keep stable</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4297</td>
+            <td>2348034667112</td>
+            <td>Adenike Agbaje</td>
+            <td>51</td>
+            <td>female</td>
+            <td>Organic food processing business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Need business skills</td>
+            <td>In my head</td>
+            <td>More sales</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c429a</td>
+            <td>2348033439462</td>
+            <td>Adekunle Adewale</td>
+            <td>43</td>
+            <td>male</td>
+            <td>Agriculture business</td>
+            <td>Ikorodu</td>
+            <td>16-30 workers</td>
+            <td>Growing profit monthly</td>
+            <td>Need better technology</td>
+            <td>Accounting software</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41e8</td>
+            <td>2348135502602</td>
+            <td>Adeigbehin Ezekiel</td>
+            <td>39</td>
+            <td>male</td>
+            <td>Entertainment Business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Need better technology</td>
+            <td>Notebook</td>
+            <td>Increase profit</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41ed</td>
+            <td>2349056192127</td>
+            <td>Abdulhafati Hafisat</td>
+            <td>30 years</td>
+            <td>female</td>
+            <td>Poultry business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41f7</td>
+            <td>2348128719446</td>
+            <td>Abiodun Onabisi</td>
+            <td>37</td>
+            <td>male</td>
+            <td>Renewable Energy Business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Too many competitors</td>
+            <td>Spreadsheets</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4215</td>
+            <td>2349067806076</td>
+            <td>Adeoladipo Adedayo</td>
+            <td>email:flourenceoladipo@gmail.com</td>
+            <td>gender:male</td>
+            <td>Laundry business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Not enough cash</td>
+            <td>Accounting software</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c421e</td>
+            <td>2348060979915</td>
+            <td>```python</td>
+            <td>45</td>
+            <td>male</td>
+            <td>Fish Farming business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Not enough cash</td>
+            <td>Accounting software</td>
+            <td>More sales</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4230</td>
+            <td>2348111740424</td>
+            <td>Eleshin Oyindamola</td>
+            <td>19 years</td>
+            <td>female</td>
+            <td>None</td>
+            <td>Ikorodu</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c424e</td>
+            <td>2348103246562</td>
+            <td>Ajele Jeremiah</td>
+            <td>28</td>
+            <td>male</td>
+            <td>Undefined business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Getting customers</td>
+            <td>Phone notes</td>
+            <td>Better equipment</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4262</td>
+            <td>2349037273879</td>
+            <td>Ogunmakin Adewumi</td>
+            <td>31</td>
+            <td>male</td>
+            <td>Technology business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Need better technology</td>
+            <td>Accounting software</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c426b</td>
+            <td>2348025791368</td>
+            <td>Hope James</td>
+            <td>29</td>
+            <td>female</td>
+            <td>Baking business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Need better technology</td>
+            <td>Notebook</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c427e</td>
+            <td>2348083356339</td>
+            <td>Paul Opia</td>
+            <td>28</td>
+            <td>male</td>
+            <td>Agricultural business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Keep stable</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4280</td>
+            <td>2348156876660</td>
+            <td>Ekpo Eno-Obong</td>
+            <td>45</td>
+            <td>male</td>
+            <td>Media business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Profit varies a lot</td>
+            <td>Need business skills</td>
+            <td>No records kept</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4285</td>
+            <td>2348034745179</td>
+            <td>Opeoluwa Oluwatosin</td>
+            <td>47</td>
+            <td>male</td>
+            <td>Tailoring business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Breaking even</td>
+            <td>Getting customers</td>
+            <td>In my head</td>
+            <td>Keep stable</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4289</td>
+            <td>2348062969671</td>
+            <td>Gbolaru Adewale</td>
+            <td>42</td>
+            <td>male</td>
+            <td>Poultry business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Breaking even</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c428b</td>
+            <td>2347038331815</td>
+            <td>Sarah Oladipupo</td>
+            <td>25 years</td>
+            <td>female</td>
+            <td>Personal Shopping business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Breaking even</td>
+            <td>Getting customers</td>
+            <td>No records kept</td>
+            <td>More sales</td>
+            <td>For marketing</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c428c</td>
+            <td>2347033593736</td>
+            <td>Chinyere Chuks</td>
+            <td>41 years</td>
+            <td>female</td>
+            <td>Aquaculture business</td>
+            <td>Ikorodu</td>
+            <td>6-15 workers</td>
+            <td>Breaking even</td>
+            <td>Staff issues</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41e9</td>
+            <td>2349098941068</td>
+            <td>Shoyemi Ganiyat</td>
+            <td>40yrs</td>
+            <td>female</td>
+            <td>Textile business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Better equipment</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41eb</td>
+            <td>2348138801008</td>
+            <td>Bamifayose Sarah</td>
+            <td>33years</td>
+            <td>female</td>
+            <td>Beauty business</td>
+            <td>Ikorodu</td>
+            <td>6-15 workers</td>
+            <td>Growing profit monthly</td>
+            <td>Not enough cash</td>
+            <td>In my head</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4229</td>
+            <td>2348075482324</td>
+            <td>Idowu Morenikeji</td>
+            <td>36 years</td>
+            <td>female</td>
+            <td>Agricultural business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4238</td>
+            <td>2349071344017</td>
+            <td>Jubril Bukola</td>
+            <td>42yrs</td>
+            <td>female</td>
+            <td>Fashion Design business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="&#34;Others&#34;">
+            <td>696515164d36cc5f124c424f</td>
+            <td>2348056644005</td>
+            <td>Ebbe Chizoba</td>
+            <td>39 years</td>
+            <td>female</td>
+            <td>Food business</td>
+            <td>&#34;Others&#34;</td>
+            <td>Just me</td>
+            <td>Profit varies a lot</td>
+            <td>Not enough cash</td>
+            <td>No records kept</td>
+            <td>More sales</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4253</td>
+            <td>2347064002699</td>
+            <td>Okunade Elizabeth</td>
+            <td>25</td>
+            <td>female</td>
+            <td>Fashion Design business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Getting customers</td>
+            <td>Notebook</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4268</td>
+            <td>2349068959261</td>
+            <td>Ndubuisi Oguno</td>
+            <td>43years</td>
+            <td>male</td>
+            <td>Trading business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4269</td>
+            <td>2349036537270</td>
+            <td>Christopher Otusanya</td>
+            <td>57yrs</td>
+            <td>male</td>
+            <td>Garment business</td>
+            <td>Ikorodu</td>
+            <td>6-15 workers</td>
+            <td>Growing profit monthly</td>
+            <td>Not enough cash</td>
+            <td>Spreadsheets</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c426c</td>
+            <td>2349031473902</td>
+            <td>Adekunle Olaoye</td>
+            <td>27</td>
+            <td>male</td>
+            <td>IT Services business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>No records kept</td>
+            <td>Keep stable</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4270</td>
+            <td>2347032554482</td>
+            <td>Muhammed Abdul-Fatai</td>
+            <td>34</td>
+            <td>male</td>
+            <td>Agricultural business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Good profit often</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c427d</td>
+            <td>2348184292131</td>
+            <td>Grace Aina</td>
+            <td>40</td>
+            <td>female</td>
+            <td>Technology business</td>
+            <td>Ikorodu</td>
+            <td>6-15 workers</td>
+            <td>Small profit months</td>
+            <td>Need better technology</td>
+            <td>Spreadsheets</td>
+            <td>Increase profit</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4287</td>
+            <td>2348062555564</td>
+            <td>Gbadebo Suliyat</td>
+            <td>31years</td>
+            <td>female</td>
+            <td>Textile business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c41fd</td>
+            <td>2349136368511</td>
+            <td>Ibrahim Oluwafunmilola</td>
+            <td>35</td>
+            <td>female</td>
+            <td>Tie/Dye Business</td>
+            <td>Ikorodu</td>
+            <td>6-15 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>For marketing</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c420f</td>
+            <td>2348072112646</td>
+            <td>Olakoya Afolake</td>
+            <td>49</td>
+            <td>female</td>
+            <td>Cleaning business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Staff issues</td>
+            <td>Notebook</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4216</td>
+            <td>2347069563410</td>
+            <td>Chibuzor Harrison</td>
+            <td>39</td>
+            <td>male</td>
+            <td>Cleaning business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Growing profit monthly</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c421f</td>
+            <td>2349032863955</td>
+            <td>Fadairo Adewale</td>
+            <td>29</td>
+            <td>male</td>
+            <td>Gas and Plantain Farming Business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Breaking even</td>
+            <td>Too many competitors</td>
+            <td>Notebook</td>
+            <td>New location</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c422f</td>
+            <td>2348140584201</td>
+            <td>Yusuf Yetunde</td>
+            <td>25</td>
+            <td>female</td>
+            <td>Sole Proprietorship business</td>
+            <td>Ikorodu</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c423b</td>
+            <td>2348139517609</td>
+            <td>Kawojue Afusat</td>
+            <td>32</td>
+            <td>female</td>
+            <td>Undefined business</td>
+            <td>Ikorodu</td>
+            <td>2</td>
+            <td>fine thanks so much</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4241</td>
+            <td>2348064264231</td>
+            <td>Maurice Edeh</td>
+            <td>40</td>
+            <td>male</td>
+            <td>Export business</td>
+            <td>Ikorodu</td>
+            <td>7</td>
+            <td>Small profit months</td>
+            <td>Getting customers</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>For marketing</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4257</td>
+            <td>2347065520223</td>
+            <td>Bright Doro</td>
+            <td>56</td>
+            <td>male</td>
+            <td>Agritech business</td>
+            <td>Ikorodu</td>
+            <td>3</td>
+            <td>just a start out without much attraction but with limitless opportunities</td>
+            <td>funding for my project to live out its dream</td>
+            <td>proper recording of any transactions</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c4279</td>
+            <td>2347052821929</td>
+            <td>Ali Ngozi</td>
+            <td>i am 36years old</td>
+            <td>female</td>
+            <td>Point of Sales business</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>New products</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Ikorodu">
+            <td>696515164d36cc5f124c427c</td>
+            <td>2348066154309</td>
+            <td>Niyi Dare</td>
+            <td>41</td>
+            <td>male</td>
+            <td>Food business</td>
+            <td>Ikorodu</td>
+            <td>Ikorodu</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Notebook</td>
+            <td>New products</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="">
+            <td>6968c097171482862ce6ba4c</td>
+            <td>2347042579919</td>
+            <td>None</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          
+          <tr data-location="">
+            <td>69cc38bd2cc30103e5810490</td>
+            <td>2348127170743</td>
+            <td>I Received A Response But Couldn&#39;t Extract The Text Content. Please Try Again.</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          
+          <tr data-location="">
+            <td>69cd267b70f819499c0787ce</td>
+            <td>2348033606532</td>
+            <td>None</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          
+          <tr data-location="">
+            <td>69cd8526007792dc7aacf4ce</td>
+            <td>2348135682572</td>
+            <td>None</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce714ceae83b1728575936</td>
+            <td>2348162347076</td>
+            <td>Shuaib Rukayyah</td>
+            <td>am 22 years old</td>
+            <td>female</td>
+            <td>Fashion design business</td>
+            <td>Agege</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Need better technology</td>
+            <td>In my head</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Crops farming">
+            <td>69ce76e602cd8aac6157593d</td>
+            <td>2348039195040</td>
+            <td>Agbolade Aina</td>
+            <td>52+</td>
+            <td>male</td>
+            <td>Agriculture business</td>
+            <td>Crops farming</td>
+            <td>Epe</td>
+            <td>1-5 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Notebook</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce771102cd8aac6157593f</td>
+            <td>2348142312172</td>
+            <td>My Nurudeen</td>
+            <td>april first 1991</td>
+            <td>male</td>
+            <td>Food business</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Growing profit monthly</td>
+            <td>Not enough cash</td>
+            <td>In my head</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce780502cd8aac61575943</td>
+            <td>2348137355599</td>
+            <td>Salihu Baba</td>
+            <td>41</td>
+            <td>male</td>
+            <td>Haulage business</td>
+            <td>Agege</td>
+            <td>1-5 workers</td>
+            <td>Good profit often</td>
+            <td>Not enough cash</td>
+            <td>In my head</td>
+            <td>More sales</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce796aeae83b1728575952</td>
+            <td>2349019762380</td>
+            <td>Ajeboriogbon Esther</td>
+            <td>29 years old</td>
+            <td>female</td>
+            <td>Hair Products business</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Growing profit monthly</td>
+            <td>Not enough cash</td>
+            <td>Spreadsheets</td>
+            <td>Keep stable</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="">
+            <td>69ce79f902cd8aac6157595a</td>
+            <td>2348028461800</td>
+            <td>None</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce7a5eeae83b1728575969</td>
+            <td>2349079297132</td>
+            <td>Mikail Nana</td>
+            <td>16 , may 2006</td>
+            <td>female</td>
+            <td>Fashion business</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>In my head</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce7bb202cd8aac61575976</td>
+            <td>2348136587438</td>
+            <td>Haruna Salamatu</td>
+            <td>august 17 1999</td>
+            <td>female</td>
+            <td>Trading business</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce7e5e02cd8aac6157599d</td>
+            <td>2348145727632</td>
+            <td>Shuaibu Fatimah</td>
+            <td>6, august 2006</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>In my head</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce7e9aeae83b17285759a7</td>
+            <td>2348121848119</td>
+            <td>Aisha Kabiru</td>
+            <td>21</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>1-5 workers</td>
+            <td>Good profit often</td>
+            <td>Getting customers</td>
+            <td>Notebook</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce801902cd8aac615759c7</td>
+            <td>2347078355731</td>
+            <td>Unknown</td>
+            <td>18</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>6-15 workers</td>
+            <td>Good profit often</td>
+            <td>Getting customers</td>
+            <td>In my head</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce86cc02cd8aac615759f0</td>
+            <td>2349090865672</td>
+            <td>Unknown</td>
+            <td>27</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Growing profit monthly</td>
+            <td>Need business skills</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce8771eae83b17285759d4</td>
+            <td>2348140170630</td>
+            <td>Unknown</td>
+            <td>42 years</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Good profit often</td>
+            <td>Not enough cash</td>
+            <td>In my head</td>
+            <td>New location</td>
+            <td>Small profit months</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce8953eae83b17285759e3</td>
+            <td>2348023912697</td>
+            <td>Api Error Occurred. Please Try Again Later.</td>
+            <td>45 years old</td>
+            <td>male</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Need better technology</td>
+            <td>Notebook</td>
+            <td>New location</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce8d46eae83b17285759ec</td>
+            <td>2348165604405</td>
+            <td>Unknown</td>
+            <td>37</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>1-5 workers</td>
+            <td>Growing profit monthly</td>
+            <td>Need better technology</td>
+            <td>Spreadsheets</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce8dd9eae83b17285759f0</td>
+            <td>2348021473277</td>
+            <td>Ayinde Adewale</td>
+            <td>35</td>
+            <td>male</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Growing profit monthly</td>
+            <td>Not enough cash</td>
+            <td>Spreadsheets</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce938902cd8aac61575a1e</td>
+            <td>2348033531849</td>
+            <td>Unknown</td>
+            <td>52 years</td>
+            <td>male</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>6-15 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce945b02cd8aac61575a23</td>
+            <td>2349131591945</td>
+            <td>Unknown</td>
+            <td>46 years old</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Growing profit monthly</td>
+            <td>Not enough cash</td>
+            <td>Phone notes</td>
+            <td>More sales</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce949deae83b1728575a1d</td>
+            <td>2348088722160</td>
+            <td>Musa Kadijjat Kuburat</td>
+            <td>33 years</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Not enough cash</td>
+            <td>Good profit often</td>
+            <td>Notebook</td>
+            <td>Increase profit</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce96b202cd8aac61575a32</td>
+            <td>2347038462860</td>
+            <td>Unknown</td>
+            <td>59 years</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>1-5 workers</td>
+            <td>Losing money monthly</td>
+            <td>Staff issues</td>
+            <td>No records kept</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce974feae83b1728575a35</td>
+            <td>2349061429472</td>
+            <td>Unknown</td>
+            <td>ok</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Losing money monthly</td>
+            <td>Not enough cash</td>
+            <td>In my head</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce9776eae83b1728575a38</td>
+            <td>2349090621536</td>
+            <td>Unknown</td>
+            <td>name: ejekukor olufunmilayo florence 
+age: 56 years old</td>
+            <td>am a female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>1-5 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Not enough cash</td>
+            <td>No records kept</td>
+            <td>Keep stable</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce9790eae83b1728575a3b</td>
+            <td>2349166179541</td>
+            <td>Shotayo Esther Temitope</td>
+            <td>40 years old</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Good profit often</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce984eeae83b1728575a46</td>
+            <td>2349077243531</td>
+            <td>Unknown</td>
+            <td>27</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Getting customers</td>
+            <td>Phone notes</td>
+            <td>More sales</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce9947eae83b1728575a55</td>
+            <td>2349039928544</td>
+            <td>Unknown</td>
+            <td>32yrs</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Agege</td>
+            <td>Growing profit monthly</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce99c0eae83b1728575a5d</td>
+            <td>2348107534424</td>
+            <td>Unknown</td>
+            <td>ok</td>
+            <td>hi, this is empowerlocals, you can edit this intro message!</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Good profit often</td>
+            <td>Need better technology</td>
+            <td>Phone notes</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce9c97eae83b1728575a88</td>
+            <td>2348033730686</td>
+            <td>Adesola Fatai</td>
+            <td>20/10/1978</td>
+            <td>male</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>1-5 workers</td>
+            <td>Good profit often</td>
+            <td>Not enough cash</td>
+            <td>In my head</td>
+            <td>More sales</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce9d8f02cd8aac61575a73</td>
+            <td>2348068315766</td>
+            <td>Adebusuyi Rosemary Ikhayere</td>
+            <td>july 30th 1981</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>1-5 workers</td>
+            <td>Growing profit monthly</td>
+            <td>Need better technology</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ce9f7beae83b1728575aae</td>
+            <td>2347070955311</td>
+            <td>Unknown</td>
+            <td>28</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>1-5 workers</td>
+            <td>Breaking even</td>
+            <td>Need business skills</td>
+            <td>Phone notes</td>
+            <td>More sales</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69cea082eae83b1728575acb</td>
+            <td>2349055884640</td>
+            <td>Unknown</td>
+            <td>34 years</td>
+            <td>malr</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>Agege</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Too many competitors</td>
+            <td>Phone notes</td>
+            <td>Increase profit</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69cea1f102cd8aac61575ab7</td>
+            <td>2347034972394</td>
+            <td>Unknown</td>
+            <td>29</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Growing profit monthly</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Alimosho">
+            <td>69cea35302cd8aac61575ac3</td>
+            <td>2347045142516</td>
+            <td>Unknown</td>
+            <td>22</td>
+            <td>male</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Alimosho</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Getting customers</td>
+            <td>Notebook</td>
+            <td>Increase profit</td>
+            <td>For marketing</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69cea540eae83b1728575af5</td>
+            <td>2349136744781</td>
+            <td>Unknown</td>
+            <td>19-06-1980</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Profit varies a lot</td>
+            <td>Not enough cash</td>
+            <td>In my head</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69cea5caeae83b1728575af8</td>
+            <td>2347011349780</td>
+            <td>Olaifa Adeola Esther</td>
+            <td>34years</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69cea6d2eae83b1728575aff</td>
+            <td>2348069644994</td>
+            <td>Unknown</td>
+            <td>39 years</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Profit varies a lot</td>
+            <td>Getting customers</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69cea7d3eae83b1728575b09</td>
+            <td>2349164745155</td>
+            <td>Unknown</td>
+            <td>21</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Good profit often</td>
+            <td>Not enough cash</td>
+            <td>Spreadsheets</td>
+            <td>More sales</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ceabe5eae83b1728575b1d</td>
+            <td>2349161833133</td>
+            <td>Unknown</td>
+            <td>42</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>No records kept</td>
+            <td>Increase profit</td>
+            <td>For marketing</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ceb59ef38dd4ac3ae8ad48</td>
+            <td>2347038172011</td>
+            <td>Unknown</td>
+            <td>okay</td>
+            <td>halima ali maisinga 
+female 
+15/4/1975</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>In my head</td>
+            <td>More sales</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ceb894f38dd4ac3ae8ad5b</td>
+            <td>2348133551569</td>
+            <td>Unknown</td>
+            <td>27/03/1993</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Growing profit monthly</td>
+            <td>Agege</td>
+            <td>Phone notes</td>
+            <td>Increase profit</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69cec441ec0fd5dd48a5df1c</td>
+            <td>2348143289931</td>
+            <td>Sholola Jeremiah</td>
+            <td>23 yrs old</td>
+            <td>male</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>1-5 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Not enough cash</td>
+            <td>Spreadsheets</td>
+            <td>More sales</td>
+            <td>New products</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69cec9c7ec0fd5dd48a5df39</td>
+            <td>2347087006626</td>
+            <td>Unknown</td>
+            <td>28</td>
+            <td>male</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>1-5 workers</td>
+            <td>Breaking even</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>New products</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="API error occurred. Please try again later.">
+            <td>69cecc49ec0fd5dd48a5df4a</td>
+            <td>2348088106465</td>
+            <td>Api Error Occurred. Please Try Again Later.</td>
+            <td>hi, this is empowerlocals, you can edit this intro message!</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Just me</td>
+            <td>Good profit often</td>
+            <td>Getting customers</td>
+            <td>Notebook</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69cecd21aa1b1610b4a5df3b</td>
+            <td>2348137842815</td>
+            <td>Oluwatobi Emmanuel Balogun</td>
+            <td>31 years old.</td>
+            <td>male.</td>
+            <td>Computer Training business</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>on hold at the moment.</td>
+            <td>finances.</td>
+            <td>notebook, phone and spreadsheet.</td>
+            <td>more students and increase in profit.</td>
+            <td>growth and expansion.</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69cecd66aa1b1610b4a5df3e</td>
+            <td>2348164437738</td>
+            <td>Unknown</td>
+            <td>1/11/1981</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Getting customers</td>
+            <td>Phone notes</td>
+            <td>More sales</td>
+            <td>i need more ideas on how to grow my business through technology</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69cecff7ec0fd5dd48a5df53</td>
+            <td>2348036533394</td>
+            <td>Ameh Janet</td>
+            <td>44 years</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Good profit often</td>
+            <td>Not enough cash</td>
+            <td>No records kept</td>
+            <td>Increase profit</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Morikaz Agege">
+            <td>69ced05caa1b1610b4a5df49</td>
+            <td>2349011793398</td>
+            <td>Unknown</td>
+            <td>am 41 years</td>
+            <td>my na is roselyn folake akinduko</td>
+            <td>Female business</td>
+            <td>Morikaz Agege</td>
+            <td>am into tailoring but no money to buy machine and some other things to expand it and i don&#39;t have shop to 
+just managing the it in my room</td>
+            <td>Small profit months</td>
+            <td>Too many competitors</td>
+            <td>No records kept</td>
+            <td>Better equipment</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69ced31baa1b1610b4a5df59</td>
+            <td>2347038724293</td>
+            <td>Unknown</td>
+            <td>32 years</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Phone notes</td>
+            <td>Better equipment</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69cedc67ec0fd5dd48a5df88</td>
+            <td>2349077188348</td>
+            <td>Unknown</td>
+            <td>29,july,1982,</td>
+            <td>male</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>1-5 workers</td>
+            <td>Breaking even</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Accounting software</td>
+            <td>More sales</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69cee044ec0fd5dd48a5df9e</td>
+            <td>2348034136780</td>
+            <td>Unknown</td>
+            <td>59 year</td>
+            <td>male</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Agege</td>
+            <td>Not enough cash</td>
+            <td>In my head</td>
+            <td>More sales</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69cee28faa1b1610b4a5df85</td>
+            <td>2348068536006</td>
+            <td>Unknown</td>
+            <td>44 years</td>
+            <td>m</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>New location</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69cee436aa1b1610b4a5df8a</td>
+            <td>2349034723075</td>
+            <td>Unknown</td>
+            <td>20</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Increase profit</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69cf4ddbf406b3876a217c13</td>
+            <td>2347084414697</td>
+            <td>Mariam Fatai</td>
+            <td>38</td>
+            <td>female</td>
+            <td>Clothing business</td>
+            <td>Agege</td>
+            <td>3</td>
+            <td>not really that good for now</td>
+            <td>low capital 
+light</td>
+            <td>on my business ni 
+but must time 
+i don&#39;t have what 
+my customers needed</td>
+            <td>standard business</td>
+            <td>startup capital</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69cf6a765924f861eb7e3bd2</td>
+            <td>2348063509790</td>
+            <td>Jemilat Onikoyi</td>
+            <td>i was born in 10th of june 1963.</td>
+            <td>female</td>
+            <td>Cleaning business</td>
+            <td>Agege</td>
+            <td>just with my sales girl</td>
+            <td>fine and manageable</td>
+            <td>Not enough cash</td>
+            <td>In my head</td>
+            <td>more sales in order to increase my profit</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69cf6c785924f861eb7e3bd4</td>
+            <td>2348136695768</td>
+            <td>Hadiza Bature Sanni</td>
+            <td>31</td>
+            <td>female</td>
+            <td>Tailoring business</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>No records kept</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69cf72755dfa5e4ffe91fdeb</td>
+            <td>2348032953743</td>
+            <td>Ibrahim Ladidi</td>
+            <td>36 years old</td>
+            <td>female</td>
+            <td>POS System Business</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Keep stable</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Alimosho">
+            <td>69cf8e59e68598a4ee00f52c</td>
+            <td>2347064645952</td>
+            <td>Ibrahim Amira</td>
+            <td>23</td>
+            <td>female</td>
+            <td>Clothing business</td>
+            <td>Alimosho</td>
+            <td>Just me</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69cf978fe68598a4ee00f541</td>
+            <td>2347086420148</td>
+            <td>Oluwasegun Ifeoluwa Esther</td>
+            <td>29</td>
+            <td>female</td>
+            <td>Pure water production business</td>
+            <td>Agege</td>
+            <td>we are more than 50 people</td>
+            <td>is doing fine buh i need more financial support to  uplift my company</td>
+            <td>sometimes it can be tough buh at the end i have to continue to push</td>
+            <td>Accounting software</td>
+            <td>Getting customers</td>
+            <td>Increase profit</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69cfa4212a9308851000f569</td>
+            <td>2348147208684</td>
+            <td>Ibrahim Binta</td>
+            <td>52 years old</td>
+            <td>female</td>
+            <td>Trading business</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Losing money monthly</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69cfb1592a9308851000f586</td>
+            <td>2347030491299</td>
+            <td>Teemah Fashion Collection</td>
+            <td>33</td>
+            <td>female</td>
+            <td>Footwear and Accessories business</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>No records kept</td>
+            <td>More sales</td>
+            <td>For marketing</td>
+          </tr>
+          
+          <tr data-location="API error occurred. Please try again later.">
+            <td>69cff76969f88f208a412e27</td>
+            <td>2348058438359</td>
+            <td>Onaolapo Afolake</td>
+            <td>55years</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Just me</td>
+            <td>Profit varies a lot</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="API error occurred. Please try again later.">
+            <td>69d018bbd0ad9a6891d6ea33</td>
+            <td>2348084008896</td>
+            <td>Olatunde Owoeye-wise</td>
+            <td>53</td>
+            <td>male</td>
+            <td>Furniture business</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Phone notes</td>
+            <td>More sales</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="API error occurred. Please try again later.">
+            <td>69d027e660a39221bef46ee4</td>
+            <td>2349022612776</td>
+            <td>Adebowale Olabisi</td>
+            <td>33 yeaes</td>
+            <td>female</td>
+            <td>Wine and Beauty business</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>In my head</td>
+            <td>Keep stable</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69d0e18fd9bb1b6719bbb49a</td>
+            <td>2348030703502</td>
+            <td>Alofe Johnson</td>
+            <td>46yrs</td>
+            <td>male</td>
+            <td>Electrical business</td>
+            <td>Agege</td>
+            <td>myself</td>
+            <td>is not going well because of inadequate of money</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="API error occurred. Please try again later.">
+            <td>69d3cbdba74969dbaf0ac132</td>
+            <td>2348109828479</td>
+            <td>Sadiya Kabiru Mohammed</td>
+            <td>46</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="">
+            <td>69d64d06c0bbe92ce994cc33</td>
+            <td>2349038227495</td>
+            <td>Api Error Occurred. Please Try Again Later.</td>
+            <td>hi, this is empowerlocals, you can edit this intro message!</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          
+          <tr data-location="API error occurred. Please try again later.">
+            <td>69d776b5ee89a7964215b548</td>
+            <td>2348039896454</td>
+            <td>Api Error Occurred. Please Try Again Later.</td>
+            <td>hi, this is empowerlocals, you can edit this intro message!</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Just me</td>
+            <td>Good profit often</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>For marketing</td>
+          </tr>
+          
+          <tr data-location="API error occurred. Please try again later.">
+            <td>69d7a848595a6cf98d433c5f</td>
+            <td>2349037321455</td>
+            <td>Api Error Occurred. Please Try Again Later.</td>
+            <td>24 years</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="API error occurred. Please try again later.">
+            <td>69d7c44b97255b15dcb6a41b</td>
+            <td>2349035665893</td>
+            <td>Api Error Occurred. Please Try Again Later.</td>
+            <td>36</td>
+            <td>male</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>2</td>
+            <td>booming</td>
+            <td>finance</td>
+            <td>spending less</td>
+            <td>to have multiple shop</td>
+            <td>to store goods</td>
+          </tr>
+          
+          <tr data-location="API error occurred. Please try again later.">
+            <td>69d7e6e22e320a869b767300</td>
+            <td>2348023402053</td>
+            <td>Api Error Occurred. Please Try Again Later.</td>
+            <td>😂😂😂</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>1-5 workers</td>
+            <td>Good profit often</td>
+            <td>Not enough cash</td>
+            <td>In my head</td>
+            <td>More sales</td>
+          </tr>
+          
+          <tr data-location="API error occurred. Please try again later.">
+            <td>69d8120f3874ac92d57e4556</td>
+            <td>2349020818490</td>
+            <td>Api Error Occurred. Please Try Again Later.</td>
+            <td>39</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>1-5 workers</td>
+            <td>Good profit often</td>
+            <td>Need business skills</td>
+            <td>Notebook</td>
+            <td>New location</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="API error occurred. Please try again later.">
+            <td>69d94f7b551792fcdefb531e</td>
+            <td>2347012552053</td>
+            <td>Api Error Occurred. Please Try Again Later.</td>
+            <td>15101965</td>
+            <td>male</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Just me</td>
+            <td>Profit varies a lot</td>
+            <td>Getting customers</td>
+            <td>Phone notes</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="API error occurred. Please try again later.">
+            <td>69da103b890501f9a0f60243</td>
+            <td>2348028286281</td>
+            <td>Api Error Occurred. Please Try Again Later.</td>
+            <td>50years</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>*cake making 
+*cooking services
+* decorations</td>
+            <td>is  gradually</td>
+            <td>for now is the location l am</td>
+            <td>at times transfer or cash</td>
+            <td>i want to  be  upgrade in all my endvour</td>
+            <td>to rent a  shop in another good location</td>
+          </tr>
+          
+          <tr data-location="API error occurred. Please try again later.">
+            <td>69dab549134ce10577361f21</td>
+            <td>2348130853189</td>
+            <td>Kabiru Abubakar</td>
+            <td>23</td>
+            <td>male</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Better equipment</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="API error occurred. Please try again later.">
+            <td>69dabe53134ce10577361f5a</td>
+            <td>2348052053423</td>
+            <td>Taiwo Idiat Ronke</td>
+            <td>45</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Just me</td>
+            <td>Profit varies a lot</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Increase profit</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="API error occurred. Please try again later.">
+            <td>69db9364f26ff2ad8deb0d8f</td>
+            <td>2348087674848</td>
+            <td>Api Error Occurred. Please Try Again Later.</td>
+            <td>am age 49</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>1-5 workers</td>
+            <td>Good profit often</td>
+            <td>Not enough cash</td>
+            <td>Phone notes</td>
+            <td>Keep stable</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="API error occurred. Please try again later.">
+            <td>69dbedce4dadd043be444c51</td>
+            <td>2348061153685</td>
+            <td>Sarah Gabriel</td>
+            <td>my name is mrs sarah gabriel my age 38</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Agege</td>
+            <td>Small profit months</td>
+            <td>Just me</td>
+            <td>Not enough cash</td>
+            <td>More sales</td>
+            <td>Urgent money</td>
+          </tr>
+          
+          <tr data-location="API error occurred. Please try again later.">
+            <td>69dbf05e40ae426ae3444c60</td>
+            <td>2349032340860</td>
+            <td>Api Error Occurred. Please Try Again Later.</td>
+            <td>19</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Just me</td>
+            <td>Growing profit monthly</td>
+            <td>Too many competitors</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="API error occurred. Please try again later.">
+            <td>69dc84c9ebbc2190688d959a</td>
+            <td>2348144335923</td>
+            <td>Olawale Rasaq Ademola</td>
+            <td>30</td>
+            <td>male</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>1-5 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Not enough cash</td>
+            <td>Spreadsheets</td>
+            <td>More sales</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="API error occurred. Please try again later.">
+            <td>69dc90f57545a7dcc18817fa</td>
+            <td>2347082729208</td>
+            <td>Api Error Occurred. Please Try Again Later.</td>
+            <td>i’m 26 years old</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Just me</td>
+            <td>Losing money monthly</td>
+            <td>Not enough cash</td>
+            <td>In my head</td>
+            <td>More sales</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="API error occurred. Please try again later.">
+            <td>69dfe458c92bc0f74f5d6815</td>
+            <td>2348024275996</td>
+            <td>Api Error Occurred. Please Try Again Later.</td>
+            <td>18 years</td>
+            <td>male</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Just me</td>
+            <td>Breaking even</td>
+            <td>Not enough cash</td>
+            <td>Phone notes</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="API error occurred. Please try again later.">
+            <td>69e00b620925840de142d296</td>
+            <td>2348142841405</td>
+            <td>Hawwa Abubakar Walida</td>
+            <td>23</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Just me</td>
+            <td>Profit varies a lot</td>
+            <td>Need business skills</td>
+            <td>Phone notes</td>
+            <td>Increase profit</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="API error occurred. Please try again later.">
+            <td>69e011c80c79c22e1242d2ce</td>
+            <td>2347062700203</td>
+            <td>Maryam Isah Marisah</td>
+            <td>31 year</td>
+            <td>female</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>Just me</td>
+            <td>Breaking even</td>
+            <td>Need business skills</td>
+            <td>No records kept</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="API error occurred. Please try again later.">
+            <td>69e0b1ff8ae428605f3f69d3</td>
+            <td>2348086799086</td>
+            <td>Api Error Occurred. Please Try Again Later.</td>
+            <td>1</td>
+            <td>male</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>API error occurred. Please try again later.</td>
+            <td>1-5 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Too many competitors</td>
+            <td>No records kept</td>
+            <td>More sales</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="">
+            <td>69e0b6ea8ae428605f3f6a69</td>
+            <td>2347039990238</td>
+            <td>None</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69e7e6e8043c931b47e4fceb</td>
+            <td>2348028521316</td>
+            <td>Adebiyi Olawunmi Festus</td>
+            <td>49</td>
+            <td>male</td>
+            <td>Service Provider/travel &amp; Tour Operator</td>
+            <td>Agege</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>Better equipment</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69e86e4578d1c764e63397a3</td>
+            <td>2348185900054</td>
+            <td>Ogunseye Adijat Toyin</td>
+            <td>37</td>
+            <td>female</td>
+            <td>Catering</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Good profit often</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>More sales</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69e884c178d1c764e633987b</td>
+            <td>2348169667006</td>
+            <td>Surname. Ore Other. Grace Ebunlola</td>
+            <td>56yrs</td>
+            <td>female</td>
+            <td>Buying And Selling. Provisions &amp; Co (trader)</td>
+            <td>Agege</td>
+            <td>1-5 workers</td>
+            <td>Small profit months</td>
+            <td>Not enough cash</td>
+            <td>Notebook</td>
+            <td>New products</td>
+            <td>Money to grow</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69e8c52e78d1c764e6339b31</td>
+            <td>2348144916810</td>
+            <td>Badmos Omowunmi Nofisat</td>
+            <td>28/06/1991</td>
+            <td>female</td>
+            <td>Hairstylist</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Growing profit monthly</td>
+            <td>Not enough cash</td>
+            <td>Phone notes</td>
+            <td>More sales</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Alimosho">
+            <td>69e990abbf4b75639cff4754</td>
+            <td>2347055779551</td>
+            <td>Ottun Noimat Omobolanle</td>
+            <td>34</td>
+            <td>female</td>
+            <td>Sales Of Kitchenware And Household Items</td>
+            <td>Alimosho</td>
+            <td>Just me</td>
+            <td>Growing profit monthly</td>
+            <td>Not enough cash</td>
+            <td>Phone notes</td>
+            <td>Increase profit</td>
+            <td>For more stock</td>
+          </tr>
+          
+          <tr data-location="Agege">
+            <td>69e9d6e73b803ec1135c0050</td>
+            <td>2349072458618</td>
+            <td>Waida Adeleke</td>
+            <td>53</td>
+            <td>female</td>
+            <td>Trading</td>
+            <td>Agege</td>
+            <td>Just me</td>
+            <td>Good profit often</td>
+            <td>Not enough cash</td>
+            <td>In my head</td>
+            <td>New products</td>
+            <td>For marketing</td>
+          </tr>
+          
+          <tr data-location="">
+            <td>69fe103eb6775c6140fa1b27</td>
+            <td>447974904959</td>
+            <td>None</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          
+          <tr data-location="Others">
+            <td>6a2d0a5707858ab60b0e00ae</td>
+            <td>2348169686473</td>
+            <td>Abiola Oyebanjo</td>
+            <td>41</td>
+            <td>make</td>
+            <td>I Sell Shoes</td>
+            <td>Others</td>
+            <td>16-30 workers</td>
+            <td>Profit varies a lot</td>
+            <td>Too many competitors</td>
+            <td>In my head</td>
+            <td>New products</td>
+            <td>For equipment</td>
+          </tr>
+          
+          <tr data-location="">
+            <td>6a390a48b868cc32aa8bac68</td>
+            <td>254701233944</td>
+            <td>Hi, This Is Empowerlocals, You Can Edit This Intro Message!</td>
+            <td>mills</td>
+            <td>male</td>
+            <td>Business</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    function filterByLocation() {
+      const filter = document.getElementById('locationFilter').value.toLowerCase();
+      const table = document.getElementById('userTable');
+      const trs = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+      for (let i = 0; i < trs.length; i++) {
+        const tr = trs[i];
+        const location = tr.getAttribute('data-location').toLowerCase();
+
+        if (filter === 'all' || location === filter) {
+          tr.style.display = '';
+        } else {
+          tr.style.display = 'none';
+        }
+      }
+    }
+  </script>
+</body>
+</html>

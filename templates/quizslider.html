@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Quiz Toggle Slider</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .quiz-item {
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 400px;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0;
+      right: 0; bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #4CAF50;
+    }
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+    .updating {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Toggle Quizzes On/Off</h1>
+  <div id="quiz-list">Loading quizzes...</div>
+  <script>
+    let quizStates = {};
+    
+    async function fetchQuizzes() {
+      try {
+        const res = await fetch('/api/quizzes', {
+          method: 'GET',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
+        const quizzes = await res.json();
+        const container = document.getElementById('quiz-list');
+        container.innerHTML = '';
+        
+        quizzes.forEach(q => {
+          // Store the current state
+          quizStates[q.quiz] = q.enabled;
+          
+          const div = document.createElement('div');
+          div.className = 'quiz-item';
+          const id = 'toggle_' + q.quiz.replace(/[^a-zA-Z0-9]/g, '_');
+          div.innerHTML = `
+            <span>${q.quiz}</span>
+            <label class="switch">
+              <input type="checkbox" id="${id}" ${q.enabled ? 'checked' : ''}>
+              <span class="slider"></span>
+            </label>
+          `;
+          container.appendChild(div);
+          
+          const checkbox = document.getElementById(id);
+          checkbox.addEventListener('change', async (e) => {
+            const enabled = e.target.checked;
+            const quizItem = e.target.closest('.quiz-item');
+            
+            try {
+              // Add visual feedback
+              quizItem.classList.add('updating');
+              
+              const response = await fetch('/api/quizzes/' + encodeURIComponent(q.quiz), {
+                method: 'POST',
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'Cache-Control': 'no-cache'
+                },
+                body: JSON.stringify({ enabled })
+              });
+              
+              if (response.ok) {
+                // Update local state only if server confirms
+                quizStates[q.quiz] = enabled;
+              } else {
+                // Revert checkbox if server update failed
+                e.target.checked = !enabled;
+                console.error('Failed to update quiz state on server');
+              }
+            } catch (error) {
+              // Revert checkbox on error
+              e.target.checked = !enabled;
+              console.error('Error updating quiz state:', error);
+            } finally {
+              quizItem.classList.remove('updating');
+            }
+          });
+        });
+      } catch (error) {
+        document.getElementById('quiz-list').innerHTML = 'Error loading quizzes. Please refresh the page.';
+        console.error('Error fetching quizzes:', error);
+      }
+    }
+    
+    // Prevent automatic refresh/reload issues
+    window.addEventListener('beforeunload', () => {
+      // Give any pending requests a moment to complete
+      setTimeout(() => {}, 100);
+    });
+    
+    fetchQuizzes();
+  </script>
+</body>
+</html>
