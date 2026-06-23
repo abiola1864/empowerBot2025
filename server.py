@@ -2,19 +2,41 @@ import os
 import logging
 import base64
 
+
+
+from dotenv import load_dotenv
+load_dotenv()
+
+from db_adapter import db, USE_MONGODB
+
+
+
+
+
+# Configure logging FIRST (beforee any other imports that might use it)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 # Decode base64 and save as a temp file
 b64_creds = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_B64")
-if not b64_creds:
-    raise ValueError("Missing Google credentials in environment!")
+if b64_creds:
+    creds_path = "/tmp/google_creds.json"
+    with open(creds_path, "wb") as f:
+        f.write(base64.b64decode(b64_creds))
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = creds_path
+else:
+    logger.warning("GOOGLE_APPLICATION_CREDENTIALS_B64 not found in environment")
 
-creds_path = "/tmp/google_creds.json"
-with open(creds_path, "wb") as f:
-    f.write(base64.b64decode(b64_creds))
+# Load environment variables EARLY
+from dotenv import load_dotenv
+load_dotenv()
 
-# Set the path for Google SDK to use
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = creds_path
+# CRITICAL: Load Gemini API key AFTER load_dotenv()
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+if not GEMINI_API_KEY:
+    logger.warning("GEMINI_API_KEY not found in environment variables!")
 
-
+# Now import everything else
 import requests
 import sqlite3
 import json
@@ -28,24 +50,37 @@ import csv
 import re
 import threading
 from datetime import datetime, timedelta
-from collections import defaultdict
+from collections import defaultdict, Counter
 from contextlib import contextmanager
-from dotenv import load_dotenv
-from flask import Flask, request, render_template, jsonify, send_from_directory
+from flask import Flask, request, render_template, jsonify, send_from_directory, Response
 from functools import lru_cache
 from logging.handlers import RotatingFileHandler
-from fuzzywuzzy import fuzz, process
+from rapidfuzz import fuzz, process
 import pytz
 import schedule
 from werkzeug.utils import secure_filename
 import traceback
 
-
-
-
+# Initialize Flask app
 app = Flask(__name__)
-load_dotenv()
 
+# Load environment variables for Flask config
+WHATSAPP_TOKEN = os.getenv('GRAPH_API_TOKEN')
+WEBHOOK_VERIFY_TOKEN = os.getenv('WEBHOOK_VERIFY_TOKEN')
+YOUR_PHONE_NUMBER_ID = os.getenv('YOUR_PHONE_NUMBER_ID')
+UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', 'uploads')
+
+# Configure Flask app
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Configure rotating file handler for app logger
+log_file = 'app.log'
+log_handler = RotatingFileHandler(log_file, maxBytes=1024 * 1024 * 5, backupCount=5)
+log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+log_handler.setFormatter(log_formatter)
+app.logger.addHandler(log_handler)
+app.logger.setLevel(logging.INFO)
 
 
 
@@ -57,11 +92,11 @@ load_dotenv()
 def ping():
     return 'OK'
 
+
 def keep_alive():
     while True:
         try:
-            # Ping your specific Glitch URL
-            requests.get('https://glitter-dynamic-taxicab.glitch.me/ping')
+            requests.get('https://empowerbot2025-1.onrender.com/ping')
             print("Ping successful")
         except Exception as e:
             print(f"Ping failed: {str(e)}")
@@ -69,7 +104,7 @@ def keep_alive():
         # Wait 4 minutes before next ping
         time.sleep(240)  # 240 seconds = 4 minutes
 
-# Start the keep-alive thread when your app starts
+# Start the keeep-alive thread when your app starts
 def start_keep_alive():
     keep_alive_thread = threading.Thread(target=keep_alive, daemon=True)
     keep_alive_thread.start()
@@ -273,7 +308,6 @@ def handle_funding_need_selection(phone_number, user, conn):
 
   
   
-  
 def handle_location_selection(phone_number, user, conn):
     list_message = {
         "type": "list",
@@ -285,8 +319,9 @@ def handle_location_selection(phone_number, user, conn):
             "sections": [{
                 "title": "Local Governments",
                 "rows": [
+                    
+                    {"id": "agege", "title": "Agege"},
                     {"id": "epe", "title": "Epe"},
-        
                     {"id": "alimosho", "title": "Alimosho"},
                     {"id": "ikorodu", "title": "Ikorodu"},
                     {"id": "others", "title": "Others"}
@@ -296,8 +331,7 @@ def handle_location_selection(phone_number, user, conn):
     }
     return send_interactive_message(phone_number, list_message)
 
-  
-  
+
 
 
 
@@ -342,22 +376,22 @@ import re
 
 
 
-def delete_git_folder():
-    while True:
-        # Check if the .git directory exists
-        if os.path.exists('.git'):
-            shutil.rmtree('.git')  # Remove the .git directory
-            print('.git folder deleted successfully.')
-        else:
-            print('.git folder does not exist.')
-
-        # Wait for 15 minutes (15 * 60 seconds)
-        time.sleep(15 * 60)
-
-# Start the deletion thread
-thread = threading.Thread(target=delete_git_folder)
-thread.daemon = True  # This makes the thread exit when the main program exits
-thread.start()
+# def delete_git_folder():
+#     while True:
+#         # Check if the .git directory exists
+#         if os.path.exists('.git'):
+#             shutil.rmtree('.git')  # Remove the .git directory
+#             print('.git folder deleted successfully.')
+#         else:
+#             print('.git folder does not exist.')
+# 
+#         # Wait for 15 minutes (15 * 60 seconds)
+#         time.sleep(15 * 60)
+# 
+# # Start the deletion thread
+# thread = threading.Thread(target=delete_git_folder)
+# thread.daemon = True  # This makes the thread exit when the main program exits
+# thread.start()
 
 
 
@@ -484,7 +518,7 @@ def dashboard():
        
        
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 WHATSAPP_TOKEN = os.getenv('GRAPH_API_TOKEN')
 WEBHOOK_VERIFY_TOKEN = os.getenv('WEBHOOK_VERIFY_TOKEN')
 YOUR_PHONE_NUMBER_ID = os.getenv('YOUR_PHONE_NUMBER_ID')
@@ -502,65 +536,49 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
  
 
 
-def list_available_quizzes():
-    quizzes = []
-    for file in os.listdir('data_bootcamp'):
-        if file.startswith('quiz') and file.endswith('.json'):
-            quiz_number = file.split('.')[0].replace('quiz', '')
-            quizzes.append(quiz_number)
-    quizzes.sort(key=int)
-    return quizzes
+
 
   
 # Replace your existing list_available_quizzes function with this:
 def list_available_quizzes():
-    """Get list of available (enabled) quizzes, checking both files and database"""
-    # First get all quiz files that exist
+    """Get list of all quiz files from MongoDB or filesystem (returns quiz numbers as strings)"""
     all_quizzes = []
+    
+    if USE_MONGODB:
+        # Get from MongoDB questions collection
+        try:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+            
+            # Get distinct quiz names from questions
+            quiz_names = mongo_db.questions.distinct("quiz")
+            
+            for quiz_name in quiz_names:
+                # Extract number from quiz name (e.g., "quiz1" -> "1")
+                if quiz_name.startswith('quiz'):
+                    quiz_number = quiz_name.replace('quiz', '')
+                    if quiz_number.isdigit():
+                        all_quizzes.append(quiz_number)
+            
+            all_quizzes.sort(key=int)
+            logging.info(f"Found {len(all_quizzes)} quizzes in MongoDB")
+            return all_quizzes
+        except Exception as e:
+            logging.error(f"Error reading quizzes from MongoDB: {e}")
+            # Fall back to filesystem
+    
+    # Fallback: Get from filesystem
     try:
         for file in os.listdir('data_bootcamp'):
             if file.startswith('quiz') and file.endswith('.json'):
                 quiz_number = file.split('.')[0].replace('quiz', '')
                 all_quizzes.append(quiz_number)
         all_quizzes.sort(key=int)
+        logging.info(f"Found {len(all_quizzes)} quiz files in data_bootcamp/")
+        return all_quizzes
     except Exception as e:
-        print(f"Error reading quiz files: {e}")
+        logging.error(f"Error reading quiz files from data_bootcamp: {e}")
         return []
-    
-    # Now filter by enabled status in database
-    enabled_quizzes = []
-    conn = get_db_connection()
-    try:
-        for quiz_num in all_quizzes:
-            quiz_name = f"quiz{quiz_num}"
-            # Check database for enabled status
-            cursor = conn.cursor()
-            cursor.execute("SELECT enabled FROM quizzes WHERE name = ?", (quiz_name,))
-            result = cursor.fetchone()
-            
-            if result:
-                # Quiz exists in database, check if enabled
-                if result[0] == 1:  # enabled = 1
-                    enabled_quizzes.append(quiz_num)
-                    print(f"Quiz {quiz_name} is ENABLED")
-                else:
-                    print(f"Quiz {quiz_name} is DISABLED")
-            else:
-                # Quiz not in database, default to enabled
-                enabled_quizzes.append(quiz_num)
-                print(f"Quiz {quiz_name} not found in database, defaulting to ENABLED")
-                
-    except Exception as e:
-        print(f"Error checking quiz enabled status: {e}")
-        # If database check fails, return empty list to be safe
-        return []
-    finally:
-        conn.close()
-    
-    print(f"Available quizzes after filtering: {enabled_quizzes}")
-    return enabled_quizzes
-  
-     
 
 
 
@@ -645,54 +663,107 @@ RESET_MINUTE = 0
 
 @app.route('/winnersboard')
 def winnersboard():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    # Load excluded phone numbers from leftout.json
     leftout_file = os.path.join('data_bootcamp', 'leftout.json')
     with open(leftout_file, 'r') as f:
         excluded_phone_numbers = json.load(f)['excluded_phone_numbers']
-    
-    # Get current time in WAT
+
     wat = pytz.timezone('Africa/Lagos')
     current_time = datetime.now(wat)
-    
-    # Calculate the next reset time
     next_reset = current_time.replace(hour=RESET_HOUR, minute=RESET_MINUTE, second=0, microsecond=0)
     while next_reset.weekday() != RESET_DAY or next_reset <= current_time:
         next_reset += timedelta(days=1)
-    
-    # Modify the query to exclude the phone numbers listed in leftout.json
-    query = """
-    SELECT u.name, us.phone_number, us.score
-    FROM users u
-    JOIN user_scores us ON u.id = us.user_id
-    WHERE us.phone_number NOT IN ({})
-    ORDER BY us.score DESC
-    LIMIT 15
-    """.format(','.join(['?']*len(excluded_phone_numbers)))
-    
-    cursor.execute(query, excluded_phone_numbers)
-    results = cursor.fetchall()
-    conn.close()
-    
+
+    if USE_MONGODB:
+        from db_mongo import get_mongo_db
+        mongo_db = get_mongo_db()
+
+        pipeline = [
+            {"$lookup": {
+                "from": "users",
+                "localField": "user_id",
+                "foreignField": "_id",
+                "as": "user_info"
+            }},
+            {"$unwind": "$user_info"},
+            {"$match": {
+                "user_info.phone_number": {"$nin": excluded_phone_numbers}
+            }},
+            {"$project": {
+                "name": "$user_info.name",
+                "phone_number": "$user_info.phone_number",
+                "score": 1
+            }},
+            {"$sort": {"score": -1}},
+            {"$limit": 15}
+        ]
+        results = list(mongo_db.user_scores.aggregate(pipeline))
+        results = [(r['name'], r['phone_number'], r['score']) for r in results]
+    else:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """
+        SELECT u.name, us.phone_number, us.score
+        FROM users u
+        JOIN user_scores us ON u.id = us.user_id
+        WHERE us.phone_number NOT IN ({})
+        ORDER BY us.score DESC
+        LIMIT 15
+        """.format(','.join(['?'] * len(excluded_phone_numbers)))
+        cursor.execute(query, excluded_phone_numbers)
+        results = cursor.fetchall()
+        conn.close()
+
     return render_template('winnersboard.html', results=results, next_reset=next_reset)
-  
+
+
   
  
+
+
 @app.route('/viewdatabootcamp')
 def viewdatabootcamp():
-    user_data = get_user_data()
-    # Group user data by quiz
-    grouped_data = {}
-    for user in user_data:
-        quiz = user['quiz'] or 'Unspecified'
-        if quiz not in grouped_data:
-            grouped_data[quiz] = []
-        grouped_data[quiz].append(user)
+    if USE_MONGODB:
+        from db_mongo import get_mongo_db
+        mongo_db = get_mongo_db()
+
+        users = list(mongo_db.users.find({}))
+        grouped_data = {}
+
+        for user in users:
+            user_id = str(user['_id'])
+            responses = list(mongo_db.responses.find({"user_id": user_id}))
+
+            quizzes = {}
+            for r in responses:
+                quiz = r.get('quiz', 'Unspecified')
+                if quiz not in quizzes:
+                    quizzes[quiz] = {'correct': 0, 'wrong': []}
+                if r.get('correct'):
+                    quizzes[quiz]['correct'] += 1
+                else:
+                    quizzes[quiz]['wrong'].append(str(r.get('question_number', '')))
+
+            for quiz, data in quizzes.items():
+                entry = {
+                    'phone_number': user.get('phone_number', ''),
+                    'name': user.get('name', ''),
+                    'correct_answers': data['correct'],
+                    'wrong_answers': ','.join(data['wrong']),
+                    'quiz': quiz
+                }
+                if quiz not in grouped_data:
+                    grouped_data[quiz] = []
+                grouped_data[quiz].append(entry)
+    else:
+        user_data = get_user_data()
+        grouped_data = {}
+        for user in user_data:
+            quiz = user['quiz'] or 'Unspecified'
+            if quiz not in grouped_data:
+                grouped_data[quiz] = []
+            grouped_data[quiz].append(user)
+
     return render_template('viewdatabootcamp.html', user_data=grouped_data)
- 
- 
  
 
 
@@ -1019,101 +1090,115 @@ def list_models():
         return None
 
       
+
+
 def generate_text(prompt):
     """
-    Generate text using Google's Gemini 1.5 Pro model.
-    
-    Args:
-        prompt (str): The prompt to send to the model
-        
-    Returns:
-        str: The generated text or error message
+    Generate AI response using Google's Gemini models.
+    Tries models in order — falls back if quota exceeded (429).
     """
-    try:
-        headers = {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': API_KEY
-        }
-        
-        # Format for Gemini 1.5 Pro API
-        data = {
-            
-            "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-            "generationConfig": {
-                "temperature": 0.7,
-                "maxOutputTokens": 1000,
-                "topP": 1,
-                "topK": 1
-            },
-            "safetySettings": [
-                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_ONLY_HIGH"},
-                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_ONLY_HIGH"},
-                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_ONLY_HIGH"},
-                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_ONLY_HIGH"}
-            ]
-        }
-        
-        # Gemini 1.5 Pro endpoint
-        model_url = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent"
-        url = f"{model_url}?key={API_KEY}"
-        
-        logging.info(f"Sending request to Gemini 1.5 Pro API with prompt: {prompt[:100]}...")
-        logging.info(f"Using URL: {model_url} (API key redacted)")
-        logging.info(f"Headers: {headers}")
-        logging.info(f"Data structure: {json.dumps({k: '...' if k == 'contents' else v for k, v in data.items()})}")
-        
-        response = requests.post(url, headers=headers, json=data)
-        logging.info(f"API response status code: {response.status_code}")
-        
-        # Log full response for debugging
-        response_text = response.text
-        logging.info(f"Raw API response: {response_text}")
-        
-        # Raise exception for bad status codes
-        response.raise_for_status()
-        
-        # Parse JSON response
-        response_json = response.json()
-        
-        # Check for successful response with candidates
-        if 'candidates' in response_json and response_json['candidates']:
-            candidate = response_json['candidates'][0]
-            if 'content' in candidate and 'parts' in candidate['content'] and len(candidate['content']['parts']) > 0:
-                return candidate['content']['parts'][0]['text']
+    global GEMINI_API_KEY
+
+    if not GEMINI_API_KEY:
+        logger.error("GEMINI_API_KEY is not set")
+        return "I apologize, but I'm having difficulty generating a response right now. Please try again later."
+
+    MODELS = [
+        "gemini-1.5-flash",      # 1,500/day free — primary
+        "gemini-1.5-flash-8b",   # 15,000/day free — fallback
+        "gemini-1.5-pro",        # 50/day free — last resort
+    ]
+
+    headers = {'Content-Type': 'application/json'}
+
+    data = {
+        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "temperature": 0.7,
+            "maxOutputTokens": 2000,
+            "topP": 1,
+            "topK": 1
+        },
+        "safetySettings": [
+            {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_ONLY_HIGH"},
+            {"category": "HARM_CATEGORY_HATE_SPEECH",       "threshold": "BLOCK_ONLY_HIGH"},
+            {"category": "HARM_CATEGORY_HARASSMENT",        "threshold": "BLOCK_ONLY_HIGH"},
+            {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_ONLY_HIGH"}
+        ]
+    }
+
+    for model in MODELS:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY}"
+            logger.info(f"Sending request to {model} with prompt: {prompt[:100]}...")
+
+            response = requests.post(url, headers=headers, json=data, timeout=30)
+            logger.info(f"API response status code: {response.status_code}")
+
+            response_text = response.text
+            logger.info(f"Raw API response: {response_text[:500]}...")
+
+            # If quota exceeded, try next model
+            if response.status_code == 429:
+                logger.warning(f"429 quota exceeded on {model}, trying next model...")
+                continue
+
+            response.raise_for_status()
+
+            response_json = response.json()
+
+            if 'candidates' in response_json and response_json['candidates']:
+                candidate = response_json['candidates'][0]
+                if 'content' in candidate and 'parts' in candidate['content'] and len(candidate['content']['parts']) > 0:
+                    generated_text = candidate['content']['parts'][0]['text']
+                    logger.info(f"Successfully generated text via {model} ({len(generated_text)} chars): {generated_text[:100]}...")
+                    return generated_text
+                else:
+                    logger.error(f"Unexpected candidate structure: {json.dumps(candidate)}")
+                    return "I received a response but couldn't extract the text content. Please try again."
+
+            elif 'promptFeedback' in response_json and response_json['promptFeedback'].get('blockReason'):
+                block_reason = response_json['promptFeedback']['blockReason']
+                logger.warning(f"Response blocked by safety filters: {block_reason}")
+                return f"I'm not able to provide a response to that query due to content safety policies ({block_reason}). Let's try a different approach or topic."
+
             else:
-                logging.error(f"Unexpected candidate structure: {json.dumps(candidate)}")
-                return "I received a response but couldn't extract the text content. Please try again."
-        
-        # Check for safety filter blocks
-        elif 'promptFeedback' in response_json and response_json['promptFeedback'].get('blockReason'):
-            block_reason = response_json['promptFeedback']['blockReason']
-            logging.warning(f"Response blocked by safety filters: {block_reason}")
-            return f"I'm not able to provide a response to that query due to content safety policies ({block_reason}). Let's try a different approach or topic."
-        
-        # Handle other error cases
-        else:
-            logging.error(f"Unexpected response format: {json.dumps(response_json)}")
-            return "I received an unexpected response format. Please try again with a different query."
-            
-    except requests.exceptions.HTTPError as e:
-        logging.error(f"HTTP error: {e}")
-        logging.error(f"Response content: {response_text if 'response_text' in locals() else 'No response text'}")
-        return f"API error: {e}. Please try again later or contact support."
-        
-    except requests.exceptions.RequestException as e:
-        logging.error(f"Request error: {e}")
-        return "I'm having trouble connecting to the language model service. Please check your internet connection and try again."
-        
-    except json.JSONDecodeError as e:
-        logging.error(f"JSON decode error: {e}")
-        logging.error(f"Response content that couldn't be parsed: {response_text if 'response_text' in locals() else 'No response text'}")
-        return "I received a response I couldn't understand. Please try again later."
-        
-    except Exception as e:
-        logging.error(f"Unexpected error in generate_text: {e}", exc_info=True)
-        return "An unexpected error occurred. Please try again or contact support if the issue persists."
-      
-      
+                logger.error(f"Unexpected response format: {json.dumps(response_json)}")
+                return "I received an unexpected response format. Please try again with a different query."
+
+        except requests.exceptions.HTTPError as e:
+            logger.error(f"HTTP error on {model}: {e}")
+            if 'response_text' in locals():
+                logger.error(f"Response content: {response_text}")
+            if '429' in str(e):
+                logger.warning(f"429 on {model}, trying next model...")
+                continue
+            return "API error occurred. Please try again later."
+
+        except requests.exceptions.Timeout:
+            logger.error(f"Request to {model} timed out")
+            return "The request took too long to process. Please try again."
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Request error on {model}: {e}")
+            return "I'm having trouble connecting to the AI service. Please check your connection and try again."
+
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON decode error on {model}: {e}")
+            if 'response_text' in locals():
+                logger.error(f"Response content that couldn't be parsed: {response_text}")
+            return "I received a response I couldn't understand. Please try again."
+
+        except Exception as e:
+            logger.error(f"Unexpected error in generate_text on {model}: {e}", exc_info=True)
+            return "An unexpected error occurred. Please try again or contact support if the issue persists."
+
+    # All models exhausted
+    logger.error("All Gemini models returned 429. Daily quota fully exhausted.")
+    return "I'm temporarily unavailable due to high demand. Please try again in a few minutes."
+
+
+
       
     
     
@@ -1153,172 +1238,172 @@ def extract_key_information(input_text: str, field: str) -> str:
  
     
     
-def handle_ai_chat(phone_number: str, message: str, conn: sqlite3.Connection):
-    try:
-        logging.info(f"IMAGE EVENT: Starting AI chat for user {phone_number}")
+# def handle_ai_chat(phone_number: str, message: str, conn: sqlite3.Connection):
+#     try:
+#         logging.info(f"IMAGE EVENT: Starting AI chat for user {phone_number}")
 
-        cursor = conn.cursor()
+#         cursor = conn.cursor()
 
-        # Get the quiz name the user is reviewing
-        cursor.execute('SELECT quiz_in_review FROM users WHERE phone_number = ?', (phone_number,))
-        result = cursor.fetchone()
+#         # Get the quiz name the user is reviewing
+#         cursor.execute('SELECT quiz_in_review FROM users WHERE phone_number = ?', (phone_number,))
+#         result = cursor.fetchone()
 
-        if result is None:
-            raise ValueError(f"No user found with phone number {phone_number}")
+#         if result is None:
+#             raise ValueError(f"No user found with phone number {phone_number}")
 
-        quiz_in_review = result['quiz_in_review']  # The quiz the user is currently reviewing
-        logging.info(f"User {phone_number} is reviewing quiz {quiz_in_review}")
+#         quiz_in_review = result['quiz_in_review']  # The quiz the user is currently reviewing
+#         logging.info(f"User {phone_number} is reviewing quiz {quiz_in_review}")
 
-        # Fetch user data
-        user = conn.execute("SELECT * FROM users WHERE phone_number = ?", (phone_number,)).fetchone()
-        if not user:
-            logging.error(f"User not found for phone number: {phone_number}")
-            send_message(phone_number, "An error occurred. Please try again or contact support.")
-            return
+#         # Fetch user data
+#         user = db.get_user_by_phone(phone_number,)
+#         if not user:
+#             logging.error(f"User not found for phone number: {phone_number}")
+#             send_message(phone_number, "An error occurred. Please try again or contact support.")
+#             return
 
-        user_id = user['id']
-        user_state = user['state']
-        current_question = user['current_question']
+#         user_id = user['id']
+#         user_state = user['state']
+#         current_question = user['current_question']
 
-        # Handle demographic input (business_type, age, etc.)
-        if current_question in ['business_type', 'age', 'gender', 'location']:
-            extracted_info = extract_key_information(message, current_question)
-            conn.execute(f"UPDATE users SET {current_question} = ? WHERE id = ?", (extracted_info, user_id))
-            conn.commit()
-            message = extracted_info
+#         # Handle demographic input (business_type, age, etc.)
+#         if current_question in ['business_type', 'age', 'gender', 'location']:
+#             extracted_info = extract_key_information(message, current_question)
+#             conn.execute(f"UPDATE users SET {current_question} = ? WHERE id = ?", (extracted_info, user_id))
+#             conn.commit()
+#             message = extracted_info
 
-        current_question_index = int(current_question) 
-        incorrect_questions = get_incorrect_questions(user_id, conn, quiz_in_review)
+#         current_question_index = int(current_question) 
+#         incorrect_questions = get_incorrect_questions(user_id, conn, quiz_in_review)
 
-        # Check if there was an error fetching incorrect questions
-        if incorrect_questions is None:
-            logging.error(f"Error fetching incorrect questions for user {user_id}, quiz {quiz_in_review}")
-            send_message(phone_number, "An error occurred while retrieving your questions. Please try again or contact support.")
-            return
+#         # Check if there was an error fetching incorrect questions
+#         if incorrect_questions is None:
+#             logging.error(f"Error fetching incorrect questions for user {user_id}, quiz {quiz_in_review}")
+#             send_message(phone_number, "An error occurred while retrieving your questions. Please try again or contact support.")
+#             return
 
-        # If all questions are done
-        if current_question_index >= len(incorrect_questions):
-            send_message(phone_number, "You've completed all questions. Would you like to start a new quiz?")
-            present_options(phone_number, user, conn)
-            return
+#         # If all questions are done
+#         if current_question_index >= len(incorrect_questions):
+#             send_message(phone_number, "You've completed all questions. Would you like to start a new quiz?")
+#             present_options(phone_number, user, conn)
+#             return
 
-        question_context = incorrect_questions[current_question_index]
+#         question_context = incorrect_questions[current_question_index]
         
-        # Convert sqlite3.Row to dictionary with all needed keys
-        if isinstance(question_context, sqlite3.Row):
-            # Create a dictionary from the Row object
-            q_context = {key: question_context[key] for key in question_context.keys()}
+#         # Convert sqlite3.Row to dictionary with all needed keys
+#         if isinstance(question_context, sqlite3.Row):
+#             # Create a dictionary from the Row object
+#             q_context = {key: question_context[key] for key in question_context.keys()}
             
-            # Ensure 'options' exists in the dictionary
-            if 'options' not in q_context:
-                q_context['options'] = []
+#             # Ensure 'options' exists in the dictionary
+#             if 'options' not in q_context:
+#                 q_context['options'] = []
                 
-            question_context = q_context
-            logging.info(f"Converted sqlite3.Row to dictionary with keys: {list(question_context.keys())}")
+#             question_context = q_context
+#             logging.info(f"Converted sqlite3.Row to dictionary with keys: {list(question_context.keys())}")
         
-        # Handle explanation or follow-up logic
-        if message.lower().strip() == "yes" and user_state in ['awaiting_explanation', 'awaiting_followup']:
-            conversation_history = get_conversation_history(user_id, conn, limit=3)
-            explanation_prompt = create_explanation_prompt(question_context, user, conversation_history)
-            response = generate_text(explanation_prompt)
+#         # Handle explanation or follow-up logic
+#         if message.lower().strip() == "yes" and user_state in ['awaiting_explanation', 'awaiting_followup']:
+#             conversation_history = get_conversation_history(user_id, conn, limit=3)
+#             explanation_prompt = create_explanation_prompt(question_context, user, conversation_history)
+#             response = generate_text(explanation_prompt)
 
-        elif not is_related_to_question(message, question_context):
-            return handle_unrelated_followup(phone_number, message, user, conn)
+#         elif not is_related_to_question(message, question_context):
+#             return handle_unrelated_followup(phone_number, message, user, conn)
 
-        else:
-            # Store follow-up question
-            try:
-                cursor = conn.cursor()
-                cursor.execute('''
-                    INSERT INTO followup_questions
-                    (user_id, quiz_name, quiz_question, followup_question, followup_date)
-                    VALUES (?, ?, ?, ?, datetime('now'))
-                ''', (user_id, question_context['quiz'], question_context['question'], message))
-                conn.commit()
-                logging.info(f"Stored follow-up question for user {user_id}")
-            except sqlite3.Error as e:
-                logging.error(f"Error storing follow-up question: {e}")
+#         else:
+#             # Store follow-up question
+#             try:
+#                 cursor = conn.cursor()
+#                 cursor.execute('''
+#                     INSERT INTO followup_questions
+#                     (user_id, quiz_name, quiz_question, followup_question, followup_date)
+#                     VALUES (?, ?, ?, ?, datetime('now'))
+#                 ''', (user_id, question_context['quiz'], question_context['question'], message))
+#                 conn.commit()
+#                 logging.info(f"Stored follow-up question for user {user_id}")
+#             except sqlite3.Error as e:
+#                 logging.error(f"Error storing follow-up question: {e}")
 
-            # Build prompt and get AI response
-            conversation_history = get_conversation_history(user_id, conn, limit=3)
+#             # Build prompt and get AI response
+#             conversation_history = get_conversation_history(user_id, conn, limit=3)
             
-            # Log question_context to debug
-            logging.info(f"Question context before create_followup_prompt: {type(question_context)}")
+#             # Log question_context to debug
+#             logging.info(f"Question context before create_followup_prompt: {type(question_context)}")
             
-            try:
-                # Check if 'options' key exists, add it if not
-                if isinstance(question_context, dict) and 'options' not in question_context:
-                    question_context['options'] = []
+#             try:
+#                 # Check if 'options' key exists, add it if not
+#                 if isinstance(question_context, dict) and 'options' not in question_context:
+#                     question_context['options'] = []
                     
-                prompt = create_followup_prompt(question_context, message, conversation_history, user)
-            except (KeyError, IndexError) as e:
-                logging.error(f"Key/Index Error in create_followup_prompt: {str(e)}")
-                # Create a simple prompt handler
-                try:
-                    prompt = f"The user has asked: '{message}' about the question: '{question_context.get('question', question_context['question'] if 'question' in question_context else 'unknown question')}'. Please provide a helpful response."
-                except:
-                    prompt = f"The user has asked: '{message}'. Please provide a helpful response."
+#                 prompt = create_followup_prompt(question_context, message, conversation_history, user)
+#             except (KeyError, IndexError) as e:
+#                 logging.error(f"Key/Index Error in create_followup_prompt: {str(e)}")
+#                 # Create a simple prompt handler
+#                 try:
+#                     prompt = f"The user has asked: '{message}' about the question: '{question_context.get('question', question_context['question'] if 'question' in question_context else 'unknown question')}'. Please provide a helpful response."
+#                 except:
+#                     prompt = f"The user has asked: '{message}'. Please provide a helpful response."
                 
-            if prompt == "provide_explanation":
-                explanation_prompt = create_explanation_prompt(question_context, user, conversation_history)
-                response = generate_text(explanation_prompt)
-            elif prompt == "brief_response":
-                response = random.choice([
-                    "You're welcome! I'm glad I could help.",
-                    "I'm happy that was helpful!",
-                    "It's my pleasure to assist you.",
-                    "Glad I could be of help!",
-                    "You're most welcome. Feel free to ask if you need anything else."
-                ])
-            else:
-                response = generate_text(prompt)
+#             if prompt == "provide_explanation":
+#                 explanation_prompt = create_explanation_prompt(question_context, user, conversation_history)
+#                 response = generate_text(explanation_prompt)
+#             elif prompt == "brief_response":
+#                 response = random.choice([
+#                     "You're welcome! I'm glad I could help.",
+#                     "I'm happy that was helpful!",
+#                     "It's my pleasure to assist you.",
+#                     "Glad I could be of help!",
+#                     "You're most welcome. Feel free to ask if you need anything else."
+#                 ])
+#             else:
+#                 response = generate_text(prompt)
 
-        # Handle cases where AI fails
-        if response.startswith("I apologize, but I'm having difficulty generating a response"):
-            prompt_next_action(phone_number, conn, include_retry=True)
-        else:
-            send_message(phone_number, response)
-            store_conversation(user_id, message, False, conn)
-            store_conversation(user_id, response, True, conn)
-            prompt_next_action(phone_number, conn)
+#         # Handle cases where AI fails
+#         if response.startswith("I apologize, but I'm having difficulty generating a response"):
+#             prompt_next_action(phone_number, conn, include_retry=True)
+#         else:
+#             send_message(phone_number, response)
+#             store_conversation(user_id, message, False, conn)
+#             store_conversation(user_id, response, True, conn)
+#             prompt_next_action(phone_number, conn)
 
-        # Ensure user has a score record
-        cursor.execute('INSERT OR IGNORE INTO user_scores (user_id, score) VALUES (?, 0)', (user_id,))
+#         # Ensure user has a score record
+#         cursor.execute('INSERT OR IGNORE INTO user_scores (user_id, score) VALUES (?, 0)', (user_id,))
 
-        # Score updating logic 
-        if user_state in ['awaiting_explanation', 'post_explanation', 'awaiting_followup']:
-            if user_state == 'awaiting_explanation':
-                score_increment = check_repeated_explanation(user_id, question_context['quiz'], current_question_index + 1, conn)
-            else:
-                cursor.execute('''
-                    SELECT COUNT(*) FROM followup_questions
-                    WHERE user_id = ? AND quiz_name = ? AND quiz_question = ?
-                ''', (user_id, question_context['quiz'], question_context['question']))
-                followup_count = cursor.fetchone()[0]
-                score_increment = 6 if followup_count == 1 else 7
+#         # Score updating logic 
+#         if user_state in ['awaiting_explanation', 'post_explanation', 'awaiting_followup']:
+#             if user_state == 'awaiting_explanation':
+#                 score_increment = check_repeated_explanation(user_id, question_context['quiz'], current_question_index + 1, conn)
+#             else:
+#                 cursor.execute('''
+#                     SELECT COUNT(*) FROM followup_questions
+#                     WHERE user_id = ? AND quiz_name = ? AND quiz_question = ?
+#                 ''', (user_id, question_context['quiz'], question_context['question']))
+#                 followup_count = cursor.fetchone()[0]
+#                 score_increment = 6 if followup_count == 1 else 7
 
-            leftout_file = os.path.join('data_file', 'leftout.json')
-            with open(leftout_file, 'r') as f:
-                excluded_phone_numbers = json.load(f)['excluded_phone_numbers']
+#             leftout_file = os.path.join('data_file', 'leftout.json')
+#             with open(leftout_file, 'r') as f:
+#                 excluded_phone_numbers = json.load(f)['excluded_phone_numbers']
 
-            if phone_number not in excluded_phone_numbers:
-                cursor.execute('''UPDATE user_scores SET score = score + ? WHERE user_id = ?''',
-                               (score_increment, user_id))
-                conn.commit()
-            else:
-                logging.info(f"User with phone number {phone_number} is excluded from the winners board. Score not updated.")
+#             if phone_number not in excluded_phone_numbers:
+#                 cursor.execute('''UPDATE user_scores SET score = score + ? WHERE user_id = ?''',
+#                                (score_increment, user_id))
+#                 conn.commit()
+#             else:
+#                 logging.info(f"User with phone number {phone_number} is excluded from the winners board. Score not updated.")
 
-        conn.execute('UPDATE users SET state = ? WHERE phone_number = ?', ('post_explanation', phone_number))
-        conn.commit()
+#         db.update_user_field(phone_number, {"state": "post_explanation"})
+#         conn.commit()
 
-    except Exception as e:
-        error_message = f"Error in handle_ai_chat: {str(e)}"
-        logging.error(error_message)
-        logging.error(traceback.format_exc())
-        send_message(phone_number, "An unexpected error occurred. Please try again or contact support if the issue persists.")
-        prompt_next_action(phone_number, conn, include_retry=True)
+#     except Exception as e:
+#         error_message = f"Error in handle_ai_chat: {str(e)}"
+#         logging.error(error_message)
+#         logging.error(traceback.format_exc())
+#         send_message(phone_number, "An unexpected error occurred. Please try again or contact support if the issue persists.")
+#         prompt_next_action(phone_number, conn, include_retry=True)
 
-    logging.info(f"IMAGE EVENT: Finished AI chat for user {phone_number}")
+#     logging.info(f"IMAGE EVENT: Finished AI chat for user {phone_number}")
     
     
     
@@ -1346,7 +1431,7 @@ def handle_ai_chat(phone_number: str, message: str, conn: sqlite3.Connection):
 #         logging.info(f"User {phone_number} is reviewing quiz {quiz_in_review}")
 
 #         # Fetch user data
-#         user = conn.execute("SELECT * FROM users WHERE phone_number = ?", (phone_number,)).fetchone()
+#         user = db.get_user_by_phone(phone_number,)
 #         if not user:
 #             logging.error(f"User not found for phone number: {phone_number}")
 #             send_message(phone_number, "An error occurred. Please try again or contact support.")
@@ -1492,7 +1577,7 @@ def handle_ai_chat(phone_number: str, message: str, conn: sqlite3.Connection):
 #         # Rest of function (scoring logic) remains the same
 #         # [...]
         
-#         conn.execute('UPDATE users SET state = ? WHERE phone_number = ?', ('post_explanation', phone_number))
+#         db.update_user_field(phone_number, {"state": "post_explanation"})
 #         conn.commit()
 
 #     except Exception as e:
@@ -1509,193 +1594,338 @@ def handle_ai_chat(phone_number: str, message: str, conn: sqlite3.Connection):
 
 
 
+# def handle_ai_chat(phone_number: str, message: str, conn: sqlite3.Connection):
+#     try:
+#         import json
+#         caller = inspect.stack()[1].function
+#         logger.info(f"AI CHAT: Starting AI chat for user {phone_number} (called from {caller})")
 
-def handle_ai_chat(phone_number: str, message: str, conn: sqlite3.Connection):
+#         cursor = conn.cursor()
+
+#         # Get the quiz name the user is reviewing
+#         cursor.execute('SELECT quiz_in_review FROM users WHERE phone_number = ?', (phone_number,))
+#         result = cursor.fetchone()
+
+#         if result is None:
+#             raise ValueError(f"No user found with phone number {phone_number}")
+
+#         quiz_in_review = result['quiz_in_review']
+#         logger.info(f"User {phone_number} is reviewing quiz {quiz_in_review}")
+
+#         # Fetch user data
+#         user = db.get_user_by_phone(phone_number,)
+#         if not user:
+#             logger.error(f"User not found for phone number: {phone_number}")
+#             send_message(phone_number, "An error occurred. Please try again or contact support.")
+#             return
+
+#         user_id = user['id']
+#         user_state = user['state']
+#         current_question = user['current_question']
+
+#         # ✅ Only allow AI chat in relevant states
+#         if user_state not in ['awaiting_explanation', 'awaiting_followup', 'post_explanation']:
+#             logger.info(f"AI CHAT: Skipping AI chat for user {phone_number} due to state: {user_state}")
+#             return
+
+#         # Handle demographic input
+#         if current_question in ['business_type', 'age', 'gender', 'location']:
+#             extracted_info = extract_key_information(message, current_question)
+#             conn.execute(f"UPDATE users SET {current_question} = ? WHERE id = ?", (extracted_info, user_id))
+#             conn.commit()
+#             message = extracted_info
+
+#         current_question_index = int(current_question) - 1
+#         incorrect_questions = get_incorrect_questions(user_id, conn, quiz_in_review)
+
+#         if incorrect_questions is None:
+#             logger.error(f"Error fetching incorrect questions for user {user_id}, quiz {quiz_in_review}")
+#             send_message(phone_number, "An error occurred while retrieving your questions. Please try again or contact support.")
+#             return
+
+#         if current_question_index >= len(incorrect_questions):
+#             send_message(phone_number, "You've completed all questions. Would you like to start a new quiz?")
+#             present_options(phone_number, user, conn)
+#             return
+
+#         question_context = incorrect_questions[current_question_index]
+
+#         # Convert sqlite3.Row to dictionary and ensure options are properly loaded
+#         if isinstance(question_context, sqlite3.Row):
+#             q_context = {key: question_context[key] for key in question_context.keys()}
+#         else:
+#             q_context = question_context
+
+#         # Get the current question's actual question number and quiz from the context
+#         question_number = q_context.get('question_number', current_question-1)
+#         actual_quiz = q_context.get('quiz', quiz_in_review)
+        
+#         logger.info(f"Getting options for quiz={actual_quiz}, question_number={question_number}")
+
+#         # Fetch and parse options from the questions table using the actual question number from the context
+#         try:
+#             options_query = conn.execute(
+#                 "SELECT options FROM questions WHERE quiz = ? AND question_number = ?", 
+#                 (actual_quiz, question_number)
+#             ).fetchone()
+            
+#             if options_query and options_query['options']:
+#                 # Parse JSON string to Python list
+#                 q_context['options'] = json.loads(options_query['options'])
+#                 logger.info(f"Successfully loaded options for {actual_quiz} question {question_number}: {q_context['options']}")
+#             else:
+#                 q_context['options'] = []
+#                 logger.warning(f"No options found for quiz {actual_quiz}, question {question_number}")
+#         except Exception as e:
+#             logger.error(f"Error fetching question options: {e}")
+#             q_context['options'] = []
+
+#         # Fetch user response from the correct 'responses' table
+#         if 'response' not in q_context:
+#             try:
+#                 user_response = conn.execute(
+#                     "SELECT response FROM responses WHERE user_id = ? AND quiz = ? AND question_number = ?", 
+#                     (user_id, actual_quiz, question_number)
+#                 ).fetchone()
+                
+#                 q_context['response'] = user_response['response'] if user_response else "No answer provided"
+#                 logger.info(f"Retrieved user response for {actual_quiz} question {question_number}: {q_context['response']}")
+#             except Exception as e:
+#                 logger.error(f"Error fetching user response: {e}")
+#                 q_context['response'] = "No answer provided"
+
+#         # Make sure we also have the correct answer
+#         if 'answer' not in q_context or not q_context['answer']:
+#             try:
+#                 answer_query = conn.execute(
+#                     "SELECT answer FROM questions WHERE quiz = ? AND question_number = ?",
+#                     (actual_quiz, question_number)
+#                 ).fetchone()
+                
+#                 if answer_query:
+#                     q_context['answer'] = answer_query['answer']
+#                     logger.info(f"Retrieved correct answer for {actual_quiz} question {question_number}: {q_context['answer']}")
+#             except Exception as e:
+#                 logger.error(f"Error fetching correct answer: {e}")
+
+#         question_context = q_context
+#         logger.info(f"Prepared question context with keys: {list(question_context.keys())}")
+
+#         # Handle explanation or follow-up logic
+#         response = None  # Initialize response to None
+        
+#         if message.lower().strip() == "yes" and user_state in ['awaiting_explanation', 'awaiting_followup']:
+#             conversation_history = get_conversation_history(user_id, conn, limit=3)
+#             explanation_prompt = create_explanation_prompt(question_context, user, conversation_history)
+#             response = generate_text(explanation_prompt)
+
+#         elif not is_related_to_question(message, question_context):
+#             return handle_unrelated_followup(phone_number, message, user, conn)
+
+#         else:
+#             try:
+#                 cursor.execute('''
+#                     INSERT INTO followup_questions
+#                     (user_id, quiz_name, quiz_question, followup_question, followup_date)
+#                     VALUES (?, ?, ?, ?, datetime('now'))
+#                 ''', (user_id, question_context['quiz'], question_context['question'], message))
+#                 conn.commit()
+#                 logger.info(f"Stored follow-up question for user {user_id}")
+#             except sqlite3.Error as e:
+#                 logger.error(f"Error storing follow-up question: {e}")
+
+#             conversation_history = get_conversation_history(user_id, conn, limit=3)
+
+#             try:
+#                 prompt = create_followup_prompt(question_context, message, conversation_history, user)
+#             except Exception as e:
+#                 logger.error(f"Error in create_followup_prompt: {str(e)}")
+#                 prompt = f"The user '{user.get('name', 'Entrepreneur')}' who runs a {user.get('business_type', 'business')} in {user.get('location', 'Nigeria')} has asked: '{message}' about the business question from {question_context.get('quiz', 'unknown quiz')} question {question_context.get('question_number', 'unknown number')}: '{question_context.get('question', 'unknown question')}'. The question had these options: {question_context.get('options', [])}. The user selected: {question_context.get('response', 'unknown')}. The correct answer was: {question_context.get('answer', 'unknown')}. Provide a helpful, practical response (maximum 200 words) with specific Nigerian business advice and examples."
+
+#             if prompt == "provide_explanation":
+#                 explanation_prompt = create_explanation_prompt(question_context, user, conversation_history)
+#                 response = generate_text(explanation_prompt)
+#             elif prompt == "brief_response":
+#                 response = random.choice([
+#                     "You're welcome! I'm glad I could help.",
+#                     "I'm happy that was helpful!",
+#                     "It's my pleasure to assist you.",
+#                     "Glad I could be of help!",
+#                     "You're most welcome. Feel free to ask if you need anything else."
+#                 ])
+#             else:
+#                 response = generate_text(prompt)
+
+#         # ✅ FIXED: Handle None response properly
+#         if response is None:
+#             logger.warning(f"AI response is None for user {phone_number}")
+#             send_message(phone_number, "I'm having difficulty connecting to the AI service right now. Please try again in a moment.")
+#             prompt_next_action(phone_number, conn, include_retry=True)
+#         elif response.startswith("I apologize, but I'm having difficulty generating a response"):
+#             logger.warning(f"AI returned error message for user {phone_number}")
+#             prompt_next_action(phone_number, conn, include_retry=True)
+#         else:
+#             send_message(phone_number, response)
+#             store_conversation(user_id, message, False, conn)
+#             store_conversation(user_id, response, True, conn)
+#             prompt_next_action(phone_number, conn)
+
+#         db.update_user_field(phone_number, {"state": "post_explanation"})
+#         conn.commit()
+
+#     except Exception as e:
+#         error_message = f"Error in handle_ai_chat: {str(e)}"
+#         logger.error(error_message)
+#         logger.error(traceback.format_exc())
+#         send_message(phone_number, "An unexpected error occurred. Please try again or contact support if the issue persists.")
+#         prompt_next_action(phone_number, conn, include_retry=True)
+
+#     logger.info(f"AI CHAT: Finished handling AI chat for user {phone_number}")
+
+
+def handle_ai_chat(phone_number: str, message: str, conn):
     try:
-        import json
-        caller = inspect.stack()[1].function
-        logging.info(f"AI CHAT: Starting AI chat for user {phone_number} (called from {caller})")
+        logger.info(f"AI CHAT: Starting for user {phone_number}, message: {message}")
 
-        cursor = conn.cursor()
-
-        # Get the quiz name the user is reviewing
-        cursor.execute('SELECT quiz_in_review FROM users WHERE phone_number = ?', (phone_number,))
-        result = cursor.fetchone()
-
-        if result is None:
-            raise ValueError(f"No user found with phone number {phone_number}")
-
-        quiz_in_review = result['quiz_in_review']
-        logging.info(f"User {phone_number} is reviewing quiz {quiz_in_review}")
-
-        # Fetch user data
-        user = conn.execute("SELECT * FROM users WHERE phone_number = ?", (phone_number,)).fetchone()
+        user = db.get_user_by_phone(phone_number)
         if not user:
-            logging.error(f"User not found for phone number: {phone_number}")
-            send_message(phone_number, "An error occurred. Please try again or contact support.")
+            send_message(phone_number, "An error occurred. Please try again.")
             return
 
-        user_id = user['id']
+        user_id = str(user['_id']) if USE_MONGODB else user['id']
         user_state = user['state']
-        current_question = user['current_question']
+        current_question = user.get('current_question', 0)
+        quiz_in_review = user.get('quiz_in_review')
 
-        # ✅ Only allow AI chat in relevant states
-        if user_state not in ['awaiting_explanation', 'awaiting_followup','post_explanation']:
-            logging.info(f"AI CHAT: Skipping AI chat for user {phone_number} due to state: {user_state}")
+        if user_state not in ['awaiting_explanation', 'awaiting_followup', 'post_explanation', 'awaiting_action']:
+            logger.info(f"AI CHAT: Skipping - user in wrong state: {user_state}")
             return
 
-        # Handle demographic input
-        if current_question in ['business_type', 'age', 'gender', 'location']:
-            extracted_info = extract_key_information(message, current_question)
-            conn.execute(f"UPDATE users SET {current_question} = ? WHERE id = ?", (extracted_info, user_id))
-            conn.commit()
-            message = extracted_info
+        if not quiz_in_review:
+            logger.error(f"No quiz_in_review for user {phone_number}")
+            send_message(phone_number, "No quiz in review. Please start a quiz review first.")
+            present_options(phone_number, user, conn)
+            return
 
         current_question_index = int(current_question) - 1
         incorrect_questions = get_incorrect_questions(user_id, conn, quiz_in_review)
 
-        if incorrect_questions is None:
-            logging.error(f"Error fetching incorrect questions for user {user_id}, quiz {quiz_in_review}")
-            send_message(phone_number, "An error occurred while retrieving your questions. Please try again or contact support.")
-            return
-
-        if current_question_index >= len(incorrect_questions):
+        if incorrect_questions is None or current_question_index >= len(incorrect_questions):
             send_message(phone_number, "You've completed all questions. Would you like to start a new quiz?")
             present_options(phone_number, user, conn)
             return
 
         question_context = incorrect_questions[current_question_index]
+        if not isinstance(question_context, dict):
+            question_context = dict(zip(['id', 'question', 'answer', 'question_number', 'quiz'], question_context))
 
-        # Convert sqlite3.Row to dictionary and ensure options are properly loaded
-        if isinstance(question_context, sqlite3.Row):
-            q_context = {key: question_context[key] for key in question_context.keys()}
+        actual_quiz = question_context.get('quiz', quiz_in_review)
+        question_number = question_context.get('question_number')
+
+        # Get options
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+            q_doc = mongo_db.questions.find_one({
+                "quiz": actual_quiz,
+                "question_number": question_number
+            })
+            question_context['options'] = q_doc.get('options', []) if q_doc else []
+
+            resp_doc = mongo_db.responses.find_one({
+                "user_id": user_id,
+                "quiz": actual_quiz,
+                "question_number": question_number,
+                "correct": False
+            })
+            question_context['response'] = resp_doc['response'] if resp_doc else "No answer provided"
         else:
-            q_context = question_context
-
-        # Get the current question's actual question number and quiz from the context
-        question_number = q_context.get('question_number', current_question-1)
-        actual_quiz = q_context.get('quiz', quiz_in_review)
-        
-        logging.info(f"Getting options for quiz={actual_quiz}, question_number={question_number}")
-
-        # Fetch and parse options from the questions table using the actual question number from the context
-        try:
-            options_query = conn.execute(
-                "SELECT options FROM questions WHERE quiz = ? AND question_number = ?", 
-                (actual_quiz, question_number)
-            ).fetchone()
-            
-            if options_query and options_query['options']:
-                # Parse JSON string to Python list
-                q_context['options'] = json.loads(options_query['options'])
-                logging.info(f"Successfully loaded options for {actual_quiz} question {question_number}: {q_context['options']}")
-            else:
-                q_context['options'] = []
-                logging.warning(f"No options found for quiz {actual_quiz}, question {question_number}")
-        except Exception as e:
-            logging.error(f"Error fetching question options: {e}")
-            q_context['options'] = []
-
-        # Fetch user response from the correct 'responses' table
-        if 'response' not in q_context:
-            try:
-                user_response = conn.execute(
-                    "SELECT response FROM responses WHERE user_id = ? AND quiz = ? AND question_number = ?", 
-                    (user_id, actual_quiz, question_number)
-                ).fetchone()
-                
-                q_context['response'] = user_response['response'] if user_response else "No answer provided"
-                logging.info(f"Retrieved user response for {actual_quiz} question {question_number}: {q_context['response']}")
-            except Exception as e:
-                logging.error(f"Error fetching user response: {e}")
-                q_context['response'] = "No answer provided"
-
-        # Make sure we also have the correct answer
-        if 'answer' not in q_context or not q_context['answer']:
-            try:
-                answer_query = conn.execute(
-                    "SELECT answer FROM questions WHERE quiz = ? AND question_number = ?",
+            if conn and hasattr(conn, 'execute'):
+                options_result = conn.execute(
+                    "SELECT options FROM questions WHERE quiz = ? AND question_number = ?",
                     (actual_quiz, question_number)
                 ).fetchone()
-                
-                if answer_query:
-                    q_context['answer'] = answer_query['answer']
-                    logging.info(f"Retrieved correct answer for {actual_quiz} question {question_number}: {q_context['answer']}")
-            except Exception as e:
-                logging.error(f"Error fetching correct answer: {e}")
+                question_context['options'] = json.loads(options_result[0]) if options_result else []
 
-        question_context = q_context
-        logging.info(f"Prepared question context with keys: {list(question_context.keys())}")
-        logging.info(f"Question context details - Quiz: {question_context.get('quiz', 'N/A')}")
-        logging.info(f"Question context details - Question Number: {question_context.get('question_number', 'N/A')}")
-        logging.info(f"Question context details - Question: {question_context.get('question', 'N/A')}")
-        logging.info(f"Question context details - Options: {question_context.get('options', 'N/A')}")
-        logging.info(f"Question context details - User Response: {question_context.get('response', 'N/A')}")
-        logging.info(f"Question context details - Correct Answer: {question_context.get('answer', 'N/A')}")
+                resp_result = conn.execute(
+                    "SELECT response FROM responses WHERE user_id = ? AND quiz = ? AND question_number = ?",
+                    (user_id, actual_quiz, question_number)
+                ).fetchone()
+                question_context['response'] = resp_result[0] if resp_result else "No answer provided"
 
-        # Handle explanation or follow-up logic
-        if message.lower().strip() == "yes" and user_state in ['awaiting_explanation', 'awaiting_followup']:
-            conversation_history = get_conversation_history(user_id, conn, limit=3)
-            explanation_prompt = create_explanation_prompt(question_context, user, conversation_history)
-            response = generate_text(explanation_prompt)
-
-        elif not is_related_to_question(message, question_context):
-            return handle_unrelated_followup(phone_number, message, user, conn)
-
+        if USE_MONGODB:
+            conversation_history = []
+            history_docs = list(mongo_db.conversation_history.find(
+                {"user_id": user_id}
+            ).sort("timestamp", -1).limit(3))
+            for doc in reversed(history_docs):
+                conversation_history.append((doc['message'], doc['is_ai']))
         else:
-            try:
-                cursor.execute('''
-                    INSERT INTO followup_questions
-                    (user_id, quiz_name, quiz_question, followup_question, followup_date)
-                    VALUES (?, ?, ?, ?, datetime('now'))
-                ''', (user_id, question_context['quiz'], question_context['question'], message))
-                conn.commit()
-                logging.info(f"Stored follow-up question for user {user_id}")
-            except sqlite3.Error as e:
-                logging.error(f"Error storing follow-up question: {e}")
-
             conversation_history = get_conversation_history(user_id, conn, limit=3)
 
-            try:
+        # Decide which prompt to use
+        if user_state == 'awaiting_explanation':
+            if message.lower().strip() == "yes":
+                prompt = create_explanation_prompt(question_context, user, conversation_history)
+                response = generate_text(prompt)
+            else:
                 prompt = create_followup_prompt(question_context, message, conversation_history, user)
-            except Exception as e:
-                logging.error(f"Error in create_followup_prompt: {str(e)}")
-                prompt = f"The user '{user.get('name', 'Entrepreneur')}' who runs a {user.get('business_type', 'business')} in {user.get('location', 'Nigeria')} has asked: '{message}' about the business question from {question_context.get('quiz', 'unknown quiz')} question {question_context.get('question_number', 'unknown number')}: '{question_context.get('question', 'unknown question')}'. The question had these options: {question_context.get('options', [])}. The user selected: {question_context.get('response', 'unknown')}. The correct answer was: {question_context.get('answer', 'unknown')}. Provide a helpful, practical response (maximum 150 words) with specific Nigerian business advice and examples."
-
-            if prompt == "provide_explanation":
-                explanation_prompt = create_explanation_prompt(question_context, user, conversation_history)
-                response = generate_text(explanation_prompt)
-            elif prompt == "brief_response":
+                response = generate_text(prompt)
+        elif user_state in ['awaiting_followup', 'post_explanation', 'awaiting_action']:
+            thank_you_phrases = ['thank', 'thanks', 'appreciate', 'grateful', 'helpful']
+            if any(phrase in message.lower() for phrase in thank_you_phrases) and len(message.split()) <= 5:
                 response = random.choice([
                     "You're welcome! I'm glad I could help.",
-                    "I'm happy that was helpful!",
+                    "Happy to help!",
                     "It's my pleasure to assist you.",
                     "Glad I could be of help!",
-                    "You're most welcome. Feel free to ask if you need anything else."
                 ])
+            elif not is_related_to_question(message, question_context):
+                return handle_unrelated_followup(phone_number, message, user, conn)
             else:
+                prompt = create_followup_prompt(question_context, message, conversation_history, user)
                 response = generate_text(prompt)
+        else:
+            prompt = create_followup_prompt(question_context, message, conversation_history, user)
+            response = generate_text(prompt)
 
-        # Fallback in case AI response fails
-        if response.startswith("I apologize, but I'm having difficulty generating a response"):
+        if response is None:
+            send_message(phone_number, "I'm having difficulty connecting right now. Please try again.")
+            prompt_next_action(phone_number, conn, include_retry=True)
+        elif response.startswith("I apologize, but I'm having difficulty"):
             prompt_next_action(phone_number, conn, include_retry=True)
         else:
             send_message(phone_number, response)
-            store_conversation(user_id, message, False, conn)
-            store_conversation(user_id, response, True, conn)
+
+            if USE_MONGODB:
+                mongo_db.conversation_history.insert_one({
+                    "user_id": user_id,
+                    "message": message,
+                    "is_ai": False,
+                    "timestamp": datetime.utcnow()
+                })
+                mongo_db.conversation_history.insert_one({
+                    "user_id": user_id,
+                    "message": response,
+                    "is_ai": True,
+                    "timestamp": datetime.utcnow()
+                })
+            else:
+                store_conversation(user_id, message, False, conn)
+                store_conversation(user_id, response, True, conn)
+
             prompt_next_action(phone_number, conn)
 
-        conn.execute('UPDATE users SET state = ? WHERE phone_number = ?', ('post_explanation', phone_number))
-        conn.commit()
+        db.update_user_field(phone_number, {"state": "post_explanation"})
 
     except Exception as e:
-        error_message = f"Error in handle_ai_chat: {str(e)}"
-        logging.error(error_message)
-        logging.error(traceback.format_exc())
-        send_message(phone_number, "An unexpected error occurred. Please try again or contact support if the issue persists.")
+        logger.error(f"Error in handle_ai_chat: {str(e)}")
+        logger.error(traceback.format_exc())
+        send_message(phone_number, "An unexpected error occurred. Please try again or contact support.")
         prompt_next_action(phone_number, conn, include_retry=True)
 
-    logging.info(f"AI CHAT: Finished handling AI chat for user {phone_number}")
+
+
     
     
 # Helper functions to handle different conversation history formats
@@ -2001,8 +2231,7 @@ def prompt_next_action(phone_number, conn, include_retry=False):
 
     send_interactive_message(phone_number, message, buttons)
    
-    conn.execute('UPDATE users SET state = ? WHERE phone_number = ?', ('awaiting_action', phone_number))
-    conn.commit()
+    db.update_user_field(phone_number, {"state": "awaiting_action"})
     log_image_event(f"Updated user {phone_number} state to awaiting_action")
    
  
@@ -2115,170 +2344,170 @@ def get_current_user_data(user_identifier):
   
   
   
-def create_explanation_prompt(question_context, user, conversation_history):
-    # Step 1: Ensure user data is retrieved properly
-    user_name = user['name'].split()[0].capitalize() 
-    user_age = user['age']
-    user_gender = user['gender']
-    user_business_type = user['business_type']
-    user_location = user['location'].capitalize()
-    user_business_size = user['business_size']
-    user_financial_status = user['financial_status']
-    user_main_challenge = user['main_challenge']
-    user_record_keeping = user['record_keeping']
-    user_growth_goal = user['growth_goal']
-    user_funding_need = user['funding_need']
-    user_products = "various products"  # Generic term since data is not yet available
+# def create_explanation_prompt(question_context, user, conversation_history):
+#     # Step 1: Ensure user data is retrieved properly
+#     user_name = user['name'].split()[0].capitalize() 
+#     user_age = user['age']
+#     user_gender = user['gender']
+#     user_business_type = user['business_type']
+#     user_location = user['location'].capitalize()
+#     user_business_size = user['business_size']
+#     user_financial_status = user['financial_status']
+#     user_main_challenge = user['main_challenge']
+#     user_record_keeping = user['record_keeping']
+#     user_growth_goal = user['growth_goal']
+#     user_funding_need = user['funding_need']
+#     user_products = "various products"  # Generic term since data is not yet available
 
-    # Log the user data to ensure proper retrieval (can be used for debugging)
-    logging.info(f"Creating prompt for {user_name}, age: {user_age}, gender: {user_gender}, "
-                 f"business: {user_business_type}, location: {user_location}, "
-                 f"size: {user_business_size}, financial status: {user_financial_status}, "
-                 f"main challenge: {user_main_challenge}, record keeping: {user_record_keeping}, "
-                 f"growth goal: {user_growth_goal}, funding need: {user_funding_need}, "
-                 f"products: {user_products}")
+#     # Log the user data to ensure proper retrieval (can be used for debugging)
+#     logging.info(f"Creating prompt for {user_name}, age: {user_age}, gender: {user_gender}, "
+#                  f"business: {user_business_type}, location: {user_location}, "
+#                  f"size: {user_business_size}, financial status: {user_financial_status}, "
+#                  f"main challenge: {user_main_challenge}, record keeping: {user_record_keeping}, "
+#                  f"growth goal: {user_growth_goal}, funding need: {user_funding_need}, "
+#                  f"products: {user_products}")
 
-    # Step 2: Process the question and user's response
-    options = [opt.strip() for opt in question_context['options'].split('\n') if opt.strip()]
-    options_dict = {chr(65 + i): opt for i, opt in enumerate(options)}
-    user_answer = question_context['response'].strip()
-    correct_answer = question_context['answer'].strip().lower()
-    user_option = next((opt for opt, text in options_dict.items() if text.lower() == user_answer.lower()), 'Unknown')
-    correct_option = next((opt for opt, text in options_dict.items() if text.lower() == correct_answer), 'Unknown')
-    is_correct = user_answer.lower() == correct_answer
-    options_text = "\n".join([f"{opt}) {text}" for opt, text in options_dict.items()])
+#     # Step 2: Process the question and user's response
+#     options = [opt.strip() for opt in question_context['options'].split('\n') if opt.strip()]
+#     options_dict = {chr(65 + i): opt for i, opt in enumerate(options)}
+#     user_answer = question_context['response'].strip()
+#     correct_answer = question_context['answer'].strip().lower()
+#     user_option = next((opt for opt, text in options_dict.items() if text.lower() == user_answer.lower()), 'Unknown')
+#     correct_option = next((opt for opt, text in options_dict.items() if text.lower() == correct_answer), 'Unknown')
+#     is_correct = user_answer.lower() == correct_answer
+#     options_text = "\n".join([f"{opt}) {text}" for opt, text in options_dict.items()])
 
-    # # Step 3: Include recent conversation history
-    # recent_history = "\n".join([f"{'User' if not msg['is_ai'] else 'AI'}: {msg['message']}" for msg in conversation_history[-3:]])
+#     # # Step 3: Include recent conversation history
+#     # recent_history = "\n".join([f"{'User' if not msg['is_ai'] else 'AI'}: {msg['message']}" for msg in conversation_history[-3:]])
 
-    # Step 4: Create the personalized prompt
-    return f"""
-    You are a mentor helping {user_name}, a {user_age}-year-old {user_gender} entrepreneur who owns a small {user_business_type} business in {user_location}. 
-    Their business size is {user_business_size}, with a financial status of {user_financial_status}. 
-    Their main challenge is {user_main_challenge}, they use {user_record_keeping} for record keeping, their growth goal is {user_growth_goal},
-    and their funding need is {user_funding_need}. They sell various products. 
-    They just answered a question in a business quiz.
-    All should not be more than 50 words so make them precise.
-    Give (1) start with the  explanation of why the {user_answer} is incorrect and why {correct_option} is, (2)tailored advice ans (3) Quick Wins
-    Below are the details:
+#     # Step 4: Create the personalized prompt
+#     return f"""
+#     You are a mentor helping {user_name}, a {user_age}-year-old {user_gender} entrepreneur who owns a small {user_business_type} business in {user_location}. 
+#     Their business size is {user_business_size}, with a financial status of {user_financial_status}. 
+#     Their main challenge is {user_main_challenge}, they use {user_record_keeping} for record keeping, their growth goal is {user_growth_goal},
+#     and their funding need is {user_funding_need}. They sell various products. 
+#     They just answered a question in a business quiz.
+#     All should not be more than 50 words so make them precise.
+#     Give (1) start with the  explanation of why the {user_answer} is incorrect and why {correct_option} is, (2)tailored advice ans (3) Quick Wins
+#     Below are the details:
 
-    Question: {question_context['question']}
-    Options:
-    {options_text}
-    {user_name}'s Answer: {user_option}) {user_answer}
-    Correct Answer: {correct_option}) {correct_answer}
+#     Question: {question_context['question']}
+#     Options:
+#     {options_text}
+#     {user_name}'s Answer: {user_option}) {user_answer}
+#     Correct Answer: {correct_option}) {correct_answer}
     
     
-    {'The user answered correctly.' if is_correct else 'The user answered incorrectly.'}
+#     {'The user answered correctly.' if is_correct else 'The user answered incorrectly.'}
 
   
 
-    ### Explanation:
+#     ### Explanation:
 
-    1. ### Explanation:
+#     1. ### Explanation:
 
-    Greet {user_name} warmly, acknowledge their efforts, and provide a detailed explanation of the concept often in pidging English. Make sure to:
-    - start with the  explanation of why the {user_answer} is incorrect 
-    -  Kindly explain the  {correct_option}) {correct_answer} and why, while relating the explanation back to the {user_business_type} business they run.
+#     Greet {user_name} warmly, acknowledge their efforts, and provide a detailed explanation of the concept often in pidging English. Make sure to:
+#     - start with the  explanation of why the {user_answer} is incorrect 
+#     -  Kindly explain the  {correct_option}) {correct_answer} and why, while relating the explanation back to the {user_business_type} business they run.
     
-    - Use realistic examples relevant  {user_name} and to their business environment in {user_location}. For instance, describe how the correct answer applies to {user_name}'s daily operations. Dont use third person, make it personalized
+#     - Use realistic examples relevant  {user_name} and to their business environment in {user_location}. For instance, describe how the correct answer applies to {user_name}'s daily operations. Dont use third person, make it personalized
 
-    - Be a bit dramatic and make it more fun and show excitment, action and curiousity
-    - Let responses be in shorter paragraphs, dont lump them together.
-    - Explain the "how"the {correct_option} is somwhat similar but different from the {user_answer}
-    - Explain the "how" not just the "why" of the {correct_option} and how possible solutions that can be applied by {user_business_type} in real life.
-    - Always use icons and emojis 
-    - User very simple english for people with little or no education
-    - Don't repeat response related to products, anectodes, example  for {user_name}, make it random
-    - If their answer was incorrect, kindly explain why, while relating the explanation back to the {user_business_type} business they run.
-    - Use realistic examples relevant  {user_name} and to their business environment in {user_location}. For instance, describe how the correct answer applies to {user_name}'s daily operations. Dont use third person, make it personalized
+#     - Be a bit dramatic and make it more fun and show excitment, action and curiousity
+#     - Let responses be in shorter paragraphs, dont lump them together.
+#     - Explain the "how"the {correct_option} is somwhat similar but different from the {user_answer}
+#     - Explain the "how" not just the "why" of the {correct_option} and how possible solutions that can be applied by {user_business_type} in real life.
+#     - Always use icons and emojis 
+#     - User very simple english for people with little or no education
+#     - Don't repeat response related to products, anectodes, example  for {user_name}, make it random
+#     - If their answer was incorrect, kindly explain why, while relating the explanation back to the {user_business_type} business they run.
+#     - Use realistic examples relevant  {user_name} and to their business environment in {user_location}. For instance, describe how the correct answer applies to {user_name}'s daily operations. Dont use third person, make it personalized
    
-    - Use very simple English for people with little or no formal business education.
-    - If their correct answer {correct_answer} was wrong, kindly explain why, linking it to their {user_business_type}.
-    - Encourage {user_name} to think about how to use this idea in their {user_business_type}
-    - If their answer was wrong, kindly explain why, linking it to their {user_business_type}.
-    - Encourage {user_name} to think about how to use this idea in their {user_business_type}
-    - Always include a bit of pidgin English and sometimes references to Nigerian culture in the text to make it relatable.
-    - Use very simple English for people with little or no formal business education.
-    - Explain how the correct answer {correct_answer} can help {user_name}'s business in real life.
-    - Use emojis to make key points stand out.
-    - If their answer was wrong, kindly explain why, linking it to their business.
-    -  Make it easy to understand and do for a business with 0-1 employees.
+#     - Use very simple English for people with little or no formal business education.
+#     - If their correct answer {correct_answer} was wrong, kindly explain why, linking it to their {user_business_type}.
+#     - Encourage {user_name} to think about how to use this idea in their {user_business_type}
+#     - If their answer was wrong, kindly explain why, linking it to their {user_business_type}.
+#     - Encourage {user_name} to think about how to use this idea in their {user_business_type}
+#     - Always include a bit of pidgin English and sometimes references to Nigerian culture in the text to make it relatable.
+#     - Use very simple English for people with little or no formal business education.
+#     - Explain how the correct answer {correct_answer} can help {user_name}'s business in real life.
+#     - Use emojis to make key points stand out.
+#     - If their answer was wrong, kindly explain why, linking it to their business.
+#     -  Make it easy to understand and do for a business with 0-1 employees.
     
     
-    2. Based on the question, correct answer, and {user_name}'s situation, provide 2-3 specific recommendations: After explaining the {correct_answer}, provide highly tailored advice in one or all of these three areas: 1. Cost Efficiency and Resource Management, 2. Revenue Growth and Customer Acquisition,
-    and Potential Partnership using the following:
+#     2. Based on the question, correct answer, and {user_name}'s situation, provide 2-3 specific recommendations: After explaining the {correct_answer}, provide highly tailored advice in one or all of these three areas: 1. Cost Efficiency and Resource Management, 2. Revenue Growth and Customer Acquisition,
+#     and Potential Partnership using the following:
     
-       - Web Search and Data Gathering (Do not include this in your response to the user):
-       - Conduct a web search for recent information about {user_business_type} businesses in {user_location}
-       - Find data on local market conditions, popular products, pricing trends, and common challenges
-       - Identify local events, potential partners, and suppliers relevant to {user_business_type}
-       - Research successful strategies used by similar businesses in the area
+#        - Web Search and Data Gathering (Do not include this in your response to the user):
+#        - Conduct a web search for recent information about {user_business_type} businesses in {user_location}
+#        - Find data on local market conditions, popular products, pricing trends, and common challenges
+#        - Identify local events, potential partners, and suppliers relevant to {user_business_type}
+#        - Research successful strategies used by similar businesses in the area
 
   
-    The Tailored Business Advice (15 words) should be:
-       Based on the question, correct answer, their challenge ({user_main_challenge}), and your Web Search and Data, provide 2-3 specific recommendations:
+#     The Tailored Business Advice (15 words) should be:
+#        Based on the question, correct answer, their challenge ({user_main_challenge}), and your Web Search and Data, provide 2-3 specific recommendations:
        
-       a) Business-Specific Strategies[Very specific action based on the correct answer]:
-          - Suggest pricing strategies based on local market research
-          - Recommend specific local events or venues for selling
-          - Propose product ideas or modifications based on market trends
+#        a) Business-Specific Strategies[Very specific action based on the correct answer]:
+#           - Suggest pricing strategies based on local market research
+#           - Recommend specific local events or venues for selling
+#           - Propose product ideas or modifications based on market trends
        
-       b) Challenge-Specific Solutions[Very specific action based on the correct answer]:
-          - Address their {user_main_challenge} with actionable advice
-          - Suggest partnerships or collaborations with local businesses (use real examples from your search)
-          - Recommend cost-saving or revenue-generating ideas suitable for their {user_business_size} business
+#        b) Challenge-Specific Solutions[Very specific action based on the correct answer]:
+#           - Address their {user_main_challenge} with actionable advice
+#           - Suggest partnerships or collaborations with local businesses (use real examples from your search)
+#           - Recommend cost-saving or revenue-generating ideas suitable for their {user_business_size} business
 
-       c) Growth Opportunities[Very specific action based on the correct answer]:
-          - Suggest specific steps to achieve their {user_growth_goal}
-          - Recommend financial strategies based on their {user_financial_status} and {user_funding_need}
-          - Propose record-keeping improvements considering their {user_record_keeping} method
+#        c) Growth Opportunities[Very specific action based on the correct answer]:
+#           - Suggest specific steps to achieve their {user_growth_goal}
+#           - Recommend financial strategies based on their {user_financial_status} and {user_funding_need}
+#           - Propose record-keeping improvements considering their {user_record_keeping} method
 
 
-    ### Guidelines:
-    - Use recent web search of 2024 results to provide relevant, location-specific advice and 2024 prices and similar products
-    - All suggestions should be actionable for a {user_business_size} business
-    - Use simple language, short sentences, and occasional pidgin English
-    - Incorporate Nigerian cultural references to increase relatability
-    - Emphasize the 'why' behind each recommendation
-    - Highlight potential risks of not implementing the advice
+#     ### Guidelines:
+#     - Use recent web search of 2024 results to provide relevant, location-specific advice and 2024 prices and similar products
+#     - All suggestions should be actionable for a {user_business_size} business
+#     - Use simple language, short sentences, and occasional pidgin English
+#     - Incorporate Nigerian cultural references to increase relatability
+#     - Emphasize the 'why' behind each recommendation
+#     - Highlight potential risks of not implementing the advice
 
-    Example Response Format:
-    "💡 {user_name}, about [concept from question], it's crucial for your {user_business_type} because [reason tied to correct answer and their challenge].
+#     Example Response Format:
+#     "💡 {user_name}, about [concept from question], it's crucial for your {user_business_type} because [reason tied to correct answer and their challenge].
 
-    In {user_location}, you could:
-    1. Sell your [typical product for their business type] at [specific local event from your search] next month
-    2. Partner with [real local business from your search] to cross-promote
-    3. Get your supplies from [specific supplier or market from your search] to save [researched amount] Naira
+#     In {user_location}, you could:
+#     1. Sell your [typical product for their business type] at [specific local event from your search] next month
+#     2. Partner with [real local business from your search] to cross-promote
+#     3. Get your supplies from [specific supplier or market from your search] to save [researched amount] Naira
 
-     3. Detailed Quick Win (15 words):
-    Provide a specific, immediately actionable plan that addresses all aspects of the user's situation:
+#      3. Detailed Quick Win (15 words):
+#     Provide a specific, immediately actionable plan that addresses all aspects of the user's situation:
 
-       🎯 Quick Win: Tomorrow, try this specific plan for your {user_business_type} :
+#        🎯 Quick Win: Tomorrow, try this specific plan for your {user_business_type} :
 
-       1. Action: [Very specific action based on correct answer and research ]
-          - Consider user's [{user_financial_status} and {user_main_challenge}]
-          - Product: [Name a specific, relevant product for their business type]
-          - Location: [Name a specific market, street, or event in {user_location}]
-          - Timing: [Suggest a specific day and time]
-          - Price: [Recommend a specific price in Naira, based on local market research, considering 2024 market prices and inflation]
+#        1. Action: [Very specific action based on correct answer and research ]
+#           - Consider user's [{user_financial_status} and {user_main_challenge}]
+#           - Product: [Name a specific, relevant product for their business type]
+#           - Location: [Name a specific market, street, or event in {user_location}]
+#           - Timing: [Suggest a specific day and time]
+#           - Price: [Recommend a specific price in Naira, based on local market research, considering 2024 market prices and inflation]
 
-       2. Resources Needed[Very specific action based on the correct answer]:
-          - Money: [Specific amount in Naira, considering their {user_financial_status} and and {user_main_challenge}]
-          - Time: [Exact time commitment, e.g., "2 hours in the morning"]
-          - People: [Specify if they need help, e.g., "Ask your sister to assist for 1 hour"]
+#        2. Resources Needed[Very specific action based on the correct answer]:
+#           - Money: [Specific amount in Naira, considering their {user_financial_status} and and {user_main_challenge}]
+#           - Time: [Exact time commitment, e.g., "2 hours in the morning"]
+#           - People: [Specify if they need help, e.g., "Ask your sister to assist for 1 hour"]
 
       
-       This plan directly addresses your {user_main_challenge}and {user_main_challenge} by [specific outcome]. 
-       It also moves you closer to your {user_growth_goal} and  by [specific benefit].
+#        This plan directly addresses your {user_main_challenge}and {user_main_challenge} by [specific outcome]. 
+#        It also moves you closer to your {user_growth_goal} and  by [specific benefit].
 
-       If you need the ₦[specific amount] for this, consider [funding suggestion based on {user_funding_need}].
+#        If you need the ₦[specific amount] for this, consider [funding suggestion based on {user_funding_need}].
 
-      You can end with Asking one prompting question such as: Wetin you think? You fit try this one? Make you tell me how e go when you don do am!"
+#       You can end with Asking one prompting question such as: Wetin you think? You fit try this one? Make you tell me how e go when you don do am!"
 
-    Remember to use simple English and Pidgin where appropriate, and ensure all suggestions are feasible for a {user_business_size} business in {user_location}.
-    """
-    logging.debug(f"Generated personalized prompt for {user_name}: {prompt[:200]}...")  # Log first 200 chars
+#     Remember to use simple English and Pidgin where appropriate, and ensure all suggestions are feasible for a {user_business_size} business in {user_location}.
+#     """
+#     logging.debug(f"Generated personalized prompt for {user_name}: {prompt[:200]}...")  # Log first 200 chars
     
 
   
@@ -2297,18 +2526,9 @@ def create_explanation_prompt(question_context, user, conversation_history):
     user_record_keeping = user['record_keeping']
     user_growth_goal = user['growth_goal']
     user_funding_need = user['funding_need']
-    user_products = "various products"  # Generic term since data is not yet available
-
-    # Log the user data to ensure proper retrieval (can be used for debugging)
-    logging.info(f"Creating prompt for {user_name}, age: {user_age}, gender: {user_gender}, "
-                 f"business: {user_business_type}, location: {user_location}, "
-                 f"size: {user_business_size}, financial status: {user_financial_status}, "
-                 f"main challenge: {user_main_challenge}, record keeping: {user_record_keeping}, "
-                 f"growth goal: {user_growth_goal}, funding need: {user_funding_need}, "
-                 f"products: {user_products}")
 
     # Step 2: Process the question and user's response
-    options = [opt.strip() for opt in question_context['options'].split('\n') if opt.strip()]
+    options = [opt.strip() for opt in question_context['options'].split('\n') if opt.strip()] if isinstance(question_context['options'], str) else question_context['options']
     options_dict = {chr(65 + i): opt for i, opt in enumerate(options)}
     user_answer = question_context['response'].strip()
     correct_answer = question_context['answer'].strip().lower()
@@ -2317,15 +2537,25 @@ def create_explanation_prompt(question_context, user, conversation_history):
     is_correct = user_answer.lower() == correct_answer
     options_text = "\n".join([f"{opt}) {text}" for opt, text in options_dict.items()])
 
-    # Step 3: Create the personalized prompt with EMPHASIS on 50-word limit
+    # Step 3: Create the personalized prompt
     return f"""
-    ⚠️ IMPORTANT: YOUR ENTIRE RESPONSE MUST BE 90 WORDS OR LESS TOTAL. NO EXCEPTIONS. ⚠️
+    ⚠️ CRITICAL INSTRUCTIONS - READ FIRST ⚠️
+    - The user's name is {user_name} - USE THIS NAME throughout by personalizing the response, NOT fictional names like "Uncle Kunle"
+    - They run a {user_business_type} business in {user_location} - USE THIS as your example
+    - DO NOT create fictional characters or scenarios with made-up names
+    - Speak directly to {user_name} about THEIR {user_business_type} business
+    - Say "Imagine YOU, {user_name}, with your {user_business_type} in {user_location}..."
+    - NOT "Imagine Uncle Kunle with his mama put joint"
+    
+    ⚠️ WORD COUNT: YOUR ENTIRE RESPONSE MUST BE 200-250 WORDS TOTAL ⚠️
 
-    You are a mentor helping {user_name}, a {user_age}-year-old {user_gender} entrepreneur who owns a small {user_business_type} business in {user_location}. 
-    Their business size is {user_business_size}, with a financial status of {user_financial_status}. 
-    Their main challenge is {user_main_challenge}, they use {user_record_keeping} for record keeping, their growth goal is {user_growth_goal},
-    and their funding need is {user_funding_need}. They sell various products. 
-    They just answered a question in a business quiz.
+    You are a mentor helping {user_name}, a {user_age}-year-old {user_gender} entrepreneur who owns a {user_business_type} business in {user_location}. 
+    Business size: {user_business_size}
+    Financial status: {user_financial_status}
+    Main challenge: {user_main_challenge}
+    Record keeping: {user_record_keeping}
+    Growth goal: {user_growth_goal}
+    Funding need: {user_funding_need}
 
     Question: {question_context['question']}
     Options:
@@ -2335,37 +2565,37 @@ def create_explanation_prompt(question_context, user, conversation_history):
     
     {'The user answered correctly.' if is_correct else 'The user answered incorrectly.'}
 
-    Within your 50-WORD RESPONSE, include these three elements:
+    Structure your 200-250 word response in THREE parts:
 
-    1. Explanation:
+    1. Explanation (100-120 words):
+    - Greet {user_name} warmly using pidgin English
+    - Address {user_name} directly throughout
     - Explain why {correct_answer} is correct (and if applicable, why {user_answer} is wrong)
-    - Explain HOW {correct_option} is somewhat similar but different from {user_answer}
-    - Explain HOW not just WHY the correct answer works and can be applied to {user_business_type} in real life
-    - Relate it to their {user_business_type}
-    - Use simple English with some pidgin
-    - Be dramatic, fun, humorous, and show excitement/curiosity
-    - Include a very brief anecdote if possible
+    - Use {user_name}'s actual {user_business_type} business in {user_location} as the example
+    - Say: "Imagine YOU, {user_name}, with YOUR {user_business_type} in {user_location}..."
+    - Use simple English mixed with pidgin
+    - Be dramatic, fun, and show excitement with emojis
+    - Include realistic Naira amounts relevant to {user_business_type}
 
-    2. Tailored Business Advice:
-    - Give ONE specific recommendation based on:
-      - Their challenge ({user_main_challenge})
-      - Their location ({user_location})
-      - Their business type ({user_business_type})
-    - Make it immediately actionable
-    - Include insights from recent (2024) web search results if possible
+    2. Practical Advice (50-70 words):
+    - Give ONE specific recommendation for {user_name}'s {user_business_type}
+    - Address their challenge: {user_main_challenge}
+    - Make it actionable in {user_location}
+    - Include realistic 2024 Naira prices for {user_business_type}
 
-    3. Quick Win:
-    - ONE very specific action they can take tomorrow
-    - Consider their financial status ({user_financial_status})
-    - Include specific details (product, location, timing, price in Naira)
+    3. Quick Win (50-60 words):
+    - ONE specific action {user_name} can take tomorrow
+    - For their {user_business_type} in {user_location}
+    - Consider their financial status: {user_financial_status}
+    - Include specific details (product, location, timing, price)
+    - End with a pidgin question: "Wetin you think?"
 
-    Use multiple icons and emojis throughout, simple language, and be warm and encouraging.
-    End with a brief question in pidgin like "Wetin you think?"
-
-    ⚠️ FINAL REMINDER: THE ENTIRE RESPONSE MUST BE 50 WORDS OR LESS TOTAL. THIS IS ABSOLUTELY CRITICAL. ⚠️
+    Remember: Use emojis, simple language, be warm and encouraging.
+    TOTAL: 200-250 WORDS. Use {user_name}'s name and business throughout!
     """
-    logging.debug(f"Generated personalized prompt for {user_name}: {prompt[:200]}...")  # Log first 200 chars
-    
+
+
+
     
   
   
@@ -2407,7 +2637,13 @@ def create_followup_prompt(question_context, user_message, conversation_history,
   
     
     user_name = user['name'].split()[0].capitalize()
+    user_age = user['age']
+    user_business_type = user['business_type']
     user_location = user['location'].capitalize()
+    user_business_size = user['business_size']
+    user_financial_status = user['financial_status']
+    user_main_challenge = user['main_challenge']
+    user_growth_goal = user['growth_goal']
     
     # Transform record keeping status into natural context
     record_context = {
@@ -2649,10 +2885,17 @@ def create_followup_prompt(question_context, user_message, conversation_history,
     full_conversation = "\n".join([f"{'AI' if is_ai else 'User'}: {msg}" for msg, is_ai in conversation_history])
     
       # For other cases, construct the full prompt
+  
     return f"""
-      
-    You are a helpful assistant for small business owners in Nigeria with limited education. You're continuing a conversation about a quiz question and ending it with a practical advice. Here's the context:
+    ⚠️ CRITICAL INSTRUCTIONS - READ FIRST ⚠️
+    - The user's name is {user_name} - USE THIS NAME, NOT fictional names
+    - They run a {user_business_type} business in {user_location} - USE THIS as examples
+    - DO NOT create fictional characters like "Uncle Kunle" or "Mama Ngozi"
+    - Speak directly to {user_name} about THEIR business
+    
+    ⚠️ WORD COUNT: 150-200 WORDS TOTAL ⚠️
 
+    You are continuing a conversation with {user_name}, a {user_age}-year-old entrepreneur with a {user_business_type} business in {user_location}.
     Recent Conversation:
     {conversation_context}
 
@@ -2665,7 +2908,7 @@ def create_followup_prompt(question_context, user_message, conversation_history,
     The user's latest message is: "{user_message}"
 
    1. Your response should:
-    - Be around 10. 0 words and specific to the user's question and recent conversation:
+    - Be around 100 words and specific to the user's question and recent conversation:
     - Don't repeat anecdotes or examples for each user
     - When using currency to explain, use Naira only
     - Don't repeat response for each user, make it random
@@ -2815,8 +3058,7 @@ def create_followup_prompt(question_context, user_message, conversation_history,
 def handle_followup_request(phone_number, conn):
     log_image_event(f"Handling follow-up request for {phone_number}")
     send_message(phone_number, "Please type your follow-up question and press send.")
-    conn.execute('UPDATE users SET state = ? WHERE phone_number = ?', ('awaiting_followup', phone_number))
-    conn.commit()
+    db.update_user_field(phone_number, {"state": "awaiting_followup"})
     log_image_event(f"Updated user {phone_number} state to awaiting_followup")
    
    
@@ -3053,55 +3295,83 @@ def handle_post_explanation_action(phone_number, action, user, conn):
       
       
 
-
 def get_incorrect_questions(user_id, conn, quiz_name):
-    """
-    Returns a list of (id, question, answer, question_number, quiz)
-    for every question the user got wrong in quiz_name.
-    On DB errors returns None (so caller can distinguish “error” vs “no wrong answers”).
-    """
-    # Sanity‑check that conn is a real sqlite3.Connection
-    if not hasattr(conn, 'cursor'):
-        logging.error(f"get_incorrect_questions: expected sqlite3.Connection, got {type(conn)}")
-        return None
-
     try:
-        cursor = conn.cursor()
-        # 1) Grab the numbers of the wrong questions
-        query1 = """
-            SELECT question_number
-            FROM responses
-            WHERE user_id = ? AND quiz = ? AND correct = 0
-            ORDER BY question_number ASC
-        """
-        cursor.execute(query1, (user_id, quiz_name))
-        q_nums = [row[0] for row in cursor.fetchall()]
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+            user_id_str = str(user_id)
 
-        # 2) If none wrong, return empty list
-        if not q_nums:
-            return []
+            # Get question numbers the user got wrong
+            wrong_responses = list(mongo_db.responses.find({
+                "user_id": user_id_str,
+                "quiz": quiz_name,
+                "correct": False
+            }, {"question_number": 1, "response": 1}))
 
-        # 3) Otherwise fetch the full question records
-        placeholders = ','.join('?' for _ in q_nums)
-        query2 = f"""
-            SELECT id, question, answer, question_number, quiz
-            FROM questions
-            WHERE quiz = ? AND question_number IN ({placeholders})
-            ORDER BY question_number ASC
-        """
-        params = [quiz_name] + q_nums
-        cursor.execute(query2, params)
-        results = cursor.fetchall()
+            if not wrong_responses:
+                return []
 
-        logging.info(f"get_incorrect_questions: fetched {len(results)} wrong questions for user={user_id}, quiz={quiz_name}")
-        return results
+            wrong_q_nums = [r['question_number'] for r in wrong_responses]
+            response_map = {r['question_number']: r['response'] for r in wrong_responses}
+
+            # Get the actual questions
+            questions = list(mongo_db.questions.find({
+                "quiz": quiz_name,
+                "question_number": {"$in": wrong_q_nums}
+            }).sort("question_number", 1))
+
+            # Build result as list of dicts
+            results = []
+            for q in questions:
+                results.append({
+                    "id": str(q.get('_id')),
+                    "question": q.get('question'),
+                    "answer": q.get('answer'),
+                    "question_number": q.get('question_number'),
+                    "quiz": q.get('quiz'),
+                    "options": q.get('options', []),
+                    "response": response_map.get(q.get('question_number'), "No answer provided")
+                })
+
+            logging.info(f"get_incorrect_questions: fetched {len(results)} wrong questions for user={user_id_str}, quiz={quiz_name}")
+            return results
+
+        else:
+            if not hasattr(conn, 'cursor'):
+                logging.error(f"get_incorrect_questions: expected sqlite3.Connection, got {type(conn)}")
+                return None
+
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT question_number FROM responses
+                WHERE user_id = ? AND quiz = ? AND correct = 0
+                ORDER BY question_number ASC
+            """, (user_id, quiz_name))
+            q_nums = [row[0] for row in cursor.fetchall()]
+
+            if not q_nums:
+                return []
+
+            placeholders = ','.join('?' for _ in q_nums)
+            cursor.execute(f"""
+                SELECT id, question, answer, question_number, quiz
+                FROM questions
+                WHERE quiz = ? AND question_number IN ({placeholders})
+                ORDER BY question_number ASC
+            """, [quiz_name] + q_nums)
+            results = cursor.fetchall()
+
+            logging.info(f"get_incorrect_questions: fetched {len(results)} wrong questions for user={user_id}, quiz={quiz_name}")
+            return results
 
     except Exception as e:
         logging.error(f"get_incorrect_questions error: {e}")
         logging.error(traceback.format_exc())
         return None
 
-      
+
+
       
       
 
@@ -3207,128 +3477,155 @@ def get_incorrect_questions(user_id, conn, quiz_name):
         
 def send_next_question(phone_number, user, conn):
     try:
-        # Fetch the current question
-        cursor = conn.cursor()
-        cursor.execute('SELECT current_question, quiz_in_review FROM users WHERE phone_number = ?', (phone_number,))
-        result = cursor.fetchone()
-       
-        if result is None:
-            raise ValueError(f"No user found with phone number {phone_number}")
-       
-        current_question = int(result[0])
-        quiz_name = result[1]
-        
+        user_id = str(user['_id']) if USE_MONGODB else user['id']
+
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+            current_question = int(user.get('current_question', 0))
+            quiz_name = user.get('quiz_in_review')
+        else:
+            cursor = conn.cursor()
+            cursor.execute('SELECT current_question, quiz_in_review FROM users WHERE phone_number = ?', (phone_number,))
+            result = cursor.fetchone()
+            if result is None:
+                raise ValueError(f"No user found with phone number {phone_number}")
+            current_question = int(result[0])
+            quiz_name = result[1]
+
         if not quiz_name:
             raise ValueError("No quiz in review found for this user")
-       
-        logging.info(f"Current question for user {phone_number}: {current_question}")
-        logging.info(f"Quiz in review: {quiz_name}")
-       
-        # Fetch incorrect questions with the quiz_name parameter
-        incorrect_questions = get_incorrect_questions(user['id'], conn, quiz_name)
-       
-        logging.info(f"Fetched {len(incorrect_questions)} incorrect questions for user {phone_number}")
-       
+
+        logging.info(f"Current question for user {phone_number}: {current_question}, quiz: {quiz_name}")
+
+        incorrect_questions = get_incorrect_questions(user_id, conn, quiz_name)
+
+        if incorrect_questions is None:
+            send_message(phone_number, "An error occurred while retrieving questions. Please try again.")
+            return
+
         if current_question >= len(incorrect_questions):
             send_message(phone_number, "Great job! You've reviewed all your incorrect questions. Would you like to start a new quiz?")
             present_options(phone_number, user, conn)
             return
-       
+
         question_data = incorrect_questions[current_question]
-       
-        logging.info(f"Question data for current question: {question_data}")
-       
-        # Ensure question_data is a dictionary
+
         if not isinstance(question_data, dict):
             question_data = dict(zip(['id', 'question', 'answer', 'question_number', 'quiz'], question_data))
-       
-        logging.info(f"Question data after conversion: {question_data}")
-       
-        # Get user's response for this question
-        response_query = """
-        SELECT response 
-        FROM responses 
-        WHERE user_id = ? AND quiz = ? AND question_number = ? AND correct = 0
-        """
-        cursor.execute(response_query, (user['id'], quiz_name, question_data['question_number']))
-        response_result = cursor.fetchone()
-        
-        if not response_result:
-            raise ValueError(f"No incorrect response found for question {question_data['question_number']}")
-            
-        user_answer = response_result[0]
+
+        q_number = question_data['question_number']
+
+        # Get user response and options
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+
+            response_doc = mongo_db.responses.find_one({
+                "user_id": user_id,
+                "quiz": quiz_name,
+                "question_number": q_number,
+                "correct": False
+            })
+            user_answer = response_doc['response'] if response_doc else "No answer provided"
+
+            q_doc = mongo_db.questions.find_one({
+                "quiz": quiz_name,
+                "question_number": q_number
+            })
+
+            if q_doc:
+                raw_options = q_doc.get('options', [])
+            else:
+                raw_options = []
+
+            # Options are stored as a JSON string in MongoDB — parse it
+            if isinstance(raw_options, str):
+                try:
+                    raw_options = json.loads(raw_options)
+                except Exception:
+                    raw_options = []
+
+        else:
+            cursor = conn.cursor()
+            response_result = cursor.execute(
+                "SELECT response FROM responses WHERE user_id = ? AND quiz = ? AND question_number = ? AND correct = 0",
+                (user_id, quiz_name, q_number)
+            ).fetchone()
+            user_answer = response_result[0] if response_result else "No answer provided"
+
+            options_result = cursor.execute(
+                "SELECT options FROM questions WHERE quiz = ? AND question_number = ?",
+                (quiz_name, q_number)
+            ).fetchone()
+            raw_options = json.loads(options_result[0]) if options_result else []
+
+        # Normalize options
+        if isinstance(raw_options, str):
+            try:
+                options = json.loads(raw_options)
+            except Exception:
+                options = []
+        elif isinstance(raw_options, list):
+            options = raw_options
+        else:
+            options = []
+
+        # Final fallback — load from JSON file if options still empty
+        if len(options) == 0:
+            logging.warning(f"Options empty for {quiz_name} q{q_number}, loading from JSON file")
+            quiz_data = load_quiz_data(quiz_name)
+            if quiz_data:
+                questions_list = quiz_data.get('questions', [])
+                for i, q in enumerate(questions_list):
+                    if i + 1 == q_number:
+                        options = q.get('options', [])
+                        break
+
+        if len(options) == 0:
+            raise ValueError(f"Could not find options for {quiz_name} question {q_number}")
+
+        logging.info(f"Options for {quiz_name} q{q_number}: {options}")
+
         question_data['response'] = user_answer
-        
-        # Fetch options for this question
-        options_query = """
-        SELECT options 
-        FROM questions 
-        WHERE quiz = ? AND question_number = ?
-        """
-        cursor.execute(options_query, (quiz_name, question_data['question_number']))
-        options_result = cursor.fetchone()
-        
-        if not options_result:
-            raise ValueError(f"No options found for question {question_data['question_number']}")
-            
-        options_str = options_result[0]
-        question_data['options'] = options_str
-       
-        # Check if required fields are present
-        required_fields = ['question', 'options', 'answer', 'response', 'quiz', 'question_number']
-        for field in required_fields:
+        question_data['options'] = options
+
+        # Validate required fields
+        for field in ['question', 'answer', 'response', 'quiz', 'question_number']:
             if field not in question_data or question_data[field] is None:
-                logging.error(f"Missing required field: {field}")
-                logging.error(f"Full question data: {question_data}")
                 raise ValueError(f"Missing required field: {field}")
-       
-        quiz_name = question_data['quiz']
-        question_number = question_data['question_number']
+
         question_text = question_data['question']
-        options_str = question_data['options']
         correct_answer = question_data['answer']
-        user_answer = question_data['response']
-       
-        # Parse options
-        try:
-            options = json.loads(options_str)
-            if not isinstance(options, list) or len(options) != 3:
-                raise ValueError("Options must be a list of 3 items")
-        except json.JSONDecodeError as e:
-            logging.error(f"Failed to parse options JSON: {options_str}")
-            raise ValueError(f"Invalid options format: {str(e)}")
-       
-        # Do not add additional A, B, C to options
-        formatted_options = options
-       
-        message = f"Quiz: {quiz_name}\nQuestion {question_number}:\n\n{question_text}\n\nOptions:\n"
-        message += "\n".join(formatted_options)
-        message += f"\n\nYour answer: {user_answer}\nCorrect answer: {correct_answer}"
-       
+
+        message = f"Quiz: {quiz_name}\nQuestion {q_number}:\n\n{question_text}\n\nOptions:\n"
+        message += "\n".join(options)
+        message += f"\n\nYour answer: {user_answer}\nCorrect answer: {correct_answer.upper()}"
+
         send_message(phone_number, message)
-       
-        # Add interactive buttons for explanation
+
         buttons = [
             {"type": "reply", "reply": {"id": "explain_yes", "title": "Yes"}},
             {"type": "reply", "reply": {"id": "explain_no", "title": "No"}}
         ]
         send_interactive_message(phone_number, "Would you like an explanation for this question?", buttons)
-       
-        # Update user state and increment current question
-        conn.execute('UPDATE users SET state = ?, current_question = ? WHERE phone_number = ?',
-                     ('awaiting_explanation', current_question + 1, phone_number))
-        conn.commit()
-        logging.info(f"Updated user {phone_number} state to awaiting_explanation and incremented current_question to {current_question + 1}")
-       
+
+        db.update_user_field(phone_number, {
+            "state": "awaiting_explanation",
+            "current_question": current_question + 1
+        })
+        logging.info(f"Updated user {phone_number} to awaiting_explanation, next question index: {current_question + 1}")
+
     except ValueError as ve:
         logging.error(f"ValueError in send_next_question: {str(ve)}")
         send_message(phone_number, f"An error occurred: {str(ve)}. Please contact support.")
     except Exception as e:
         logging.error(f"Unexpected error in send_next_question: {str(e)}")
         logging.error(traceback.format_exc())
-        send_message(phone_number, "An unexpected error occurred while fetching the next question. Please try again or contact support.")
+        send_message(phone_number, "An unexpected error occurred. Please try again or contact support.")
 
-        
+
+
 
 def init_db(db_file='user_data_bootcamp.db'):
     conn = sqlite3.connect(db_file)
@@ -3485,88 +3782,142 @@ init_db()
 # Replace your quiz_visibility line with this:
 from collections import defaultdict
 # Remove any existing quiz_visibility declarations and use only this one:
-quiz_visibility = {}  # Use regular dict, not defaultdict
+app.config['QUIZ_VISIBILITY'] = {}
 
 def load_quiz_visibility_from_db():
     """Load quiz visibility settings from database into memory"""
-    global quiz_visibility
-    conn = sqlite3.connect('user_data_bootcamp.db')  # Fixed: use sqlite3.connect instead of get_db_connection()
-    cursor = conn.cursor()
-    try:
-        # Fixed: Read from quiz_status table, not quizzes table
-        cursor.execute("SELECT quiz, enabled FROM quiz_status")
-        quiz_visibility = {}  # Clear existing
-        for row in cursor.fetchall():
-            # Fixed: row is tuple, not dict - use row[0] and row[1]
-            quiz_visibility[row[0]] = bool(row[1])
-        print(f"Loaded quiz visibility from DB: {quiz_visibility}")
-    except Exception as e:
-        print(f"Error loading quiz visibility: {e}")
-    finally:
-        conn.close()
-        
+    
+    if USE_MONGODB:
+        from db_mongo import get_mongo_db
+        try:
+            mongo_db = get_mongo_db()
+            temp_visibility = {}  # Use temp dict
+            
+            # Get all quiz statuses from MongoDB
+            statuses = mongo_db.quiz_status.find({})
+            for status in statuses:
+                temp_visibility[status['quiz']] = bool(status.get('enabled', True))
+            
+            # Store in Flask config
+            app.config['QUIZ_VISIBILITY'] = temp_visibility
+            print(f"Loaded quiz visibility from MongoDB: {temp_visibility}")
+        except Exception as e:
+            print(f"Error loading quiz visibility from MongoDB: {e}")
+    else:
+        # SQLite version
+        conn = db.get_connection()
+        try:
+            temp_visibility = {}
+            cursor = conn.cursor()
+            
+            # Get all quizzes from files
+            all_quizzes = []
+            for file in os.listdir('data_bootcamp'):
+                if file.startswith('quiz') and file.endswith('.json'):
+                    quiz_number = file.split('.')[0].replace('quiz', '')
+                    all_quizzes.append(quiz_number)
+            
+            for quiz_num in all_quizzes:
+                quiz_name = f"quiz{quiz_num}"
+                cursor.execute("SELECT enabled FROM quiz_status WHERE quiz = ?", (quiz_name,))
+                result = cursor.fetchone()
+                
+                if result:
+                    temp_visibility[quiz_name] = bool(result[0])
+                else:
+                    temp_visibility[quiz_name] = True
+            
+            # Store in Flask config
+            app.config['QUIZ_VISIBILITY'] = temp_visibility
+            print(f"Loaded quiz visibility from SQLite: {temp_visibility}")
+        except Exception as e:
+            print(f"Error loading quiz visibility from SQLite: {e}")
+        finally:
+            conn.close()
+
+
+                
         
 # Fixed GET endpoint - reads from quiz_status table
-@app.route('/api/quizzes')
-def get_quizzes():
-    # Fixed: Load fresh data from database every time
-    load_quiz_visibility_from_db()
-    
-    conn = sqlite3.connect('user_data_bootcamp.db')
-    cursor = conn.cursor()
-    
-    # Get all unique quizzes from questions table
-    cursor.execute("SELECT DISTINCT quiz FROM questions ORDER BY quiz")
-    all_quizzes = [row[0] for row in cursor.fetchall()]
-    
-    conn.close()
-    
-    result = []
-    for quiz in all_quizzes:
-        # Fixed: Use quiz_visibility cache that's loaded from quiz_status table
-        enabled = quiz_visibility.get(quiz, True)
-        result.append({
-            "quiz": quiz,
-            "enabled": enabled
-        })
-    
-    print(f"get_quizzes returning: {result}")
-    return jsonify(result)
-
-# Fixed POST endpoint - writes to quiz_status table
-@app.route('/api/quizzes/<quiz_name>', methods=['POST'])
-def update_quiz_status(quiz_name):
-    data = request.get_json()
-    if not data or 'enabled' not in data:
-        return jsonify({'error': 'Missing enabled status'}), 400
-    
-    enabled = bool(data['enabled'])
-    print(f"Updating quiz '{quiz_name}' to enabled={enabled}")
-    
-    conn = sqlite3.connect('user_data_bootcamp.db')
-    cursor = conn.cursor()
-    
+@app.route('/api/quizzes', methods=['GET'])
+def api_get_quizzes():
     try:
-        # Insert or update in quiz_status table
-        cursor.execute("""
-            INSERT OR REPLACE INTO quiz_status (quiz, enabled) 
-            VALUES (?, ?)
-        """, (quiz_name, 1 if enabled else 0))
-        
-        conn.commit()
-        print(f"Successfully updated quiz '{quiz_name}' to enabled={enabled}")
-        
-        # Fixed: Update the in-memory cache too
-        quiz_visibility[quiz_name] = enabled
-        
-        return jsonify({'quiz': quiz_name, 'enabled': enabled})
-        
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+
+            # Get all unique quiz names from questions collection
+            quiz_names = sorted(
+                mongo_db.questions.distinct("quiz"),
+                key=lambda x: int(x.replace('quiz', '')) if x.replace('quiz', '').isdigit() else 999
+            )
+
+            # Load latest visibility from DB into config
+            load_quiz_visibility_from_db()
+            visibility = app.config.get('QUIZ_VISIBILITY', {})
+
+            quizzes = [
+                {
+                    "quiz": name,
+                    "enabled": visibility.get(name, True)
+                }
+                for name in quiz_names
+            ]
+        else:
+            conn = get_db_connection()
+            rows = conn.execute("SELECT quiz, enabled FROM quiz_status ORDER BY quiz").fetchall()
+            conn.close()
+            quizzes = [{"quiz": row[0], "enabled": bool(row[1])} for row in rows]
+
+        return jsonify(quizzes)
+
     except Exception as e:
-        print(f"Error updating quiz status: {e}")
-        conn.rollback()
-        return jsonify({'error': 'Database update failed'}), 500
-    finally:
-        conn.close()
+        logging.error(f"api_get_quizzes error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/quizzes/<quiz_name>', methods=['POST'])
+def api_update_quiz(quiz_name):
+    try:
+        data = request.get_json()
+        if data is None or 'enabled' not in data:
+            return jsonify({"error": "Missing 'enabled' field"}), 400
+
+        enabled = bool(data['enabled'])
+
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+
+            mongo_db.quiz_status.update_one(
+                {"quiz": quiz_name},
+                {"$set": {"quiz": quiz_name, "enabled": enabled}},
+                upsert=True
+            )
+
+            # Update in-memory config immediately so quiz visibility is live
+            visibility = app.config.get('QUIZ_VISIBILITY', {})
+            visibility[quiz_name] = enabled
+            app.config['QUIZ_VISIBILITY'] = visibility
+
+        else:
+            conn = get_db_connection()
+            conn.execute(
+                "INSERT INTO quiz_status (quiz, enabled) VALUES (?, ?) "
+                "ON CONFLICT(quiz) DO UPDATE SET enabled = ?",
+                (quiz_name, int(enabled), int(enabled))
+            )
+            conn.commit()
+            conn.close()
+
+        logging.info(f"Quiz '{quiz_name}' set to enabled={enabled}")
+        return jsonify({"quiz": quiz_name, "enabled": enabled, "status": "updated"})
+
+    except Exception as e:
+        logging.error(f"api_update_quiz error: {e}")
+        return jsonify({"error": str(e)}), 500
+    
+    
 
 # Route to serve the quiz slider page
 @app.route('/quizslider')
@@ -3689,6 +4040,11 @@ def populate_database_from_json_files():
 
  
 
+
+
+
+
+
  
 @app.route('/webhook', methods=['POST'])
 def webhook():
@@ -3702,6 +4058,30 @@ def webhook():
                         handle_message(message)
     return 'OK', 200
 
+
+
+
+
+@app.route('/debug/scoreboard')
+def debug_scoreboard():
+    try:
+        from db_mongo import get_mongo_db
+        mongo_db = get_mongo_db()
+        
+        users = list(mongo_db.users.find({}, {"_id": 1, "name": 1, "location": 1}))
+        locations = mongo_db.users.distinct("location")
+        response_count = mongo_db.responses.count_documents({})
+        
+        return jsonify({
+            "user_count": len(users),
+            "sample_users": [{"id": str(u["_id"]), "name": u.get("name"), "location": u.get("location")} for u in users[:3]],
+            "locations": locations,
+            "response_count": response_count,
+            "USE_MONGODB": USE_MONGODB
+        })
+    except Exception as e:
+        import traceback
+        return jsonify({"error": str(e), "trace": traceback.format_exc()}), 500
 
 # def handle_button_response(phone_number, button_id, button_text, user, conn):
 #     log_image_event(f"Button response received: id={button_id}, text={button_text}")
@@ -3749,7 +4129,7 @@ def webhook():
 #         elif button_id == "back":
 #             log_image_event(f"User {phone_number} is returning to previous activity")
 #             previous_state = conn.execute('SELECT previous_state FROM users WHERE phone_number = ?', (phone_number,)).fetchone()[0]
-#             conn.execute('UPDATE users SET state = ? WHERE phone_number = ?', (previous_state, phone_number))
+#             db.update_user_field(phone_number, {"state": previous_state})
 #             conn.commit()
 #             send_message(phone_number, "Returning to previous activity.")
 #             present_options(phone_number, user, conn)
@@ -3795,9 +4175,7 @@ def handle_button_response(phone_number, button_id, button_text, user, conn):
             # Present options after settings command completes
         elif button_id == "change_name" or button_text.lower() == "change name":
             log_image_event(f"User {phone_number} initiated name change")
-            conn.execute('UPDATE users SET state = ?, previous_state = ? WHERE phone_number = ?',
-                         ('changing_name', user['state'], phone_number))
-            conn.commit()
+            db.update_user_field(phone_number, {"state": "changing_name", "previous_state": user['state']})
             send_message(phone_number, "Please enter your new name:")
         elif button_id == "view_name" or button_text.lower() == "view name":
             log_image_event(f"User {phone_number} requested to view their name")
@@ -3832,8 +4210,7 @@ def handle_button_response(phone_number, button_id, button_text, user, conn):
         elif button_id == "back" or button_text.lower() == "back":
             log_image_event(f"User {phone_number} is returning to previous activity")
             previous_state = conn.execute('SELECT previous_state FROM users WHERE phone_number = ?', (phone_number,)).fetchone()[0]
-            conn.execute('UPDATE users SET state = ? WHERE phone_number = ?', (previous_state, phone_number))
-            conn.commit()
+            db.update_user_field(phone_number, {"state": previous_state})
             send_message(phone_number, "Returning to previous activity.")
             present_options(phone_number, user, conn)
         elif button_id == "more" or button_text.lower() == "more options":
@@ -3868,34 +4245,39 @@ def handle_button_response(phone_number, button_id, button_text, user, conn):
         
         
         
-
 def handle_button_response(phone_number, button_id, button_text, user, conn):
     log_image_event(f"Button/List response received: id={button_id}, text={button_text}")
     try:
         # Handle quiz review at the start
         if user['state'] == 'reviewing_quiz':
-            # Match exact format: quiz6 (3 incorrect)
             quiz_match = re.search(r'quiz(\d+)\s?\(\d+\s?incorrect\)', button_id)
             if quiz_match:
                 quiz_number = quiz_match.group(1)
                 quiz_name = f'quiz{quiz_number}'
-                
-                cursor = conn.cursor()
-                query = """
-                SELECT COUNT(*) as count
-                FROM responses r
-                WHERE r.user_id = ? 
-                AND r.quiz = ? 
-                AND r.correct = 0
-                """
-                cursor.execute(query, (user['id'], quiz_name))
-                result = cursor.fetchone()
-                
-                if not result or result['count'] == 0:
-                    send_message(phone_number, f"No incorrect answers found for Quiz {quiz_number}. Please select a quiz from the available options.")
+
+                if USE_MONGODB:
+                    from db_mongo import get_mongo_db
+                    mongo_db = get_mongo_db()
+                    user_id = str(user['_id'])
+                    count = mongo_db.responses.count_documents({
+                        "user_id": user_id,
+                        "quiz": quiz_name,
+                        "correct": False
+                    })
+                else:
+                    cursor = conn.cursor()
+                    cursor.execute("""
+                        SELECT COUNT(*) as count FROM responses r
+                        WHERE r.user_id = ? AND r.quiz = ? AND r.correct = 0
+                    """, (user['id'], quiz_name))
+                    result = cursor.fetchone()
+                    count = result['count'] if result else 0
+
+                if count == 0:
+                    send_message(phone_number, f"No incorrect answers found for Quiz {quiz_number}. Please select another.")
                     start_ai_chat(phone_number, user, conn)
                     return
-                    
+
                 handle_quiz_review(phone_number, quiz_name, user, conn)
                 return
 
@@ -3905,54 +4287,74 @@ def handle_button_response(phone_number, button_id, button_text, user, conn):
             handle_settings_command(phone_number, user, conn)
         elif button_id in ["change_name", "change name"]:
             log_image_event(f"User {phone_number} initiated name change")
-            conn.execute('UPDATE users SET state = ?, previous_state = ? WHERE phone_number = ?',
-                         ('changing_name', user['state'], phone_number))
-            conn.commit()
+            db.update_user_field(phone_number, {"state": "changing_name", "previous_state": user['state']})
             send_message(phone_number, "Please enter your new name:")
         elif button_id == "review_another":
             logging.info(f"User {phone_number} chose to review another quiz.")
             start_ai_chat(phone_number, user, conn)
         elif button_id in ["view_name", "view name"]:
             log_image_event(f"User {phone_number} requested to view their name")
-            user_name = conn.execute('SELECT name FROM users WHERE phone_number = ?', (phone_number,)).fetchone()[0]
-            send_message(phone_number, f"Your name is {user_name}.")
+            send_message(phone_number, f"Your name is {user['name']}.")
             present_options(phone_number, user, conn)
         elif button_id in ["view_quiz_names", "view quiz names"]:
             log_image_event(f"User {phone_number} requested to view quiz names")
-            quiz_names = conn.execute('SELECT DISTINCT quiz FROM questions').fetchall()
-            quiz_names_str = ', '.join(row[0] for row in quiz_names)
+            if USE_MONGODB:
+                from db_mongo import get_mongo_db
+                mongo_db = get_mongo_db()
+                quiz_names = mongo_db.questions.distinct("quiz")
+                quiz_names_str = ', '.join(sorted(quiz_names))
+            else:
+                quiz_names = conn.execute('SELECT DISTINCT quiz FROM questions').fetchall()
+                quiz_names_str = ', '.join(row[0] for row in quiz_names)
             send_message(phone_number, f"Available quizzes: {quiz_names_str}.")
             present_options(phone_number, user, conn)
         elif button_id in ["view_scores", "view scores"]:
             log_image_event(f"User {phone_number} requested to view their scores")
-            cursor = conn.cursor()
-            cursor.execute("""
-                SELECT quiz, COUNT(*) as total_questions, SUM(correct) as correct_answers
-                FROM responses
-                WHERE user_id = ?
-                GROUP BY quiz
-            """, (user['id'],))
-            scores = cursor.fetchall()
-            scores_message = "Your scores:\n"
-            for row in scores:
-                quiz, total, correct = row
-                percentage = (correct / total) * 100 if total > 0 else 0
-                scores_message += f"Quiz: {quiz}, Total Questions: {total}, Correct Answers: {correct}, Percentage: {percentage:.1f}%\n"
+            if USE_MONGODB:
+                from db_mongo import get_mongo_db
+                mongo_db = get_mongo_db()
+                user_id = str(user['_id'])
+                pipeline = [
+                    {"$match": {"user_id": user_id}},
+                    {"$group": {
+                        "_id": "$quiz",
+                        "total": {"$sum": 1},
+                        "correct": {"$sum": {"$cond": ["$correct", 1, 0]}}
+                    }}
+                ]
+                scores = list(mongo_db.responses.aggregate(pipeline))
+                scores_message = "Your scores:\n"
+                for row in scores:
+                    total = row['total']
+                    correct = row['correct']
+                    percentage = (correct / total) * 100 if total > 0 else 0
+                    scores_message += f"Quiz: {row['_id']}, Total: {total}, Correct: {correct}, Percentage: {percentage:.1f}%\n"
+            else:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT quiz, COUNT(*) as total_questions, SUM(correct) as correct_answers
+                    FROM responses WHERE user_id = ? GROUP BY quiz
+                """, (user['id'],))
+                scores = cursor.fetchall()
+                scores_message = "Your scores:\n"
+                for row in scores:
+                    quiz, total, correct = row
+                    percentage = (correct / total) * 100 if total > 0 else 0
+                    scores_message += f"Quiz: {quiz}, Total: {total}, Correct: {correct}, Percentage: {percentage:.1f}%\n"
             send_message(phone_number, scores_message)
             present_options(phone_number, user, conn)
         elif button_id in ["back", "back"]:
             log_image_event(f"User {phone_number} is returning to previous activity")
-            previous_state = conn.execute('SELECT previous_state FROM users WHERE phone_number = ?', (phone_number,)).fetchone()[0]
-            conn.execute('UPDATE users SET state = ? WHERE phone_number = ?', (previous_state, phone_number))
-            conn.commit()
+            previous_state = user.get('previous_state', 'main_menu')
+            db.update_user_field(phone_number, {"state": previous_state})
             send_message(phone_number, "Returning to previous activity.")
             present_options(phone_number, user, conn)
         elif button_id in ["more", "more options"]:
             log_image_event(f"User {phone_number} requested more options")
-            handle_settings_command(phone_number, user, conn, page=2)
+            handle_settings_command(phone_number, user, conn)
         elif button_id in ["page_1", "page 1"]:
             log_image_event(f"User {phone_number} requested page 1")
-            handle_settings_command(phone_number, user, conn, page=1)
+            handle_settings_command(phone_number, user, conn)
         elif button_id in ["records", "quiz"] or button_text.lower() in ["start quiz", "record keeping"]:
             log_image_event(f"Handling {button_text} request for {phone_number}")
             handle_text_message(phone_number, button_text, user, conn)
@@ -3976,7 +4378,8 @@ def handle_button_response(phone_number, button_id, button_text, user, conn):
         log_image_event(traceback.format_exc())
         send_message(phone_number, "An error occurred. Please try again or type 'records', 'quiz', or 'settings' to switch.")
 
-        
+
+
         
         
    
@@ -3996,7 +4399,7 @@ def handle_button_response(phone_number, button_id, button_text, user, conn):
 #             log_image_event(f"Message {message_id} already processed, skipping")
 #             return
        
-#         user = conn.execute('SELECT * FROM users WHERE phone_number = ?', (phone_number,)).fetchone()
+#         user = db.get_user_by_phone(phone_number,)
 #         log_image_event(f"Processing message {message_id} for user: {user}")
        
 #         if user is None:
@@ -4092,7 +4495,7 @@ def handle_button_response(phone_number, button_id, button_text, user, conn):
 #             log_image_event(f"Message {message_id} already processed, skipping")
 #             return
        
-#         user = conn.execute('SELECT * FROM users WHERE phone_number = ?', (phone_number,)).fetchone()
+#         user = db.get_user_by_phone(phone_number,)
 #         log_image_event(f"Processing message {message_id} for user: {user}")
        
 #         if user is None:
@@ -4194,104 +4597,361 @@ def get_phone_lock(phone_number):
     finally:
         lock.release()
 
+
+
 def handle_message(message):
+    """Handle incoming WhatsApp messages with MongoDB/SQLite support"""
     log_image_event(f"Full message content: {json.dumps(message, indent=2)}")
-   
+
     message_id = message.get('id')
     phone_number = message['from']
     message_type = message['type']
     log_image_event(f"Received message of type '{message_type}' from {phone_number}")
 
-    # Use a lock for each phone number to prevent concurrent processing
-    with get_phone_lock(phone_number):
-        conn = get_db_connection()
-        try:
-            if conn.execute('SELECT 1 FROM processed_messages WHERE message_id = ?', (message_id,)).fetchone():
+    try:
+        # Check if message already processed
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+            processed = mongo_db.processed_messages.find_one({"message_id": message_id})
+            if processed:
                 log_image_event(f"Message {message_id} already processed, skipping")
                 return
-           
-            user = conn.execute('SELECT * FROM users WHERE phone_number = ?', (phone_number,)).fetchone()
-            log_image_event(f"Processing message {message_id} for user: {user}")
-           
-            if user is None:
-                # This is a new user, let's create a record for them
-                conn.execute('INSERT INTO users (phone_number, state) VALUES (?, ?)', 
-                           (phone_number, 'awaiting_full_info'))
-                conn.commit()
-                
-                send_message(phone_number, "Welcome to EmpowerBot! What's your full name?")
-                log_image_event(f"New user created for {phone_number}, awaiting name")
-            else:
-                log_image_event(f"User state: {user['state']}")
-               
-                if message_type == 'interactive':
-                    log_image_event(f"Processing interactive message: {json.dumps(message.get('interactive', {}), indent=2)}")
-                    interactive = message.get('interactive', {})
-                   
-                    if interactive.get('type') == 'button_reply':
-                        button_id = interactive['button_reply']['id']
-                        button_text = interactive['button_reply']['title']
-                        log_image_event(f"Received button reply: id={button_id}, text={button_text}")
-                       
-                        if button_id == 'explain_yes':
-                            log_image_event(f"Triggering AI chat for explanation")
-                            handle_ai_chat(phone_number, "Please explain the previous question.", conn)
-                        elif button_id == 'explain_no':
-                            log_image_event(f"Moving to next question")
-                            send_next_question(phone_number, user, conn)
-                        elif button_id == 'end_chat':
-                            end_ai_chat(phone_number, user, conn)
-                        elif button_id == 'next_question':
-                            handle_post_explanation_action(phone_number, button_id, user, conn)
-                        elif button_id == 'remove_account':
-                            handle_remove_account_request(phone_number, user, conn)
-                        elif button_id == 'confirm_remove':
-                            remove_user_account(phone_number, conn)
-                        elif button_id == 'cancel_remove':
-                            handle_settings_command(phone_number, user, conn)
-                        else:
-                            log_image_event(f"Handling other button response")
-                            handle_button_response(phone_number, button_id, button_text, user, conn)
-                    
-                    elif interactive.get('type') == 'list_reply':
-                        list_id = interactive['list_reply']['id']
-                        list_title = interactive['list_reply']['title']
-                        log_image_event(f"Received list selection: id={list_id}, title={list_title}")
-                        
-                        if list_id == 'remove_account':
-                            handle_remove_account_request(phone_number, user, conn)
-                        else:
-                            handle_button_response(phone_number, list_id, list_title, user, conn)
-                    
+        else:
+            conn = get_db_connection()
+            try:
+                if conn.execute('SELECT 1 FROM processed_messages WHERE message_id = ?', (message_id,)).fetchone():
+                    log_image_event(f"Message {message_id} already processed, skipping")
+                    return
+            finally:
+                conn.close()
+
+        # Get user using database adapter
+        user = db.get_user_by_phone(phone_number)
+        log_image_event(f"Processing message {message_id} for user: {user}")
+
+        if user is None:
+            try:
+                user = db.create_new_user(phone_number, state="awaiting_full_info")
+            except Exception:
+                user = db.get_user_by_phone(phone_number)
+                if user is None:
+                    return
+            send_message(phone_number, "Welcome to EmpowerBot! What's your full name?")
+            log_image_event(f"New user created for {phone_number}, awaiting name")
+
+        else:
+            log_image_event(f"User state: {user['state']}")
+
+            if message_type == 'interactive':
+                log_image_event(f"Processing interactive message")
+                interactive = message.get('interactive', {})
+
+                if interactive.get('type') == 'button_reply':
+                    button_id = interactive['button_reply']['id']
+                    button_text = interactive['button_reply']['title']
+                    log_image_event(f"Received button reply: id={button_id}, text={button_text}")
+
+                    if button_id == 'explain_yes':
+                        handle_ai_chat(phone_number, "Please explain the previous question.", None)
+                    elif button_id == 'explain_no':
+                        send_next_question(phone_number, user, None)
+                    elif button_id == 'end_chat':
+                        end_ai_chat(phone_number, user, None)
+                    elif button_id == 'next_question':
+                        handle_post_explanation_action(phone_number, button_id, user, None)
+                    elif button_id == 'remove_account':
+                        handle_remove_account_request(phone_number, user, None)
+                    elif button_id == 'confirm_remove':
+                        remove_user_account(phone_number, None)
+                    elif button_id == 'cancel_remove':
+                        handle_settings_command(phone_number, user, None)
                     else:
-                        log_image_event(f"Unrecognized interactive type: {interactive.get('type')}")
-                        send_message(phone_number, "Unsupported interactive message type. Please try again.")
-               
-                elif message_type == 'text':
-                    message_body = message['text']['body'].lower().strip()
-                    log_image_event(f"Received text message from {phone_number}: {message_body}")
-                    handle_text_message(phone_number, message_body, user, conn)
-               
-                elif message_type in ['image', 'document']:
-                    log_image_event(f"Received {message_type} message from {phone_number}")
-                    handle_media_message(phone_number, message, message_type, user, conn)
-               
+                        handle_button_response(phone_number, button_id, button_text, user, None)
+
+                elif interactive.get('type') == 'list_reply':
+                    list_id = interactive['list_reply']['id']
+                    list_title = interactive['list_reply']['title']
+                    log_image_event(f"Received list selection: id={list_id}, title={list_title}")
+
+                    if list_id == 'remove_account':
+                        handle_remove_account_request(phone_number, user, None)
+                    else:
+                        handle_button_response(phone_number, list_id, list_title, user, None)
+
                 else:
-                    log_image_event(f"Unsupported message type '{message_type}' from {phone_number}")
-                    send_message(phone_number, "Unsupported message type. Please send text, image, or document.")
-           
-            conn.execute('INSERT INTO processed_messages (message_id) VALUES (?)', (message_id,))
-            conn.commit()
-       
-        except Exception as e:
-            log_image_event(f"Error processing message {message_id}: {str(e)}")
-            log_image_event(traceback.format_exc())
+                    log_image_event(f"Unrecognized interactive type: {interactive.get('type')}")
+                    send_message(phone_number, "Unsupported interactive message type. Please try again.")
+
+            elif message_type == 'text':
+                message_body = message['text']['body'].lower().strip()
+                log_image_event(f"Received text message from {phone_number}: {message_body}")
+                handle_text_message(phone_number, message_body, user, None)
+
+            elif message_type in ['image', 'document']:
+                log_image_event(f"Received {message_type} message from {phone_number}")
+                handle_media_message(phone_number, message, message_type, user, None)
+
+            else:
+                log_image_event(f"Unsupported message type '{message_type}' from {phone_number}")
+                send_message(phone_number, "Unsupported message type. Please send text, image, or document.")
+
+        # Mark message as processed
+        if USE_MONGODB:
+            try:
+                mongo_db.processed_messages.insert_one({
+                    "message_id": message_id,
+                    "processed_at": datetime.utcnow()
+                })
+                log_image_event(f"Message {message_id} marked as processed in MongoDB")
+            except Exception:
+                pass  # Already processed, ignore duplicate key error
+        else:
+            conn = get_db_connection()
+            try:
+                conn.execute('INSERT INTO processed_messages (message_id) VALUES (?)', (message_id,))
+                conn.commit()
+            finally:
+                conn.close()
+
+    except Exception as e:
+        log_image_event(f"Error processing message {message_id}: {str(e)}")
+        log_image_event(traceback.format_exc())
+        try:
             send_message(phone_number, "An error occurred. Please try again or contact support if the issue persists.")
-       
-        finally:
-            conn.close()
+        except Exception:
+            pass
+
+
+
+# def handle_text_message(phone_number, message_body, user, conn):
+#     """Handle text messages with MongoDB/SQLite support"""
+#     log_image_event(f"Handling text message for {phone_number}: {message_body}")
+#     message_lower = message_body.lower().strip()
+
+#     try:
+#         # Always allow switching to quiz, records, or settings
+#         if message_lower in ['quiz', 'start quiz', 'records', 'record keeping', 'settings']:
+#             if message_lower in ['quiz', 'start quiz']:
+#                 handle_quiz_selection(phone_number, message_body, user, conn)
+#             elif message_lower in ['records', 'record keeping']:
+#                 if USE_MONGODB:
+#                     db.update_user_field(phone_number, {"state": "records"})
+#                 else:
+#                     db.update_user_field(phone_number, {"state": "records"})
+#                 send_message(phone_number, f"Welcome {user['name']}, please upload your business record as an image or PDF.")
+#             elif message_lower == 'settings':
+#                 handle_settings_command(phone_number, user, conn)
+#             return
+
+#         # Handle account removal
+#         if user['state'] == 'removing_account':
+#             if message_lower == 'yes':
+#                 remove_user_account(phone_number, conn)
+#             elif message_lower == 'no':
+#                 handle_settings_command(phone_number, user, conn)
+#             else:
+#                 send_message(phone_number, "Please respond with 'yes' to confirm account removal or 'no' to cancel.")
+#             return
+
+#         # Handle name change
+#         if user['state'] == 'changing_name':
+#             new_name = standardize_user_input(message_body.strip(), 'name')
             
+#             if USE_MONGODB:
+#                 db.update_user_field(phone_number, {
+#                     "name": new_name,
+#                     "state": user.get('previous_state', 'main_menu')
+#                 })
+#             else:
+#                 db.update_user_field(phone_number, {"name": new_name, "state": user['previous_state']})
             
+#             send_message(phone_number, f"Your name has been updated to: {new_name}")
+#             user = db.get_user_by_phone(phone_number) if USE_MONGODB else db.get_user_by_phone(phone_number,)
+#             present_options(phone_number, user, conn)
+#             return
+
+#         # Step-by-step profile completion flow
+#         if user['state'] == 'awaiting_full_info':
+#             standardized_name = standardize_user_input(message_body, 'name')
+            
+#             if USE_MONGODB:
+#                 db.update_user_field(phone_number, {
+#                     "name": standardized_name,
+#                     "state": "awaiting_age"
+#                 })
+#             else:
+#                 db.update_user_field(phone_number, {"name": standardized_name, "state": "awaiting_age"})
+            
+#             send_message(phone_number, f"Nice to meet you, {standardized_name}! Please type your age in the chat.")
+
+#         elif user['state'] == 'awaiting_age':
+#             if USE_MONGODB:
+#                 db.update_user_field(phone_number, {
+#                     "age": message_body,
+#                     "state": "awaiting_gender"
+#                 })
+#             else:
+#                 db.update_user_field(phone_number, {"age": message_body, "state": "awaiting_gender"})
+            
+#             send_message(phone_number, "Thank you! Please type your gender in the chat (male, female, or other).")
+
+#         elif user['state'] == 'awaiting_gender':
+#             if USE_MONGODB:
+#                 db.update_user_field(phone_number, {
+#                     "gender": message_body,
+#                     "state": "awaiting_business_type"
+#                 })
+#             else:
+#                 db.update_user_field(phone_number, {"gender": message_body, "state": "awaiting_business_type"})
+            
+#             send_message(phone_number, "Great! Please type in the chat the type of business or services you deal with.")
+
+#         elif user['state'] == 'awaiting_business_type':
+#             standardized_business_type = standardize_user_input(message_body, 'business_type')
+            
+#             if USE_MONGODB:
+#                 db.update_user_field(phone_number, {
+#                     "business_type": standardized_business_type,
+#                     "state": "awaiting_location"
+#                 })
+#             else:
+#                 db.update_user_field(phone_number, {"business_type": standardized_business_type, "state": "awaiting_location"})
+            
+#             handle_location_selection(phone_number, user, conn)
+
+#         elif user['state'] == 'awaiting_location':
+#             standardized_location = standardize_user_input(message_body, 'location')
+            
+#             if USE_MONGODB:
+#                 db.update_user_field(phone_number, {
+#                     "location": standardized_location,
+#                     "state": "awaiting_business_size"
+#                 })
+#             else:
+#                 db.update_user_field(phone_number, {"location": standardized_location, "state": "awaiting_business_size"})
+            
+#             handle_business_size_selection(phone_number, user, conn)
+
+#         elif user['state'] == 'awaiting_business_size':
+#             if USE_MONGODB:
+#                 db.update_user_field(phone_number, {
+#                     "business_size": message_body,
+#                     "state": "awaiting_financial_status"
+#                 })
+#             else:
+#                 db.update_user_field(phone_number, {"business_size": message_body, "state": "awaiting_financial_status"})
+            
+#             handle_financial_status_selection(phone_number, user, conn)
+
+#         elif user['state'] == 'awaiting_financial_status':
+#             if USE_MONGODB:
+#                 db.update_user_field(phone_number, {
+#                     "financial_status": message_body,
+#                     "state": "awaiting_main_challenge"
+#                 })
+#             else:
+#                 db.update_user_field(phone_number, {"financial_status": message_body, "state": "awaiting_main_challenge"})
+            
+#             handle_main_challenge_selection(phone_number, user, conn)
+
+#         elif user['state'] == 'awaiting_main_challenge':
+#             if USE_MONGODB:
+#                 db.update_user_field(phone_number, {
+#                     "main_challenge": message_body,
+#                     "state": "awaiting_record_keeping"
+#                 })
+#             else:
+#                 db.update_user_field(phone_number, {"main_challenge": message_body, "state": "awaiting_record_keeping"})
+            
+#             handle_record_keeping_selection(phone_number, user, conn)
+
+#         elif user['state'] == 'awaiting_record_keeping':
+#             if USE_MONGODB:
+#                 db.update_user_field(phone_number, {
+#                     "record_keeping": message_body,
+#                     "state": "awaiting_growth_goal"
+#                 })
+#             else:
+#                 db.update_user_field(phone_number, {"record_keeping": message_body, "state": "awaiting_growth_goal"})
+            
+#             handle_growth_goal_selection(phone_number, user, conn)
+
+#         elif user['state'] == 'awaiting_growth_goal':
+#             if USE_MONGODB:
+#                 db.update_user_field(phone_number, {
+#                     "growth_goal": message_body,
+#                     "state": "awaiting_funding_need"
+#                 })
+#             else:
+#                 db.update_user_field(phone_number, {"growth_goal": message_body, "state": "awaiting_funding_need"})
+            
+#             handle_funding_need_selection(phone_number, user, conn)
+
+#         elif user['state'] == 'awaiting_funding_need':
+#             if USE_MONGODB:
+#                 db.update_user_field(phone_number, {
+#                     "funding_need": message_body,
+#                     "state": "awaiting_choice"
+#                 })
+#             else:
+#                 db.update_user_field(phone_number, {"funding_need": message_body, "state": "awaiting_choice"})
+            
+#             send_message(phone_number, "Thank you! We now understand your business better. What would you like to do next?")
+#             present_options(phone_number, user, conn)
+
+#         elif user['state'] in ['awaiting_choice', 'main_menu']:
+#             send_message(phone_number, "Please choose 'Record Keeping' or 'Start Quiz'.")
+#             present_options(phone_number, user, conn)
+
+#         elif user['state'] in ['ai_chat', 'awaiting_followup', 'post_explanation', 'awaiting_action', 'awaiting_explanation']:
+#             # Store follow-up question
+#             if USE_MONGODB:
+#                 from db_mongo import get_mongo_db
+#                 mongo_db = get_mongo_db()
+#                 user_id = str(user['_id'])
+#                 mongo_db.followup_questions.insert_one({
+#                     "user_id": user_id,
+#                     "question": message_body,
+#                     "timestamp": datetime.utcnow()
+#                 })
+#             else:
+#                 cursor = conn.cursor()
+#                 cursor.execute('INSERT INTO followup_questions (user_id, question) VALUES (?, ?)',
+#                              (user['id'], message_body))
+#                 conn.commit()
+            
+#             handle_ai_chat(phone_number, message_body, conn)
+            
+#             if USE_MONGODB:
+#                 db.update_user_field(phone_number, {"state": "ai_chat"})
+#             else:
+#                 db.update_user_field(phone_number, {"state": "ai_chat"})
+
+#         elif user['state'] == 'selecting_quiz':
+#             handle_quiz_selection(phone_number, message_body, user, conn)
+
+#         elif user['state'].startswith('quiz_'):
+#             handle_quiz_response(phone_number, message_body, user, conn)
+
+#         elif user['state'] == 'records':
+#             send_message(phone_number, f"Welcome {user['name']}, please upload your business record as an image or PDF.")
+
+#         else:
+#             send_message(phone_number, "Invalid input. Please type 'records' to begin record keeping or 'quiz' to start the quiz.")
+        
+#         # Occasional reminder
+#         if random.random() < 0.005:
+#             send_message(phone_number, "Remember, you can type 'records', 'quiz', or 'settings' at any time to switch.")
+
+#     except Exception as e:
+#         log_image_event(f"Error in handle_text_message: {str(e)}")
+#         log_image_event(traceback.format_exc())
+#         send_message(phone_number, "Sorry, something went wrong. Please try again or contact support.")
+#         present_options(phone_number, user, conn)
+
+
+
         
 
 def generate_random_number(user_id):
@@ -4301,12 +4961,12 @@ def generate_random_number(user_id):
     return ''.join(random.choices(string.digits, k=6))
 
  
- 
+
+
 def handle_media_message(phone_number, message, message_type, user, conn):
     log_image_event(f"Handling media message for user {phone_number}")
-   
+
     if user['state'] != 'records':
-        log_image_event(f"User {phone_number} attempted to upload media while in state: {user['state']}")
         send_message(phone_number, "To upload a record, please select the 'Record Keeping' option first.")
         present_options(phone_number, user, conn)
         return
@@ -4316,88 +4976,86 @@ def handle_media_message(phone_number, message, message_type, user, conn):
     headers = {"Authorization": f"Bearer {WHATSAPP_TOKEN}"}
 
     try:
-        log_image_event(f"User {phone_number} requested to upload {message_type}. Downloading media {media_id}...")
         response = requests.get(media_url, headers=headers)
         if response.status_code == 200:
-            log_image_event(f"Successfully downloaded media {media_id} for user {phone_number}")
             file_url = response.json()['url']
-            log_image_event(f"Retrieving media file from {file_url}")
             file_content = requests.get(file_url, headers=headers).content
 
-            filename = secure_filename(f"{user['id']}_{media_id}.{'jpg' if message_type == 'image' else 'pdf'}")
+            user_id = str(user['_id']) if USE_MONGODB else user['id']
+            filename = secure_filename(f"{user_id}_{media_id}.{'jpg' if message_type == 'image' else 'pdf'}")
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
-            log_image_event(f"Saving media file as {filename} to {file_path}")
             with open(file_path, 'wb') as f:
                 f.write(file_content)
 
-            random_number = generate_random_number(user['id'])
-            log_image_event(f"Generating random number {random_number} for user {user['id']}")
-            conn.execute('UPDATE users SET random_number = ?, state = ? WHERE id = ?', (random_number, 'awaiting_choice', user['id']))
-            conn.execute('INSERT INTO records (user_id, media_url) VALUES (?, ?)', (user['id'], filename))
-            conn.commit()
-            log_image_event(f"Stored media {filename} for user {phone_number} in database")
+            random_number = generate_random_number(user_id)
 
-            base_url = "https://glitter-dynamic-taxicab.glitch.me"  # Replace with your actual base URL
-            user_url = f"{base_url}/user/{user['id']}/{random_number}"
+            if USE_MONGODB:
+                from db_mongo import get_mongo_db
+                mongo_db = get_mongo_db()
+                mongo_db.records.insert_one({
+                    "user_id": user_id,
+                    "media_url": filename,
+                    "upload_date": datetime.utcnow()
+                })
+                db.update_user_field(phone_number, {
+                    "random_number": random_number,
+                    "state": "awaiting_choice"
+                })
+            else:
+                conn.execute(
+                    'UPDATE users SET random_number = ?, state = ? WHERE id = ?',
+                    (random_number, 'awaiting_choice', user['id'])
+                )
+                conn.execute(
+                    'INSERT INTO records (user_id, media_url) VALUES (?, ?)',
+                    (user['id'], filename)
+                )
+                conn.commit()
 
+            base_url = "https://empowerbot2025-1.onrender.com"
+            user_url = f"{base_url}/user/{user_id}/{random_number}"
             thank_you_message = (
-                 f"Thank you {user['name']}! Your record has been uploaded successfully. "
+                f"Thank you {user['name']}! Your record has been uploaded successfully. "
                 f"You can view your records here: {user_url}"
             )
-            log_image_event(f"Sending success message to user {phone_number}")
             send_message(phone_number, thank_you_message)
-           
-            # Update user object with new state
-            user = conn.execute('SELECT * FROM users WHERE phone_number = ?', (phone_number,)).fetchone()
-           
-            # Present options after successful upload
-            log_image_event(f"Presenting options after upload for user {phone_number}")
-
-
-            present_options_after_upload(phone_number, user, conn)
+            user = db.get_user_by_phone(phone_number)
+            present_options(phone_number, user, conn)
         else:
-            log_image_event(f"Error downloading media {media_id} for user {phone_number}: {response.status_code}")
             send_message(phone_number, "Sorry, there was an error processing your file. Please try again.")
             present_options(phone_number, user, conn)
-    except requests.RequestException as e:
-        log_image_event(f"Network error while processing media for user {phone_number}: {str(e)}")
-        send_message(phone_number, "There was a network error while processing your file. Please try again later.")
-        present_options(phone_number, user, conn)
-    except sqlite3.Error as e:
-        log_image_event(f"Database error while processing media for user {phone_number}: {str(e)}")
-        send_message(phone_number, "There was a database error while saving your record. Please try again or contact support.")
-        present_options(phone_number, user, conn)
-    except IOError as e:
-        log_image_event(f"File I/O error while saving media for user {phone_number}: {str(e)}")
-        send_message(phone_number, "There was an error saving your file. Please try again or contact support.")
-        present_options(phone_number, user, conn)
+
     except Exception as e:
-        log_image_event(f"Unexpected error in handle_media_message for user {phone_number}: {str(e)}")
+        log_image_event(f"Unexpected error in handle_media_message: {str(e)}")
         log_image_event(traceback.format_exc())
-        send_message(phone_number, "An unexpected error occurred while processing your upload. Please try again or contact support if the issue persists.")
+        send_message(phone_number, "An unexpected error occurred. Please try again or contact support.")
         present_options(phone_number, user, conn)
-       
+
+
        
        
       
        
        
-
-def present_options_after_upload(phone_number, user, conn):
-    present_options(phone_number, user, conn)
-
 def present_options(phone_number, user, conn):
+    """Present main options - MongoDB compatible"""
     log_image_event(f"Presenting main options to user {phone_number}")
+    
     buttons = [
         {"type": "reply", "reply": {"id": "quiz", "title": "Start Quiz"}},
         {"type": "reply", "reply": {"id": "records", "title": "Record Keeping"}},
         {"type": "reply", "reply": {"id": "settings", "title": "Settings"}}
     ]
+    
     send_interactive_message(phone_number, "What would you like to do next?", buttons)
-    conn.execute('UPDATE users SET state = ? WHERE phone_number = ?', ('main_menu', phone_number))
-    conn.commit()
-   
+    
+    # Use database adapter instead of conn.execute()
+    db.update_user_field(phone_number, {"state": "main_menu"})
+    
+    log_image_event(f"Updated user {phone_number} state to main_menu")
+
+    
  
 
 
@@ -4406,8 +5064,7 @@ def present_options(phone_number, user, conn):
 def handle_records_command(phone_number, user, conn):
     message = f"Welcome to Record Keeping, {user['name']}! Please upload your business record as an image or PDF."
     send_message(phone_number, message)
-    conn.execute('UPDATE users SET state = ? WHERE phone_number = ?', ('records', phone_number))
-    conn.commit()
+    db.update_user_field(phone_number, {"state": "records"})
     log_image_event(f"Switched to records mode for {phone_number}")
 
    
@@ -4439,7 +5096,7 @@ def check_quiz_state(conn, user_id, quiz_name):
 #             if message_lower in ['quiz', 'start quiz']:
 #                 handle_quiz_selection(phone_number, message_body, user, conn)
 #             elif message_lower in ['records', 'record keeping']:
-#                 conn.execute('UPDATE users SET state = ? WHERE phone_number = ?', ('records', phone_number))
+#                 db.update_user_field(phone_number, {"state": "records"})
 #                 conn.commit()
 #                 send_message(phone_number, f"Welcome {user['name']}, please upload your business record as an image or PDF.")
 #             elif message_lower == 'settings':
@@ -4461,7 +5118,7 @@ def check_quiz_state(conn, user_id, quiz_name):
 #                          (new_name, user['previous_state'], phone_number))
 #             conn.commit()
 #             send_message(phone_number, f"Your name has been updated to: {new_name}")
-#             user = conn.execute('SELECT * FROM users WHERE phone_number = ?', (phone_number,)).fetchone()
+#             user = db.get_user_by_phone(phone_number,)
 #             present_options(phone_number, user, conn)
 #             return
 
@@ -4512,7 +5169,7 @@ def check_quiz_state(conn, user_id, quiz_name):
 #             conn.commit()
 #             # Handle AI chat and set state to 'ai_chat' to continue the conversation
 #             handle_ai_chat(phone_number, message_body, button_id, conn)
-#             conn.execute('UPDATE users SET state = ? WHERE phone_number = ?', ('ai_chat', phone_number))
+#             db.update_user_field(phone_number, {"state": "ai_chat"})
 #             conn.commit()
 #         elif user['state'] == 'selecting_quiz':
 #             handle_quiz_selection(phone_number, message_body, user, conn)
@@ -4542,7 +5199,7 @@ def check_quiz_state(conn, user_id, quiz_name):
 #             if message_lower in ['quiz', 'start quiz']:
 #                 handle_quiz_selection(phone_number, message_body, user, conn)
 #             elif message_lower in ['records', 'record keeping']:
-#                 conn.execute('UPDATE users SET state = ? WHERE phone_number = ?', ('records', phone_number))
+#                 db.update_user_field(phone_number, {"state": "records"})
 #                 conn.commit()
 #                 send_message(phone_number, f"Welcome {user['name']}, please upload your business record as an image or PDF.")
 #             elif message_lower == 'settings':
@@ -4565,7 +5222,7 @@ def check_quiz_state(conn, user_id, quiz_name):
 #                         (new_name, user['previous_state'], phone_number))
 #             conn.commit()
 #             send_message(phone_number, f"Your name has been updated to: {new_name}")
-#             user = conn.execute('SELECT * FROM users WHERE phone_number = ?', (phone_number,)).fetchone()
+#             user = db.get_user_by_phone(phone_number,)
 #             present_options(phone_number, user, conn)
 #             return True
 
@@ -4689,7 +5346,7 @@ def check_quiz_state(conn, user_id, quiz_name):
 #                          (user['id'], message_body))
 #             conn.commit()
 #             handle_ai_chat(phone_number, message_body, conn)
-#             conn.execute('UPDATE users SET state = ? WHERE phone_number = ?', ('ai_chat', phone_number))
+#             db.update_user_field(phone_number, {"state": "ai_chat"})
 #             conn.commit()
 #             return True
 
@@ -4836,76 +5493,74 @@ def handle_quiz_review(phone_number, quiz_name, user, conn):
         
         
 def handle_quiz_review(phone_number, quiz_selection, user, conn):
-    """
-    Handle reviewing quizzes with incorrect answers.
-    Args:
-        phone_number: User's phone number.
-        quiz_selection: The selected quiz option (e.g., "quiz8 (2 incorrect)").
-        user: User dictionary containing user information.
-        conn: Database connection.
-    """
     try:
         logging.info(f"handle_quiz_review called with quiz_selection: {quiz_selection}")
-        
-        # Extract quiz name (e.g., "quiz3")
+
         quiz_match = re.search(r'(quiz\d+)', quiz_selection)
         if quiz_match:
             quiz_name = quiz_match.group(1)
         else:
             quiz_name = quiz_selection.split(" ")[0]
-        
+
         logging.info(f"Extracted quiz_name: {quiz_name}")
-        logging.info(f"User ID: {user['id']}")
-        
-        cursor = conn.cursor()
-        
-        # Count incorrect answers
-        check_query = """
-        SELECT COUNT(*) 
-        FROM responses 
-        WHERE user_id = ? AND quiz = ? AND correct = 0
-        """
-        cursor.execute(check_query, (user['id'], quiz_name))
-        count = cursor.fetchone()[0]
-        logging.info(f"Found {count} incorrect answers for user {user['id']} in quiz {quiz_name}")
-        
-        # Use the helper function to get incorrect questions
-        incorrect_questions = get_incorrect_questions(user['id'], conn, quiz_name)
-        
-        # Handle case where get_incorrect_questions returns None (DB error)
+
+        user_id = str(user['_id']) if USE_MONGODB else user['id']
+
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+            count = mongo_db.responses.count_documents({
+                "user_id": user_id,
+                "quiz": quiz_name,
+                "correct": False
+            })
+        else:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT COUNT(*) FROM responses
+                WHERE user_id = ? AND quiz = ? AND correct = 0
+            """, (user_id, quiz_name))
+            count = cursor.fetchone()[0]
+
+        logging.info(f"Found {count} incorrect answers for user {user_id} in quiz {quiz_name}")
+
+        if count == 0:
+            send_message(phone_number, f"No incorrect answers found for {quiz_name}.")
+            present_options(phone_number, user, conn)
+            return
+
+        incorrect_questions = get_incorrect_questions(user_id, conn, quiz_name)
+
         if incorrect_questions is None:
-            logging.error(f"Database error while getting incorrect questions for user {user['id']}, quiz {quiz_name}")
+            logging.error(f"Database error while getting incorrect questions")
             send_message(phone_number, "An error occurred while retrieving your incorrect answers. Please try again.")
             present_options(phone_number, user, conn)
             return
-            
-        logging.info(f"Query returned {len(incorrect_questions)} incorrect questions")
-        
+
         if not incorrect_questions:
             send_message(phone_number, f"No incorrect answers found for {quiz_name}.")
             present_options(phone_number, user, conn)
             return
-            
+
         logging.info(f"First incorrect question: {incorrect_questions[0]}")
-        
-        # Update the user's state to start review
-        conn.execute("""
-            UPDATE users 
-            SET state = ?, quiz_in_review = ?, current_question = ?
-            WHERE phone_number = ?
-        """, ('reviewing_question', quiz_name, 0, phone_number))
-        conn.commit()
-        
-        # Instead of modifying the user dict, create a new one with updated data
-        # or just rely on the database to provide this information in send_next_question
+
+        db.update_user_field(phone_number, {
+            "state": "reviewing_question",
+            "quiz_in_review": quiz_name,
+            "current_question": 0
+        })
+
+        # Refresh user object after update
+        user = db.get_user_by_phone(phone_number)
         send_next_question(phone_number, user, conn)
-        
+
     except Exception as e:
         logging.error(f"Error in handle_quiz_review: {str(e)}")
         logging.error(traceback.format_exc())
         send_message(phone_number, "An error occurred while starting the review. Please try again.")
         present_options(phone_number, user, conn)
-        
+
+
 
         
 
@@ -4916,16 +5571,24 @@ def standardize_user_input(input_text, field_type):
     
     standardization_prompts = {
         'name': f"""
-            Convert this input: "{input_text}" into ONLY a capitalized first and  surname.
+            Convert this input: "{input_text}" into a properly formatted full name (first and last name).
             Rules:
-          
-            - Capitalize first letter
-            - Remove any titles, suffixes, or additional names
-            - Return only the name, no extra text
+            - Keep BOTH first name AND last name (surname)
+            - Capitalize the first letter of each name
+            - Remove any titles (Mr., Mrs., Dr., etc.), suffixes (Jr., Sr., III), or nicknames
+            - Return ONLY the first and last name, no extra text, NO quotes, NO special characters
+            - If only one name is provided, keep it as is
+            - Output should be plain text only
+            
             Example inputs/outputs:
-            "My name is John Smith" → "John Smith"
-            "mrs. sarah johnson" → "Sarah Johnson"
-            "MICHAEL PHELPS JR" → "Michael Phelps"
+            My name is John Smith → John Smith
+            mrs. sarah johnson → Sarah Johnson
+            MICHAEL PHELPS JR → Michael Phelps
+            "Jane Doe" → Jane Doe
+            abiola oyebanjo → Abiola Oyebanjo
+            Mr. David Brown III → David Brown
+            chioma → Chioma
+            BLESSING ADEBAYO → Blessing Adebayo
             """,
             
         'business_type': f"""
@@ -4934,11 +5597,11 @@ def standardize_user_input(input_text, field_type):
             - Remove phrases like "I sell", "we deal in", "I do", etc.
             - Convert to "[type] business" format
             - Capitalize first letter
-            - Return only the business type, no extra text
+            - Return only the business type, no extra text, NO quotes
             Example inputs/outputs:
-            "I sell food and drinks" → "Food business"
-            "We deal in baby clothes" → "Clothing business"
-            "I do hair styling" → "Salon business"
+            I sell food and drinks → Food business
+            We deal in baby clothes → Clothing business
+            I do hair styling → Salon business
             """,
             
         'location': f"""
@@ -4947,24 +5610,118 @@ def standardize_user_input(input_text, field_type):
             - Extract main location name
             - Capitalize first letter
             - Remove extra words like "I'm at", "located in", etc.
-            - Return only the location name, no extra text
+            - Return only the location name, no extra text, NO quotes
             Example inputs/outputs:
-            "I dey for Ikeja" → "Ikeja"
-            "My shop is in surulere" → "Surulere"
-            "located at LEKKI" → "Lekki"
+            I dey for Ikeja → Ikeja
+            My shop is in surulere → Surulere
+            located at LEKKI → Lekki
             """
     }
     
     try:
         standardized = generate_text(standardization_prompts[field_type]).strip()
+        
         # Additional cleanup to ensure single-line response
         standardized = standardized.split('\n')[0].strip()
+        
+        # ✅ CRITICAL FIX: Remove quotes and extra whitespace
+        # Remove both double and single quotes from start and end
+        standardized = standardized.strip('"').strip("'").strip()
+        
+        # Remove any remaining quotes if AI wrapped the response
+        if standardized.startswith('"') and standardized.endswith('"'):
+            standardized = standardized[1:-1]
+        if standardized.startswith("'") and standardized.endswith("'"):
+            standardized = standardized[1:-1]
+            
+        # Remove any markdown code block formatting
+        standardized = standardized.replace('```', '').replace('`', '').strip()
+        
+        # Remove any "Output:" or "Result:" prefixes that AI might add
+        for prefix in ['Output:', 'Result:', 'Answer:', 'Response:']:
+            if standardized.startswith(prefix):
+                standardized = standardized[len(prefix):].strip()
+        
+        # Final cleanup - remove any remaining quotes
+        standardized = standardized.strip('"').strip("'").strip()
+        
+        # For names specifically, ensure proper capitalization
+        if field_type == 'name':
+            # Split by space and capitalize each word (handles "abiola oyebanjo" → "Abiola Oyebanjo")
+            name_parts = standardized.split()
+            standardized = ' '.join(word.capitalize() for word in name_parts if word)
+        
+        logging.info(f"Standardized {field_type}: '{input_text}' → '{standardized}'")
+        
         return standardized
+        
     except Exception as e:
-        logging.error(f"Error in input standardization: {str(e)}")
+        logging.error(f"Error in input standardization for {field_type}: {e}")
         # Fallback to basic capitalization if AI fails
-        return input_text.strip().capitalize()
-      
+        fallback = input_text.strip().strip('"').strip("'").strip()
+        
+        if field_type == 'name':
+            # For names, capitalize each word
+            name_parts = fallback.split()
+            return ' '.join(word.capitalize() for word in name_parts if word)
+        else:
+            return fallback.capitalize()
+        
+
+
+
+
+def clean_quoted_names_in_database():
+    """
+    Clean up all user names that have quotes around them.
+    This fixes the bug where AI standardization adds quotes.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # Find all users with quoted names
+        cursor.execute("""
+            SELECT id, name, phone_number 
+            FROM users 
+            WHERE name LIKE '"%' OR name LIKE '''%'
+        """)
+        
+        users_to_fix = cursor.fetchall()
+        
+        if not users_to_fix:
+            logging.info("No users with quoted names found. Database is clean.")
+            return 0
+        
+        logging.info(f"Found {len(users_to_fix)} users with quoted names. Cleaning...")
+        
+        # Fix each user
+        fixed_count = 0
+        for user in users_to_fix:
+            user_id = user['id']
+            old_name = user['name']
+            phone = user['phone_number']
+            
+            # Remove quotes and clean up
+            new_name = old_name.strip('"').strip("'").strip()
+            
+            # Update the database
+            cursor.execute("UPDATE users SET name = ? WHERE id = ?", (new_name, user_id))
+            
+            logging.info(f"Fixed user {user_id} ({phone}): '{old_name}' → '{new_name}'")
+            fixed_count += 1
+        
+        conn.commit()
+        logging.info(f"Successfully cleaned {fixed_count} user names")
+        return fixed_count
+        
+    except Exception as e:
+        logging.error(f"Error cleaning quoted names: {e}")
+        conn.rollback()
+        return 0
+    finally:
+        conn.close()
+
       
       
         
@@ -4979,8 +5736,7 @@ def handle_text_message(phone_number, message_body, user, conn):
             if message_lower in ['quiz', 'start quiz']:
                 handle_quiz_selection(phone_number, message_body, user, conn)
             elif message_lower in ['records', 'record keeping']:
-                conn.execute('UPDATE users SET state = ? WHERE phone_number = ?', ('records', phone_number))
-                conn.commit()
+                db.update_user_field(phone_number, {"state": "records"})
                 send_message(phone_number, f"Welcome {user['name']}, please upload your business record as an image or PDF.")
             elif message_lower == 'settings':
                 handle_settings_command(phone_number, user, conn)
@@ -4996,101 +5752,88 @@ def handle_text_message(phone_number, message_body, user, conn):
                 send_message(phone_number, "Please respond with 'yes' to confirm account removal or 'no' to cancel.")
             return
 
-        # Handle name change, applying name standardization
+        # Handle name change - direct capitalize, no Gemini
         if user['state'] == 'changing_name':
-            new_name = standardize_user_input(message_body.strip(), 'name')
-            conn.execute('UPDATE users SET name = ?, state = ? WHERE phone_number = ?',
-                         (new_name, user['previous_state'], phone_number))
-            conn.commit()
+            new_name = ' '.join(word.capitalize() for word in message_body.strip().split() if word)
+            db.update_user_field(phone_number, {"name": new_name, "state": user.get('previous_state', 'main_menu')})
             send_message(phone_number, f"Your name has been updated to: {new_name}")
-            user = conn.execute('SELECT * FROM users WHERE phone_number = ?', (phone_number,)).fetchone()
+            user = db.get_user_by_phone(phone_number)
             present_options(phone_number, user, conn)
             return
 
-        # Step-by-step profile completion flow, applying standardization
+        # Step-by-step profile completion flow
         if user['state'] == 'awaiting_full_info':
-            standardized_name = standardize_user_input(message_body, 'name')
-            conn.execute('UPDATE users SET name = ?, state = ? WHERE phone_number = ?',
-                         (standardized_name, 'awaiting_age', phone_number))
-            conn.commit()
-            send_message(phone_number, f"Nice to meet you, {standardized_name}! Please type your age in the chat.")
+            # Direct capitalize - no Gemini
+            new_name = ' '.join(word.capitalize() for word in message_body.strip().split() if word)
+            db.update_user_field(phone_number, {"name": new_name, "state": "awaiting_age"})
+            send_message(phone_number, f"Nice to meet you, {new_name}! Please type your age in the chat.")
 
         elif user['state'] == 'awaiting_age':
-            conn.execute('UPDATE users SET age = ?, state = ? WHERE phone_number = ?',
-                         (message_body, 'awaiting_gender', phone_number))
-            conn.commit()
+            db.update_user_field(phone_number, {"age": message_body, "state": "awaiting_gender"})
             send_message(phone_number, "Thank you! Please type your gender in the chat (male, female, or other).")
 
         elif user['state'] == 'awaiting_gender':
-            conn.execute('UPDATE users SET gender = ?, state = ? WHERE phone_number = ?',
-                         (message_body, 'awaiting_business_type', phone_number))
-            conn.commit()
+            db.update_user_field(phone_number, {"gender": message_body, "state": "awaiting_business_type"})
             send_message(phone_number, "Great! Please type in the chat the type of business or services you deal with.")
 
         elif user['state'] == 'awaiting_business_type':
-            standardized_business_type = standardize_user_input(message_body, 'business_type')
-            conn.execute('UPDATE users SET business_type = ?, state = ? WHERE phone_number = ?',
-                         (standardized_business_type, 'awaiting_location', phone_number))
-            conn.commit()
+            # Direct capitalize - no Gemini
+            business_type = ' '.join(word.capitalize() for word in message_body.strip().split() if word)
+            db.update_user_field(phone_number, {"business_type": business_type, "state": "awaiting_location"})
             handle_location_selection(phone_number, user, conn)
 
         elif user['state'] == 'awaiting_location':
-            standardized_location = standardize_user_input(message_body, 'location')
-            conn.execute('UPDATE users SET location = ?, state = ? WHERE phone_number = ?',
-                         (standardized_location, 'awaiting_business_size', phone_number))
-            conn.commit()
+            # Direct capitalize - no Gemini
+            location = ' '.join(word.capitalize() for word in message_body.strip().split() if word)
+            db.update_user_field(phone_number, {"location": location, "state": "awaiting_business_size"})
             handle_business_size_selection(phone_number, user, conn)
 
         elif user['state'] == 'awaiting_business_size':
-            conn.execute('UPDATE users SET business_size = ?, state = ? WHERE phone_number = ?',
-                         (message_body, 'awaiting_financial_status', phone_number))
-            conn.commit()
+            db.update_user_field(phone_number, {"business_size": message_body, "state": "awaiting_financial_status"})
             handle_financial_status_selection(phone_number, user, conn)
 
         elif user['state'] == 'awaiting_financial_status':
-            conn.execute('UPDATE users SET financial_status = ?, state = ? WHERE phone_number = ?',
-                         (message_body, 'awaiting_main_challenge', phone_number))
-            conn.commit()
+            db.update_user_field(phone_number, {"financial_status": message_body, "state": "awaiting_main_challenge"})
             handle_main_challenge_selection(phone_number, user, conn)
 
         elif user['state'] == 'awaiting_main_challenge':
-            conn.execute('UPDATE users SET main_challenge = ?, state = ? WHERE phone_number = ?',
-                         (message_body, 'awaiting_record_keeping', phone_number))
-            conn.commit()
+            db.update_user_field(phone_number, {"main_challenge": message_body, "state": "awaiting_record_keeping"})
             handle_record_keeping_selection(phone_number, user, conn)
 
         elif user['state'] == 'awaiting_record_keeping':
-            conn.execute('UPDATE users SET record_keeping = ?, state = ? WHERE phone_number = ?',
-                         (message_body, 'awaiting_growth_goal', phone_number))
-            conn.commit()
+            db.update_user_field(phone_number, {"record_keeping": message_body, "state": "awaiting_growth_goal"})
             handle_growth_goal_selection(phone_number, user, conn)
 
         elif user['state'] == 'awaiting_growth_goal':
-            conn.execute('UPDATE users SET growth_goal = ?, state = ? WHERE phone_number = ?',
-                         (message_body, 'awaiting_funding_need', phone_number))
-            conn.commit()
+            db.update_user_field(phone_number, {"growth_goal": message_body, "state": "awaiting_funding_need"})
             handle_funding_need_selection(phone_number, user, conn)
 
         elif user['state'] == 'awaiting_funding_need':
-            conn.execute('UPDATE users SET funding_need = ?, state = ? WHERE phone_number = ?',
-                         (message_body, 'awaiting_choice', phone_number))
-            conn.commit()
+            db.update_user_field(phone_number, {"funding_need": message_body, "state": "awaiting_choice"})
             send_message(phone_number, "Thank you! We now understand your business better. What would you like to do next?")
             present_options(phone_number, user, conn)
 
-        elif user['state'] == 'awaiting_choice':
+        elif user['state'] in ['awaiting_choice', 'main_menu']:
             send_message(phone_number, "Please choose 'Record Keeping' or 'Start Quiz'.")
             present_options(phone_number, user, conn)
 
-        # AI Chat and Quiz Handling
         elif user['state'] in ['ai_chat', 'awaiting_followup', 'post_explanation', 'awaiting_action', 'awaiting_explanation']:
-            cursor = conn.cursor()
-            cursor.execute('INSERT INTO followup_questions (user_id, question) VALUES (?, ?)',
-                           (user['id'], message_body))
-            conn.commit()
+            if USE_MONGODB:
+                from db_mongo import get_mongo_db
+                mongo_db = get_mongo_db()
+                user_id = str(user['_id'])
+                mongo_db.followup_questions.insert_one({
+                    "user_id": user_id,
+                    "question": message_body,
+                    "timestamp": datetime.utcnow()
+                })
+            else:
+                cursor = conn.cursor()
+                cursor.execute('INSERT INTO followup_questions (user_id, question) VALUES (?, ?)',
+                               (user['id'], message_body))
+                conn.commit()
             handle_ai_chat(phone_number, message_body, conn)
-            conn.execute('UPDATE users SET state = ? WHERE phone_number = ?', ('ai_chat', phone_number))
-            conn.commit()
+            db.update_user_field(phone_number, {"state": "ai_chat"})
 
         elif user['state'] == 'selecting_quiz':
             handle_quiz_selection(phone_number, message_body, user, conn)
@@ -5101,11 +5844,9 @@ def handle_text_message(phone_number, message_body, user, conn):
         elif user['state'] == 'records':
             send_message(phone_number, f"Welcome {user['name']}, please upload your business record as an image or PDF.")
 
-        # Default Response for Invalid Inputs
         else:
             send_message(phone_number, "Invalid input. Please type 'records' to begin record keeping or 'quiz' to start the quiz.")
-       
-        # Occasional reminder for key options
+
         if random.random() < 0.005:
             send_message(phone_number, "Remember, you can type 'records', 'quiz', or 'settings' at any time to switch.")
 
@@ -5115,6 +5856,7 @@ def handle_text_message(phone_number, message_body, user, conn):
         send_message(phone_number, "Sorry, something went wrong. Please try again or contact support.")
         present_options(phone_number, user, conn)
 
+
         
         
         
@@ -5122,9 +5864,7 @@ def handle_text_message(phone_number, message_body, user, conn):
         
         
 def end_ai_chat(phone_number, user, conn):
-    conn.execute('UPDATE users SET state = ?, current_question = ? WHERE phone_number = ?',
-                 ('awaiting_choice', None, phone_number))
-    conn.commit()
+    db.update_user_field(phone_number, {"state": "awaiting_choice", "current_question": None})
     send_message(phone_number, "Thanks for chatting! Remember, every day is a chance to learn and grow your business. What would you like to do next?")
     present_options(phone_number, user, conn)
    
@@ -5282,53 +6022,63 @@ def start_ai_chat(phone_number, user, conn):
     try:
         log_image_event(f"Starting AI chat for user {user['id']}")
         send_ai_intro(phone_number)
-        
-        
-        # Wait for 5 seconds before proceeding
         time.sleep(5)
 
-        cursor = conn.cursor()
-        query = """
-        SELECT r.quiz, COUNT(*) as incorrect_count
-        FROM responses r
-        WHERE r.user_id = ? 
-        AND r.correct = 0
-        GROUP BY r.quiz
-        ORDER BY CAST(SUBSTR(r.quiz, 5) AS INTEGER)
-        """
-        cursor.execute(query, (user['id'],))
-        quizzes = cursor.fetchall()
+        user_id = str(user['_id']) if USE_MONGODB else user['id']
+
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+
+            # Get quizzes with incorrect answers
+            pipeline = [
+                {"$match": {"user_id": user_id, "correct": False}},
+                {"$group": {"_id": "$quiz", "incorrect_count": {"$sum": 1}}},
+                {"$sort": {"_id": 1}}
+            ]
+            quizzes = list(mongo_db.responses.aggregate(pipeline))
+
+        else:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT r.quiz, COUNT(*) as incorrect_count
+                FROM responses r
+                WHERE r.user_id = ? AND r.correct = 0
+                GROUP BY r.quiz
+                ORDER BY CAST(SUBSTR(r.quiz, 5) AS INTEGER)
+            """, (user_id,))
+            quizzes_raw = cursor.fetchall()
+            quizzes = [{"_id": row[0], "incorrect_count": row[1]} for row in quizzes_raw]
 
         if not quizzes:
             send_message(phone_number, "Great job! You haven't missed any questions. Would you like to start a new quiz?")
             present_options(phone_number, user, conn)
             return
 
-        conn.execute('UPDATE users SET state = ? WHERE phone_number = ?',
-                     ('reviewing_quiz', phone_number))
-        conn.commit()
+        db.update_user_field(phone_number, {"state": "reviewing_quiz"})
 
         if len(quizzes) <= 3:
             buttons = [{
                 "type": "reply",
                 "reply": {
-                    "id": f"quiz{quiz[0].replace('quiz', '')} ({quiz[1]} incorrect)",
-                    "title": f"{quiz[0]} ({quiz[1]} incorrect)"
+                    "id": f"{q['_id']} ({q['incorrect_count']} incorrect)",
+                    "title": f"{q['_id']} ({q['incorrect_count']} incorrect)"
                 }
-            } for quiz in quizzes]
+            } for q in quizzes]
+            send_interactive_message(phone_number, "Select a quiz to review:", buttons)
 
-            send_interactive_message(
-                phone_number,
-                "Select a quiz to review:",
-                buttons
-            )
         else:
             sections = []
             current_section = []
             last_section_start = 0
 
-            for quiz in quizzes:
-                quiz_num = int(quiz[0].replace('quiz', ''))
+            for q in quizzes:
+                quiz_name = q['_id']
+                incorrect_count = q['incorrect_count']
+                try:
+                    quiz_num = int(quiz_name.replace('quiz', ''))
+                except:
+                    continue
                 section_start = (quiz_num // 10) * 10
 
                 if section_start != last_section_start and current_section:
@@ -5340,8 +6090,8 @@ def start_ai_chat(phone_number, user, conn):
                     last_section_start = section_start
 
                 current_section.append({
-                    "id": f"quiz{quiz_num} ({quiz[1]} incorrect)",
-                    "title": f"{quiz[0]}",
+                    "id": f"{quiz_name} ({incorrect_count} incorrect)",
+                    "title": f"{quiz_name} ({incorrect_count} incorrect)"
                 })
 
             if current_section:
@@ -5350,18 +6100,14 @@ def start_ai_chat(phone_number, user, conn):
                     "rows": current_section
                 })
 
-            send_quiz_list_button(
-                phone_number,
-                "Select a quiz to review",
-                "View Quizzes",
-                sections
-            )
+            send_quiz_list_button(phone_number, "Select a quiz to review", "View Quizzes", sections)
 
     except Exception as e:
         log_image_event(f"Error in start_ai_chat: {str(e)}")
         log_image_event(traceback.format_exc())
         send_message(phone_number, "An error occurred. Please try again or contact support.")
         present_options(phone_number, user, conn)
+
 
         
         
@@ -5467,9 +6213,7 @@ def handle_settings_command(phone_number, user, conn, page=1):
     previous_state = user['state']
 
     try:
-        conn.execute('UPDATE users SET state = ?, previous_state = ? WHERE phone_number = ?',
-                     ('settings', previous_state, phone_number))
-        conn.commit()
+        db.update_user_field(phone_number, {"state": "settings", "previous_state": previous_state})
 
         cursor = conn.cursor()
 
@@ -5497,8 +6241,7 @@ def handle_settings_command(phone_number, user, conn, page=1):
             "quiz_names": quiz_names,
             "scores": scores_serialized
         })
-        conn.execute('UPDATE users SET temp_data = ? WHERE phone_number = ?', (temp_data, phone_number))
-        conn.commit()
+        db.update_user_field(phone_number, {"temp_data": temp_data})
 
         log_image_event(f"Settings command handled successfully for user {phone_number}.")
 
@@ -5508,72 +6251,72 @@ def handle_settings_command(phone_number, user, conn, page=1):
 
   
   
-def handle_settings_command(phone_number, user, conn):
-    # Create a list of options for settings
-    list_options = [
-        {"id": "change_name", "title": "Change Name"},
-        {"id": "view_quiz_names", "title": "View Quiz Names"},
-        {"id": "view_scores", "title": "View Scores"},
-        {"id": "view_name", "title": "View Name"},
-        {"id": "back", "title": "Back"}
-    ]
-    # Prepare the list message with options
-    list_message = {
-        "type": "list",
-        "header": {
-            "type": "text",
-            "text": "Settings"
-        },
-        "body": {
-            "text": "Choose an option:"
-        },
-        "action": {
-            "button": "Select",
-            "sections": [
-                {
-                    "title": "Settings Options",
-                    "rows": list_options
-                }
-            ]
-        }
-    }
-    # Send the interactive message with the list
-    success, message = send_interactive_message(phone_number, list_message)
-    if not success:
-        log_image_event(f"Failed to send interactive message: {message}")
-        return
-    # Update the user's state and other relevant data
-    previous_state = user['state']
-    try:
-        conn.execute('UPDATE users SET state = ?, previous_state = ? WHERE phone_number = ?',
-                     ('settings', previous_state, phone_number))
-        conn.commit()
-        cursor = conn.cursor()
-        # Fetch and update user-related data
-        cursor.execute("SELECT name FROM users WHERE phone_number = ?", (phone_number,))
-        name_result = cursor.fetchone()
-        user_name = name_result[0] if name_result else "Unknown"
-        cursor.execute("SELECT DISTINCT quiz FROM questions")
-        quiz_names = [row[0] for row in cursor.fetchall()]
-        cursor.execute("""
-            SELECT quiz, COUNT(*) as total_questions, SUM(correct) as correct_answers
-            FROM responses
-            WHERE user_id = ?
-            GROUP BY quiz
-        """, (user['id'],))
-        scores = cursor.fetchall()
-        # Convert scores to a serializable format
-        scores_serialized = [{"quiz": row[0], "total_questions": row[1], "correct_answers": row[2]} for row in scores]
-        temp_data = json.dumps({
-            "name": user_name,
-            "quiz_names": quiz_names,
-            "scores": scores_serialized
-        })
-        conn.execute('UPDATE users SET temp_data = ? WHERE phone_number = ?', (temp_data, phone_number))
-        conn.commit()
-        log_image_event(f"Settings command handled successfully for user {phone_number}.")
-    except Exception as e:
-        log_image_event(f"Error in settings command for user {phone_number}: {e}")
+# def handle_settings_command(phone_number, user, conn):
+#     # Create a list of options for settings
+#     list_options = [
+#         {"id": "change_name", "title": "Change Name"},
+#         {"id": "view_quiz_names", "title": "View Quiz Names"},
+#         {"id": "view_scores", "title": "View Scores"},
+#         {"id": "view_name", "title": "View Name"},
+#         {"id": "back", "title": "Back"}
+#     ]
+#     # Prepare the list message with options
+#     list_message = {
+#         "type": "list",
+#         "header": {
+#             "type": "text",
+#             "text": "Settings"
+#         },
+#         "body": {
+#             "text": "Choose an option:"
+#         },
+#         "action": {
+#             "button": "Select",
+#             "sections": [
+#                 {
+#                     "title": "Settings Options",
+#                     "rows": list_options
+#                 }
+#             ]
+#         }
+#     }
+#     # Send the interactive message with the list
+#     success, message = send_interactive_message(phone_number, list_message)
+#     if not success:
+#         log_image_event(f"Failed to send interactive message: {message}")
+#         return
+#     # Update the user's state and other relevant data
+#     previous_state = user['state']
+#     try:
+#         conn.execute('UPDATE users SET state = ?, previous_state = ? WHERE phone_number = ?',
+#                      ('settings', previous_state, phone_number))
+#         conn.commit()
+#         cursor = conn.cursor()
+#         # Fetch and update user-related data
+#         cursor.execute("SELECT name FROM users WHERE phone_number = ?", (phone_number,))
+#         name_result = cursor.fetchone()
+#         user_name = name_result[0] if name_result else "Unknown"
+#         cursor.execute("SELECT DISTINCT quiz FROM questions")
+#         quiz_names = [row[0] for row in cursor.fetchall()]
+#         cursor.execute("""
+#             SELECT quiz, COUNT(*) as total_questions, SUM(correct) as correct_answers
+#             FROM responses
+#             WHERE user_id = ?
+#             GROUP BY quiz
+#         """, (user['id'],))
+#         scores = cursor.fetchall()
+#         # Convert scores to a serializable format
+#         scores_serialized = [{"quiz": row[0], "total_questions": row[1], "correct_answers": row[2]} for row in scores]
+#         temp_data = json.dumps({
+#             "name": user_name,
+#             "quiz_names": quiz_names,
+#             "scores": scores_serialized
+#         })
+#         db.update_user_field(phone_number, {"temp_data": temp_data})
+#         conn.commit()
+#         log_image_event(f"Settings command handled successfully for user {phone_number}.")
+#     except Exception as e:
+#         log_image_event(f"Error in settings command for user {phone_number}: {e}")
         
         
         
@@ -5582,7 +6325,6 @@ def handle_settings_command(phone_number, user, conn):
 def handle_settings_command(phone_number, user, conn):
     log_image_event(f"Starting settings command for {phone_number}")
 
-    # Create a list of options for settings
     list_options = [
         {"id": "change_name", "title": "Change Name"},
         {"id": "view_quiz_names", "title": "View Quiz Names"},
@@ -5592,62 +6334,34 @@ def handle_settings_command(phone_number, user, conn):
         {"id": "back", "title": "Back"}
     ]
 
-    # Prepare the list message with options
     list_message = {
         "type": "list",
-        "header": {
-            "type": "text",
-            "text": "Settings"
-        },
-        "body": {
-            "text": "Choose an option:"
-        },
+        "header": {"type": "text", "text": "Settings"},
+        "body": {"text": "Choose an option:"},
         "action": {
             "button": "Select",
-            "sections": [
-                {
-                    "title": "Settings Options",
-                    "rows": list_options
-                }
-            ]
+            "sections": [{"title": "Settings Options", "rows": list_options}]
         }
     }
 
     try:
-        log_image_event(f"Attempting to send settings menu to {phone_number}")
         success, message = send_interactive_message(phone_number, list_message)
-        
         if not success:
             raise Exception(f"Failed to send settings menu: {message}")
-
         log_image_event(f"Successfully sent settings menu to {phone_number}")
-
     except Exception as e:
-        log_image_event(f"Error sending settings menu to {phone_number}: {str(e)}")
-        log_image_event(f"Full error traceback: {traceback.format_exc()}")
-        send_message(phone_number, "An error occurred while displaying the settings menu. Please try again or contact support if the issue persists.")
+        log_image_event(f"Error sending settings menu: {str(e)}")
+        send_message(phone_number, "An error occurred displaying settings. Please try again.")
         return
 
-    # Update the user's state
-    try:
-        log_image_event(f"Updating user state for {phone_number}")
-        
-        conn.execute('UPDATE users SET state = ? WHERE phone_number = ?',
-                     ('settings', phone_number))
-        conn.commit()
-        
-        log_image_event(f"Successfully updated user state for {phone_number}")
-
-    except Exception as e:
-        log_image_event(f"Database error in settings command for {phone_number}: {str(e)}")
-        log_image_event(f"Full database error traceback: {traceback.format_exc()}")
-        conn.rollback()
-        send_message(phone_number, "An error occurred while processing your request. Please try again or contact support if the issue persists.")
-        return
-
+    db.update_user_field(phone_number, {"state": "settings"})
     log_image_event(f"Completed handle_settings_command for {phone_number}")
-        
-        
+
+
+
+
+
+
         
         
 def handle_remove_account_request(phone_number, user, conn):
@@ -5685,77 +6399,101 @@ def handle_remove_account_request(phone_number, user, conn):
     
     success, message = send_interactive_message(phone_number, confirmation_message)
     if success:
-        conn.execute('UPDATE users SET state = ? WHERE phone_number = ?', ('removing_account', phone_number))
-        conn.commit()
+        db.update_user_field(phone_number, {"state": "removing_account"})
         log_image_event(f"Sent account removal confirmation to {phone_number}")
     else:
         log_image_event(f"Failed to send account removal confirmation to {phone_number}: {message}")
         # Fallback to plain text message
         fallback_message = "Are you sure you want to remove your account? This action cannot be undone. All your data will be permanently deleted. Reply with 'YES' to confirm or 'NO' to cancel."
         send_message(phone_number, fallback_message)
-        conn.execute('UPDATE users SET state = ? WHERE phone_number = ?', ('removing_account', phone_number))
-        conn.commit()
+        db.update_user_field(phone_number, {"state": "removing_account"})
         
         
         
 
 def remove_user_account(phone_number, conn):
     try:
-        cursor = conn.cursor()
-        
-        # Get user_id
-        cursor.execute("SELECT id FROM users WHERE phone_number = ?", (phone_number,))
-        user_result = cursor.fetchone()
-        
-        if user_result is None:
-            log_image_event(f"Error removing account: User not found for phone number {phone_number}")
-            error_message = "We couldn't find your account. Please contact support if you believe this is an error."
-            send_message(phone_number, error_message)
-            return
-        user_id = user_result[0]
-        
-        # Remove user data from all tables
-        tables_to_delete = [
-            ("users", "phone_number"),
-            ("user_scores", "phone_number"),
-            ("explanation_history", "user_id"),
-            ("post10_quizzes", "user_id"),
-            ("post10_quiz_responses", "quiz_id"),  # This needs special handling
-            ("responses", "user_id"),
-            ("followup_questions", "user_id"),
-            ("conversation_history", "user_id")
-        ]
-        
-        for table, id_column in tables_to_delete:
-            try:
-                if table == "post10_quiz_responses":
-                    # First, get all quiz_ids for the user
-                    cursor.execute("SELECT id FROM post10_quizzes WHERE user_id = ?", (user_id,))
-                    quiz_ids = [row[0] for row in cursor.fetchall()]
-                    # Then delete responses for these quizzes
-                    if quiz_ids:
-                        placeholders = ','.join(['?'] * len(quiz_ids))
-                        cursor.execute(f"DELETE FROM {table} WHERE quiz_id IN ({placeholders})", quiz_ids)
-                else:
-                    cursor.execute(f"DELETE FROM {table} WHERE {id_column} = ?", 
-                                   (phone_number if id_column == "phone_number" else user_id,))
-                log_image_event(f"Deleted user data from {table}")
-            except sqlite3.Error as e:
-                log_image_event(f"Error deleting from {table}: {e}")
-        
-        conn.commit()
-        log_image_event(f"Account successfully removed for user {phone_number}")
-        
-        # Send a confirmation message
-        farewell_message = "Your account has been successfully removed. We're sorry to see you go. If you change your mind, you're always welcome to sign up again."
-        send_message(phone_number, farewell_message)
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+
+            user = mongo_db.users.find_one({"phone_number": phone_number})
+            if not user:
+                send_message(phone_number, "Account not found.")
+                return
+
+            user_id = str(user['_id'])
+            logging.info(f"Starting MongoDB account deletion for user_id={user_id}, phone={phone_number}")
+
+            collections_to_clean = [
+                'responses', 'quiz_states', 'conversation_history',
+                'followup_questions', 'explanation_history', 'user_scores',
+                'user_products', 'records', 'post10_quiz_responses',
+                'post10_quizzes', 'processed_messages'
+            ]
+
+            deletion_summary = {}
+            for collection_name in collections_to_clean:
+                try:
+                    result = mongo_db[collection_name].delete_many({"user_id": user_id})
+                    deletion_summary[collection_name] = result.deleted_count
+                except Exception as e:
+                    logging.error(f"Error deleting from {collection_name}: {e}")
+
+            mongo_db.users.delete_one({"_id": user['_id']})
+            deletion_summary['users'] = 1
+
+            summary_text = "\n".join([f"• {k}: {v} items" for k, v in deletion_summary.items() if v > 0])
+            send_message(phone_number,
+                f"✅ Your account has been completely removed.\n\n"
+                f"Deleted data:\n{summary_text}\n\n"
+                f"You can create a new account anytime by messaging us again.")
+            logging.info(f"✅ Successfully deleted all MongoDB data for user {user_id}")
+
+        else:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id FROM users WHERE phone_number = ?", (phone_number,))
+            user_result = cursor.fetchone()
+
+            if user_result is None:
+                send_message(phone_number, "Account not found.")
+                return
+
+            user_id = user_result[0]
+            logging.info(f"Starting SQLite account deletion for user_id={user_id}")
+
+            deletion_steps = [
+                {"table": "post10_quiz_responses",
+                 "query": "DELETE FROM post10_quiz_responses WHERE quiz_id IN (SELECT id FROM post10_quizzes WHERE user_id = ?)",
+                 "params": (user_id,)},
+                {"table": "post10_quizzes", "query": "DELETE FROM post10_quizzes WHERE user_id = ?", "params": (user_id,)},
+                {"table": "responses", "query": "DELETE FROM responses WHERE user_id = ?", "params": (user_id,)},
+                {"table": "quiz_states", "query": "DELETE FROM quiz_states WHERE user_id = ?", "params": (user_id,)},
+                {"table": "conversation_history", "query": "DELETE FROM conversation_history WHERE user_id = ?", "params": (user_id,)},
+                {"table": "followup_questions", "query": "DELETE FROM followup_questions WHERE user_id = ?", "params": (user_id,)},
+                {"table": "explanation_history", "query": "DELETE FROM explanation_history WHERE user_id = ?", "params": (user_id,)},
+                {"table": "user_scores", "query": "DELETE FROM user_scores WHERE user_id = ?", "params": (user_id,)},
+                {"table": "user_products", "query": "DELETE FROM user_products WHERE user_id = ?", "params": (user_id,)},
+                {"table": "records", "query": "DELETE FROM records WHERE user_id = ?", "params": (user_id,)},
+                {"table": "users", "query": "DELETE FROM users WHERE id = ?", "params": (user_id,)},
+            ]
+
+            for step in deletion_steps:
+                cursor.execute(step['query'], step['params'])
+
+            conn.commit()
+            send_message(phone_number,
+                "✅ Your account has been completely removed.\n\n"
+                "You can create a new account anytime by messaging us again.")
+
     except Exception as e:
-        log_image_event(f"Error removing account for user {phone_number}: {e}")
-        conn.rollback()
-        error_message = "We encountered an error while trying to remove your account. Please try again later or contact support."
-        send_message(phone_number, error_message)
-        
-        
+        logging.error(f"Error in remove_user_account for {phone_number}: {e}")
+        logging.error(traceback.format_exc())
+        send_message(phone_number, "An error occurred while removing your account. Please try again or contact support.")
+
+
+
+
         
 
 
@@ -5797,8 +6535,7 @@ def view_scores(phone_number, user, conn):
 def handle_records_command(phone_number, user, conn):
     message = f"Welcome to Record Keeping, {user['name']}! Please upload your business record as an image or PDF."
     send_message(phone_number, message)
-    conn.execute('UPDATE users SET state = ? WHERE phone_number = ?', ('records', phone_number))
-    conn.commit()
+    db.update_user_field(phone_number, {"state": "records"})
     log_image_event(f"Switched to records mode for {phone_number}")
 
 
@@ -5866,7 +6603,7 @@ def handle_records_command(phone_number, user, conn):
 #         send_message(phone_number, "You've completed all available quizzes. Great job!")
 #         present_options(phone_number, user, conn)
 
-#     conn.execute('UPDATE users SET state = ? WHERE phone_number = ?', ('selecting_quiz', phone_number))
+#     db.update_user_field(phone_number, {"state": "selecting_quiz"})
 #     conn.commit()
    
 
@@ -5928,40 +6665,42 @@ def handle_records_command(phone_number, user, conn):
 
 #     send_interactive_message(phone_number, "What would you like to do?", buttons)
 
-#     conn.execute('UPDATE users SET state = ? WHERE phone_number = ?', ('selecting_quiz', phone_number))
+#     db.update_user_field(phone_number, {"state": "selecting_quiz"})
 #     conn.commit()
 
     
   
 def handle_quiz_command(phone_number, user, conn):
-    # Load fresh quiz visibility data
+    print(f"🔥 DEBUG: handle_quiz_command called for {phone_number}")
+    logging.info(f"📱 handle_quiz_command called for {phone_number}")
+
     load_quiz_visibility_from_db()
-    
-    # Get all available quizzes and filter by visibility
+    quiz_visibility = app.config.get('QUIZ_VISIBILITY', {})
+
     all_quizzes = list_available_quizzes()
-    
-    # Filter out disabled quizzes
     available_quizzes = []
     for quiz_num in all_quizzes:
         quiz_name = f"quiz{quiz_num}"
-        # Check if quiz is enabled (default to True if not found)
-        if quiz_visibility.get(quiz_name, True):
+        is_enabled = quiz_visibility.get(quiz_name, True)
+        if is_enabled:
             available_quizzes.append(quiz_num)
+
+    logging.info(f"🔍 available_quizzes after filtering: {len(available_quizzes)}")
 
     quiz_statuses = {
         f"quiz{quiz}": get_quiz_status(conn, user['id'], f"quiz{quiz}")
-        for quiz in available_quizzes  # Only check enabled quizzes
+        for quiz in available_quizzes
     }
     completed_quizzes = [quiz for quiz, status in quiz_statuses.items() if status == "completed"]
     in_progress_quizzes = [quiz for quiz, status in quiz_statuses.items() if status == "in_progress"]
     uncompleted_quizzes = [quiz for quiz, status in quiz_statuses.items() if status == "not_started"]
 
-    buttons = [
-        {"type": "reply", "reply": {"id": "quiz", "title": "Start Quiz"}},
-    ]
-
     if not available_quizzes:
         send_message(phone_number, "No quiz is currently available. Please check back later.")
+        buttons = [
+            {"type": "reply", "reply": {"id": "ai_chat", "title": "Chat with AI"}},
+            {"type": "reply", "reply": {"id": "records", "title": "Record Keeping"}},
+        ]
         send_interactive_message(phone_number, "What would you like to do next?", buttons)
         return
 
@@ -5975,50 +6714,71 @@ def handle_quiz_command(phone_number, user, conn):
 
     send_message(phone_number, message)
 
-    # Add continue/start quiz buttons for assigned quizzes
-    if in_progress_quizzes:
-        buttons.extend([
-            {
-                "type": "reply",
-                "reply": {
-                    "id": quiz,
-                    "title": f"Continue {quiz}"
-                }
-            } for quiz in in_progress_quizzes[:1]
-        ])
+    # Always include Chat with AI button
+    buttons = [
+        {"type": "reply", "reply": {"id": "ai_chat", "title": "Chat with AI"}},
+    ]
 
-    if uncompleted_quizzes:
-        buttons.extend([
-            {
-                "type": "reply",
-                "reply": {
-                    "id": quiz,
-                    "title": f"Start {quiz}"
-                }
-            } for quiz in uncompleted_quizzes[:1]
-        ])
+    if in_progress_quizzes:
+        buttons.append({
+            "type": "reply",
+            "reply": {
+                "id": in_progress_quizzes[0],
+                "title": f"Continue {in_progress_quizzes[0]}"
+            }
+        })
+    elif uncompleted_quizzes:
+        buttons.append({
+            "type": "reply",
+            "reply": {
+                "id": uncompleted_quizzes[0],
+                "title": f"Start {uncompleted_quizzes[0]}"
+            }
+        })
 
     send_interactive_message(phone_number, "What would you like to do?", buttons)
+    db.update_user_field(phone_number, {"state": "selecting_quiz"})
 
-    conn.execute('UPDATE users SET state = ? WHERE phone_number = ?', ('selecting_quiz', phone_number))
-    conn.commit()
+
     
     
     
-    
-def is_quiz_enabled(quiz_name, conn):
-    """Check if a quiz is enabled by querying the database directly"""
-    cursor = conn.cursor()
-    try:
-        cursor.execute("SELECT enabled FROM quizzes WHERE name = ?", (quiz_name,))
-        result = cursor.fetchone()
-        if result:
-            return bool(result[0])  # Return the enabled status from database
-        else:
-            return True  # Default to enabled if not found in database
-    except Exception as e:
-        print(f"Error checking quiz enabled status: {e}")
-        return True  # Default to enabled on error
+def is_quiz_enabled(quiz_name):
+    """Check if a quiz is enabled - MongoDB/SQLite compatible"""
+    if USE_MONGODB:
+        from db_mongo import get_mongo_db
+        try:
+            mongo_db = get_mongo_db()
+            quiz_status = mongo_db.quiz_status.find_one({"quiz": quiz_name})
+            
+            if quiz_status:
+                return bool(quiz_status.get('enabled', True))
+            else:
+                return True  # Default to enabled if not found
+        except Exception as e:
+            print(f"Error checking quiz enabled status in MongoDB: {e}")
+            return True  # Default to enabled on error
+    else:
+        # SQLite version
+        conn = db.get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT enabled FROM quiz_status WHERE quiz = ?", (quiz_name,))
+            result = cursor.fetchone()
+            
+            if result:
+                return bool(result[0])
+            else:
+                return True  # Default to enabled if not found
+        except Exception as e:
+            print(f"Error checking quiz enabled status in SQLite: {e}")
+            return True  # Default to enabled on error
+        finally:
+            conn.close()
+
+
+
+
 
       
 
@@ -6046,39 +6806,14 @@ def handle_quiz_selection(phone_number, message_body, user, conn):
 
         selected_quiz = f"quiz{quiz_number}"
 
-        # ✅ Check if the selected quiz is currently enabled (using database)
-        if not is_quiz_enabled(selected_quiz, conn):
+        # Check if the selected quiz is currently enabled
+        if not is_quiz_enabled(selected_quiz):
             send_message(phone_number, f"{selected_quiz} is currently unavailable. Please choose another quiz.")
             handle_quiz_command(phone_number, user, conn)
             return
 
-        cursor = conn.cursor()
-
-        # ✅ Check if the user is already working on a different quiz
-        cursor.execute("""
-            SELECT quiz FROM responses 
-            WHERE user_id = ? 
-            GROUP BY quiz 
-            HAVING COUNT(*) < (SELECT COUNT(*) FROM questions WHERE quiz = responses.quiz)
-        """, (user['id'],))
-        in_progress_quizzes = [row[0] for row in cursor.fetchall()]
-
-        if in_progress_quizzes and selected_quiz not in in_progress_quizzes:
-            send_message(phone_number, f"You are already working on {in_progress_quizzes[0]}. Please complete it before starting {selected_quiz}.")
-            return
-
-        # ✅ Determine quiz status (not started, in progress, completed)
-        cursor.execute("""
-            SELECT 
-                CASE 
-                    WHEN COUNT(*) = 0 THEN 'not_started'
-                    WHEN COUNT(*) = (SELECT COUNT(*) FROM questions WHERE quiz = ?) THEN 'completed'
-                    ELSE 'in_progress'
-                END as status
-            FROM responses 
-            WHERE user_id = ? AND quiz = ?
-        """, (selected_quiz, user['id'], selected_quiz))
-        status = cursor.fetchone()[0]
+        # Check quiz status using MongoDB
+        status = get_quiz_status(conn, user['id'], selected_quiz)
 
         if status == 'completed':
             send_message(phone_number, f"You've already completed {selected_quiz}. Use 'AI Chat' to review incorrect answers or choose another quiz.")
@@ -6091,6 +6826,8 @@ def handle_quiz_selection(phone_number, message_body, user, conn):
         log_image_event(traceback.format_exc())
         send_message(phone_number, "An error occurred while selecting the quiz. Please try again.")
         present_options(phone_number, user, conn)
+
+
 # def handle_quiz_selection(phone_number, message_body, user, conn):
 #     log_image_event(f"Quiz selection initiated for {phone_number} with message: {message_body}")
    
@@ -6154,20 +6891,29 @@ def handle_quiz_selection(phone_number, message_body, user, conn):
 
        
 def start_or_resume_quiz(phone_number, user, conn, selected_quiz):
-    quiz_state = check_quiz_state(conn, user['id'], selected_quiz)
+    user_id = str(user['_id']) if USE_MONGODB else user['id']
+    quiz_state = check_quiz_state(conn, user_id, selected_quiz)
     question_index = quiz_state['question_index'] if quiz_state else 0
-   
+
     if not quiz_state:
-        conn.execute('INSERT INTO quiz_states (user_id, quiz_name, question_index) VALUES (?, ?, ?)',
-                     (user['id'], selected_quiz, question_index))
-   
-    conn.execute('UPDATE users SET current_quiz = ?, state = ? WHERE phone_number = ?',
-                 (selected_quiz, f'quiz_{question_index}', phone_number))
-    conn.commit()
-   
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+            mongo_db.quiz_states.insert_one({
+                "user_id": user_id,
+                "quiz_name": selected_quiz,
+                "question_index": question_index
+            })
+        else:
+            conn.execute('INSERT INTO quiz_states (user_id, quiz_name, question_index) VALUES (?, ?, ?)',
+                         (user_id, selected_quiz, question_index))
+
+    db.update_user_field(phone_number, {"current_quiz": selected_quiz, "state": f'quiz_{question_index}'})
+
     action = "Resuming" if quiz_state else "Starting"
-    log_image_event(f"{action} {selected_quiz} for user {user['id']} at question {question_index}")
+    log_image_event(f"{action} {selected_quiz} for user {user_id} at question {question_index}")
     start_quiz(phone_number, conn, selected_quiz, question_index)
+
 
 
    
@@ -6183,7 +6929,7 @@ def start_or_resume_quiz(phone_number, user, conn, selected_quiz):
 #         congratulations_message = f"Congratulations! You've completed the quiz. You scored {total_correct} out of {num_questions} questions correctly."
 #         send_message(phone_number, congratulations_message)
        
-#         conn.execute("UPDATE users SET state='awaiting_choice', current_quiz='' WHERE phone_number=?", (phone_number,))
+#         db.update_user_field(phone_number, {"state": "awaiting_choice", "current_quiz": ""})
 #         conn.execute("UPDATE quiz_states SET question_index = -1 WHERE user_id = ? AND quiz_name = ?",
 #                      (user['id'], current_quiz))
 #         conn.commit()
@@ -6213,7 +6959,7 @@ def start_or_resume_quiz(phone_number, user, conn, selected_quiz):
 #     finally:
 #         # Ensure the user's state is reset even if an error occurs
 #         try:
-#             conn.execute("UPDATE users SET state='awaiting_choice', current_quiz='' WHERE phone_number=?", (phone_number,))
+#             db.update_user_field(phone_number, {"state": "awaiting_choice", "current_quiz": ""})
 #             conn.commit()
 #         except Exception as e:
 #             log_image_event(f"Error resetting user state in finish_quiz for user {user['id']}: {str(e)}")
@@ -6226,42 +6972,63 @@ def finish_quiz(phone_number, user, conn, current_quiz, num_questions):
     try:
         log_image_event(f"Finishing quiz {current_quiz} for user {user['id']}")
 
-        # Extract numeric part of the quiz identifier and convert to integer
+        user_id = str(user['_id']) if USE_MONGODB else user['id']
+
         try:
-            quiz_number = int(current_quiz[4:])  # Assumes format is 'quizXX'
+            quiz_number = int(current_quiz[4:])
         except ValueError:
             quiz_number = 0
 
-        total_correct = conn.execute(
-            "SELECT COUNT(*) AS total_correct FROM responses WHERE user_id = ? AND quiz = ? AND correct = 1",
-            (user['id'], current_quiz)
-        ).fetchone()[0]
+        # Get total correct
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+            total_correct = mongo_db.responses.count_documents({
+                "user_id": user_id,
+                "quiz": current_quiz,
+                "correct": True
+            })
+        else:
+            total_correct = conn.execute(
+                "SELECT COUNT(*) AS total_correct FROM responses WHERE user_id = ? AND quiz = ? AND correct = 1",
+                (user['id'], current_quiz)
+            ).fetchone()[0]
 
         if quiz_number <= 10:
             congratulations_message = f"Congratulations! You've completed the quiz. You scored {total_correct} out of {num_questions} questions correctly."
             send_message(phone_number, congratulations_message)
         else:
-            # For quizzes numbered above 10, send a different message
-            completion_message = f"You've finished the quiz."
-            send_message(phone_number, completion_message)
+            send_message(phone_number, f"Congratulations! You've completed the quiz. You scored {total_correct} out of {num_questions} questions correctly.")
 
-        conn.execute("UPDATE users SET state='awaiting_choice', current_quiz='' WHERE phone_number=?", (phone_number,))
-        conn.execute("UPDATE quiz_states SET question_index = -1 WHERE user_id = ? AND quiz_name = ?",
-                     (user['id'], current_quiz))
-        conn.commit()
+        # Update user state
+        db.update_user_field(phone_number, {"state": "awaiting_choice", "current_quiz": ""})
+
+        # Mark quiz as completed in quiz_states
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+            mongo_db.quiz_states.update_one(
+                {"user_id": user_id, "quiz_name": current_quiz},
+                {"$set": {"question_index": -1, "state": "completed"}},
+                upsert=True
+            )
+        else:
+            conn.execute(
+                "UPDATE quiz_states SET question_index = -1 WHERE user_id = ? AND quiz_name = ?",
+                (user['id'], current_quiz)
+            )
+            conn.commit()
 
         log_image_event(f"Database updated for user {user['id']} after finishing quiz {current_quiz}")
 
-        # Offer options to take another quiz or switch to records
         buttons = [
-            {"type": "reply", "reply": {"id": "quiz", "title": "Take Another Quiz"}},
-            {"type": "reply", "reply": {"id": "records", "title": "Switch to Records"}},
-            {"type": "reply", "reply": {"id": "ai_chat", "title": "Review Mistakes (AI)"}}
+            {"type": "reply", "reply": {"id": "quiz",     "title": "Take Another Quiz"}},
+            {"type": "reply", "reply": {"id": "records",  "title": "Switch to Records"}},
+            {"type": "reply", "reply": {"id": "ai_chat",  "title": "Review Mistakes (AI)"}}
         ]
         success = send_interactive_message(phone_number, "What would you like to do next?", buttons)
 
         if not success:
-            log_image_event(f"Failed to send interactive message for user {user['id']} after quiz completion")
             send_message(phone_number, "What would you like to do next? Type 'quiz' to take another quiz or 'records' to switch to record keeping.")
 
         log_image_event(f"Quiz {current_quiz} finished successfully for user {user['id']}")
@@ -6270,40 +7037,97 @@ def finish_quiz(phone_number, user, conn, current_quiz, num_questions):
         log_image_event(f"Error in finish_quiz for user {user['id']}: {str(e)}")
         log_image_event(traceback.format_exc())
         send_message(phone_number, "An error occurred while finishing the quiz. Please type 'quiz' to start over or 'records' to switch to record keeping.")
-   
+
     finally:
-        # Ensure the user's state is reset even if an error occurs
         try:
-            conn.execute("UPDATE users SET state='awaiting_choice', current_quiz='' WHERE phone_number=?", (phone_number,))
-            conn.commit()
+            db.update_user_field(phone_number, {"state": "awaiting_choice", "current_quiz": ""})
         except Exception as e:
-            log_image_event(f"Error resetting user state in finish_quiz for user {user['id']}: {str(e)}")
+            log_image_event(f"Error resetting user state in finish_quiz: {str(e)}")
+
+
 
            
            
            
        
 def get_quiz_status(conn, user_id, quiz_name):
-    state = conn.execute(
-        "SELECT question_index FROM quiz_states WHERE user_id = ? AND quiz_name = ?",
-        (user_id, quiz_name)
-    ).fetchone()
-   
-    if state is None:
-        return "not_started"
-    elif state['question_index'] == -1:
-        return "completed"
-    else:
-        return "in_progress"
+    """Get quiz status: completed, in_progress, or not_started"""
+    try:
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
 
+            # Check quiz_states first - most reliable source
+            quiz_state = mongo_db.quiz_states.find_one({
+                "user_id": str(user_id),
+                "quiz_name": quiz_name
+            })
+            if quiz_state and quiz_state.get("state") == "completed":
+                return "completed"
+            if quiz_state and quiz_state.get("question_index", 0) == -1:
+                return "completed"
+
+            # Fall back to counting responses
+            total_questions = mongo_db.questions.count_documents({"quiz": quiz_name})
+            if total_questions == 0:
+                return "not_started"
+
+            # Count distinct question numbers answered
+            answered = mongo_db.responses.distinct("question_number", {
+                "user_id": str(user_id),
+                "quiz": quiz_name
+            })
+
+            if not answered:
+                return "not_started"
+            if len(answered) >= total_questions:
+                return "completed"
+            return "in_progress"
+
+        else:
+            # SQLite version
+            state = conn.execute(
+                "SELECT state FROM quiz_states WHERE user_id = ? AND quiz_name = ?",
+                (user_id, quiz_name)
+            ).fetchone()
+
+            if state and state[0] == 'completed':
+                return "completed"
+
+            cursor = conn.execute(
+                "SELECT COUNT(*) FROM responses WHERE user_id = ? AND quiz = ?",
+                (user_id, quiz_name)
+            )
+            response_count = cursor.fetchone()[0]
+
+            if response_count > 0:
+                return "in_progress"
+            else:
+                return "not_started"
+
+    except Exception as e:
+        logging.error(f"Error getting quiz status: {e}")
+        return "not_started"
+    
+
+    
 def check_quiz_state(conn, user_id, quiz_name):
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM quiz_states WHERE user_id = ? AND quiz_name = ?", (user_id, quiz_name))
-    state = cursor.fetchone()
-    logging.info(f"Current state for {quiz_name} for user {user_id}: {state}")
-    return state
- 
- 
+    if USE_MONGODB:
+        try:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+            state = mongo_db.quiz_states.find_one({"user_id": str(user_id), "quiz_name": quiz_name})
+            logging.info(f"Current state for {quiz_name} for user {user_id}: {state}")
+            return state
+        except Exception as e:
+            logging.error(f"Error checking quiz state in MongoDB: {e}")
+            return None
+    else:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM quiz_states WHERE user_id = ? AND quiz_name = ?", (user_id, quiz_name))
+        state = cursor.fetchone()
+        logging.info(f"Current state for {quiz_name} for user {user_id}: {state}")
+        return state
        
        
 
@@ -6433,7 +7257,7 @@ def send_interactive_message(phone_number, message, buttons=None, options=None):
 #     except Exception as e:
 #         log_image_event(f"Error loading quiz data for {current_quiz}: {str(e)}")
 #         send_message(phone_number, "There was an error with the quiz. Please type 'quiz' to start over.")
-#         conn.execute("UPDATE users SET state = 'awaiting_choice', current_quiz = '' WHERE phone_number = ?", (phone_number,))
+#         db.update_user_field(phone_number, {"state": "awaiting_choice", "current_quiz": ""})
 #         conn.commit()
 #         return
 
@@ -6462,7 +7286,7 @@ def send_interactive_message(phone_number, message, buttons=None, options=None):
 #         log_image_event(f"Moving to next question. New index: {question_index}")
 
 #         if question_index < len(QUIZ_QUESTIONS):
-#             conn.execute("UPDATE users SET state = ? WHERE phone_number = ?", (f'quiz_{question_index}', phone_number))
+#             db.update_user_field(phone_number, {"state": f'quiz_{question_index}'})
 #             conn.execute("UPDATE quiz_states SET question_index = ? WHERE user_id = ? AND quiz_name = ?",
 #                          (question_index, user['id'], current_quiz))
 #             conn.commit()
@@ -6476,7 +7300,7 @@ def send_interactive_message(phone_number, message, buttons=None, options=None):
 #                 send_message(phone_number, "An error occurred while finishing the quiz. Please type 'quiz' to start over or 'records' to switch to record keeping.")
 #     else:
 #         send_message(phone_number, "Invalid question number. Type 'quiz' to start a new quiz.")
-#         conn.execute("UPDATE users SET state = 'awaiting_choice', current_quiz = '' WHERE phone_number = ?", (phone_number,))
+#         db.update_user_field(phone_number, {"state": "awaiting_choice", "current_quiz": ""})
 #         conn.commit()
        
        
@@ -6496,14 +7320,16 @@ def load_quiz_data(quiz_name):
       
 def handle_quiz_response(phone_number, response, user, conn):
     log_image_event(f"Handling quiz response for {phone_number}: {response}")
+
     if response.lower().strip() == 'settings':
         handle_settings_command(phone_number, user, conn)
         return
+
     current_quiz = user['current_quiz']
     if not current_quiz:
-        log_image_event(f"No current quiz for user {phone_number}")
         send_message(phone_number, "No active quiz. Type 'quiz' to start a new quiz.")
         return
+
     try:
         quiz_data = load_quiz_data(current_quiz)
         if not quiz_data:
@@ -6512,76 +7338,72 @@ def handle_quiz_response(phone_number, response, user, conn):
     except Exception as e:
         log_image_event(f"Error loading quiz data for {current_quiz}: {str(e)}")
         send_message(phone_number, "There was an error with the quiz. Please type 'quiz' to start over.")
-        conn.execute("UPDATE users SET state = 'awaiting_choice', current_quiz = '' WHERE phone_number = ?", (phone_number,))
-        conn.commit()
+        db.update_user_field(phone_number, {"state": "awaiting_choice", "current_quiz": ""})
         return
 
     state = user['state']
     question_index = int(state.split('_')[1])
     question_number = question_index + 1
-    # Extract the numeric part of the quiz identifier to determine its number
-    quiz_number = int(current_quiz[4:]) if current_quiz.startswith('quiz') else 0
+
+    user_id = str(user['_id']) if USE_MONGODB else user['id']
 
     if question_index < len(QUIZ_QUESTIONS):
         current_question = QUIZ_QUESTIONS[question_index]
         correct_answer = current_question['answer'].lower().strip()
         user_response = response.lower().strip()
+        is_correct = user_response == correct_answer
 
-        # Check if the quiz number is 10 or below
-        if quiz_number <= 10:
-            is_correct = user_response == correct_answer
-            log_image_event(f"User {user['id']} answered question {question_number} {'correctly' if is_correct else 'incorrectly'}")
-            conn.execute(
-              "INSERT INTO responses (user_id, question_number, response, correct, quiz) VALUES (?, ?, ?, ?, ?)",
-              (user['id'], question_number, response, int(is_correct), current_quiz)
+        log_image_event(f"User {user_id} answered question {question_number} {'correctly' if is_correct else 'incorrectly'}")
+
+        # Save ALL quizzes to responses collection (unified)
+        if USE_MONGODB:
+            db.save_user_response(
+                user_id=user_id,
+                quiz=current_quiz,
+                question_number=question_number,
+                response=response,
+                correct=is_correct
             )
-            log_image_event(f"Inserted response for user {user['id']}: question {question_number}, correct={int(is_correct)}, quiz={current_quiz}")
-            feedback = "Correct!" if is_correct else f"Wrong! The correct answer was {correct_answer.upper()}."
-            send_message(phone_number, feedback)
         else:
-            # For quizzes numbered 11 and above
-            cursor = conn.cursor()
-           
-            # Check if a quiz entry exists for this user and quiz number
-            cursor.execute("SELECT id FROM post10_quizzes WHERE user_id = ? AND quiz_number = ?",
-                           (user['id'], quiz_number))
-            quiz_entry = cursor.fetchone()
-           
-            if not quiz_entry:
-                # Create a new quiz entry if it doesn't exist
-                cursor.execute("INSERT INTO post10_quizzes (user_id, quiz_number) VALUES (?, ?)",
-                               (user['id'], quiz_number))
-                quiz_id = cursor.lastrowid
-            else:
-                quiz_id = quiz_entry[0]
-           
-            # Insert the response
-            cursor.execute("INSERT INTO post10_quiz_responses (quiz_id, question_number, response) VALUES (?, ?, ?)",
-                           (quiz_id, question_number, response))
-           
+            conn.execute(
+                "INSERT INTO responses (user_id, question_number, response, correct, quiz) VALUES (?, ?, ?, ?, ?)",
+                (user['id'], question_number, response, int(is_correct), current_quiz)
+            )
             conn.commit()
-            send_message(phone_number, "Your response has been recorded.")
+
+        log_image_event(f"Inserted response: question {question_number}, correct={is_correct}, quiz={current_quiz}")
+        feedback = "Correct!" if is_correct else f"Wrong! The correct answer was {correct_answer.upper()}."
+        send_message(phone_number, feedback)
 
         question_index += 1
-        log_image_event(f"Moving to next question. New index: {question_index}")
+
         if question_index < len(QUIZ_QUESTIONS):
-            conn.execute("UPDATE users SET state = ? WHERE phone_number = ?", (f'quiz_{question_index}', phone_number))
-            conn.execute("UPDATE quiz_states SET question_index = ? WHERE user_id = ? AND quiz_name = ?",
-                         (question_index, user['id'], current_quiz))
-            conn.commit()
+            db.update_user_field(phone_number, {"state": f'quiz_{question_index}'})
+            if USE_MONGODB:
+                from db_mongo import get_mongo_db
+                mongo_db = get_mongo_db()
+                mongo_db.quiz_states.update_one(
+                    {"user_id": user_id, "quiz_name": current_quiz},
+                    {"$set": {"question_index": question_index}},
+                    upsert=True
+                )
+            else:
+                conn.execute(
+                    "UPDATE quiz_states SET question_index = ? WHERE user_id = ? AND quiz_name = ?",
+                    (question_index, user['id'], current_quiz)
+                )
+                conn.commit()
             send_quiz_question(phone_number, question_index, conn, current_quiz)
         else:
-            try:
-                finish_quiz(phone_number, user, conn, current_quiz, len(QUIZ_QUESTIONS))
-            except Exception as e:
-                log_image_event(f"Error in finish_quiz called from handle_quiz_response: {str(e)}")
-                log_image_event(traceback.format_exc())
-                send_message(phone_number, "An error occurred while finishing the quiz. Please type 'quiz' to start over or 'records' to switch to record keeping.")
+            finish_quiz(phone_number, user, conn, current_quiz, len(QUIZ_QUESTIONS))
     else:
         send_message(phone_number, "Invalid question number. Type 'quiz' to start a new quiz.")
-        conn.execute("UPDATE users SET state = 'awaiting_choice', current_quiz = '' WHERE phone_number = ?", (phone_number,))
-        conn.commit()
-       
+        db.update_user_field(phone_number, {"state": "awaiting_choice", "current_quiz": ""})
+
+
+
+            
+                 
        
 
         
@@ -6659,7 +7481,7 @@ def send_quiz_question(phone_number, question_index, conn, quiz_name, retries=3)
         logging.error(f"Error loading quiz data for {quiz_name}: {str(e)}")
         logging.error(traceback.format_exc())
         send_message(phone_number, f"There was an error loading the quiz. Please type 'quiz' to try again.")
-        conn.execute("UPDATE users SET state = 'awaiting_choice', current_quiz = '' WHERE phone_number = ?", (phone_number,))
+        db.update_user_field(phone_number, {"state": "awaiting_choice", "current_quiz": ""})
         conn.commit()
         return
 
@@ -6697,13 +7519,13 @@ def send_quiz_question(phone_number, question_index, conn, quiz_name, retries=3)
                 logging.error(traceback.format_exc())
                 if attempt == retries - 1:
                     send_message(phone_number, "There was an error sending the question. Please type 'quiz' to try again.")
-                    conn.execute("UPDATE users SET state = 'awaiting_choice', current_quiz = '' WHERE phone_number = ?", (phone_number,))
+                    db.update_user_field(phone_number, {"state": "awaiting_choice", "current_quiz": ""})
                     conn.commit()
                 else:
                     time.sleep(2 ** attempt)  # Exponential backoff
     else:
         logging.warning(f"Question index {question_index} out of range for {quiz_name}")
-        finish_quiz(phone_number, conn.execute("SELECT * FROM users WHERE phone_number = ?", (phone_number,)).fetchone(), conn, quiz_name, len(QUIZ_QUESTIONS))
+        finish_quiz(phone_number, db.get_user_by_phone(phone_number,), conn, quiz_name, len(QUIZ_QUESTIONS))
 
        
        
@@ -6795,10 +7617,29 @@ def start_quiz(phone_number, conn, quiz_name, question_index):
     except Exception as e:
         logging.error(f"Error starting quiz {quiz_name}: {str(e)}")
         send_message(phone_number, f"There was an error starting the quiz. Please try again.")
-        user = conn.execute("SELECT * FROM users WHERE phone_number = ?", (phone_number,)).fetchone()
+        user = db.get_user_by_phone(phone_number,)
         present_options(phone_number, user, conn)
 
-       
+
+
+
+@app.route('/admin/cleanup-names')
+def admin_cleanup_names():
+    """Admin endpoint to clean up quoted names in database"""
+    try:
+        fixed_count = clean_quoted_names_in_database()
+        return jsonify({
+            'success': True,
+            'message': f'Cleaned {fixed_count} user names',
+            'fixed_count': fixed_count
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
        
 @app.route('/images')
 def images():
@@ -6832,27 +7673,62 @@ def users():
        
        
 
-       
-@app.route('/user/<int:user_id>', defaults={'random_number': None})
-@app.route('/user/<int:user_id>/<random_number>')
+@app.route('/user/<user_id>', defaults={'random_number': None})
+@app.route('/user/<user_id>/<random_number>')
 def user_details(user_id, random_number=None):
-    conn = get_db_connection()
     try:
-        user = conn.execute("SELECT phone_number, name, random_number FROM users WHERE id=?", (user_id,)).fetchone()
-        if not user:
-            return jsonify({'status': 'error', 'message': 'User not found'}), 404
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            from bson import ObjectId
+            mongo_db = get_mongo_db()
 
-        if random_number and user['random_number'] != random_number:
-            return jsonify({'status': 'error', 'message': 'Invalid random number'}), 403
+            # Try finding by ObjectId string
+            try:
+                user = mongo_db.users.find_one({"_id": ObjectId(user_id)})
+            except Exception:
+                user = mongo_db.users.find_one({"sqlite_id": int(user_id)})
 
-        records = conn.execute("SELECT media_url, upload_date FROM records WHERE user_id=?", (user_id,)).fetchall()
-        return render_template('user_details.html', user=user, records=records)
+            if not user:
+                return jsonify({'status': 'error', 'message': 'User not found'}), 404
+
+            stored_random = user.get('random_number', '')
+            if random_number and str(stored_random) != str(random_number):
+                return jsonify({'status': 'error', 'message': 'Invalid random number'}), 403
+
+            user_id_str = str(user['_id'])
+            records = list(mongo_db.records.find({"user_id": user_id_str}))
+
+            user_data = {
+                'phone_number': user.get('phone_number'),
+                'name': user.get('name'),
+                'random_number': stored_random
+            }
+            return render_template('user_details.html', user=user_data, records=records)
+
+        else:
+            conn = get_db_connection()
+            try:
+                user = conn.execute(
+                    "SELECT phone_number, name, random_number FROM users WHERE id=?",
+                    (user_id,)
+                ).fetchone()
+                if not user:
+                    return jsonify({'status': 'error', 'message': 'User not found'}), 404
+                if random_number and user['random_number'] != random_number:
+                    return jsonify({'status': 'error', 'message': 'Invalid random number'}), 403
+                records = conn.execute(
+                    "SELECT media_url, upload_date FROM records WHERE user_id=?",
+                    (user_id,)
+                ).fetchall()
+                return render_template('user_details.html', user=user, records=records)
+            finally:
+                conn.close()
+
     except Exception as e:
         logging.error(f"Error fetching user details: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
-    finally:
-        conn.close()
-       
+
+
        
 
 @app.route('/uploads/<path:filename>')
@@ -6999,249 +7875,119 @@ def serve_image(filename):
 
 @app.route('/scoreboardbootcamp')
 def scoreboardbootcamp():
-    conn = get_db_connection()
     try:
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         pass_percentage = request.args.get('pass_percentage', 60, type=int)
         min_quizzes = request.args.get('min_quizzes', 1, type=int)
-        selected_location = request.args.get('location', 'all')
 
-        # Get all available quizzes - NOW UNIFIED IN ONE TABLE
-        available_quizzes = conn.execute("""
-            SELECT DISTINCT quiz FROM responses 
-            WHERE quiz IS NOT NULL AND quiz != '' 
-            ORDER BY CAST(SUBSTR(quiz, 5) AS INTEGER)
-        """).fetchall()
-        
-        # Also get quizzes from questions table (in case some haven't been attempted yet)
-        questions_quizzes = conn.execute("""
-            SELECT DISTINCT quiz FROM questions 
-            WHERE quiz IS NOT NULL AND quiz != '' 
-            ORDER BY CAST(SUBSTR(quiz, 5) AS INTEGER)
-        """).fetchall()
-        
-        # Combine and deduplicate
-        all_quiz_names = list(set([quiz['quiz'] for quiz in available_quizzes] + 
-                                 [quiz['quiz'] for quiz in questions_quizzes]))
-        all_quiz_names.sort(key=lambda x: int(x.replace('quiz', '')))
-        
-        # Extract quiz numbers for creating ranges
-        quiz_numbers = []
-        for quiz in all_quiz_names:
-            match = re.search(r'quiz(\d+)', quiz)
-            if match:
-                quiz_numbers.append(int(match.group(1)))
-        
-        quiz_numbers = sorted(list(set(quiz_numbers)))
-        app.logger.info(f"Available unified quiz numbers: {quiz_numbers}")
-        
-        # Create dynamic ranges based on available quizzes
-        def create_quiz_ranges(quiz_nums):
-            if not quiz_nums:
-                return ['all']
-            
-            ranges = ['all']
-            max_quiz = max(quiz_nums)
-            
-            # Create ranges in groups of 5
-            current_start = 1
-            while current_start <= max_quiz:
-                end = min(current_start + 4, max_quiz)
-                
-                # Check if any quizzes exist in this range
-                range_has_quizzes = any(current_start <= num <= end for num in quiz_nums)
-                
-                if range_has_quizzes:
-                    ranges.append(f"{current_start}-{end}")
-                
-                current_start += 5
-            
-            return ranges
-        
-        quiz_ranges = create_quiz_ranges(quiz_numbers)
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
 
-        # Get users with location filter
-        if selected_location.lower() != 'all':
-            users = conn.execute("SELECT id, phone_number, name, TRIM(location) as location FROM users WHERE TRIM(location) = ?", (selected_location,)).fetchall()
-        else:
-            users = conn.execute("SELECT id, phone_number, name, TRIM(location) as location FROM users").fetchall()
+            # Single pipeline — all users, all responses in one query
+            pipeline = [
+                {"$group": {
+                    "_id": "$user_id",
+                    "quizzes": {"$addToSet": "$quiz"},
+                    "total_correct": {"$sum": {"$cond": ["$correct", 1, 0]}},
+                    "total_attempted": {"$sum": 1}
+                }}
+            ]
+            response_data = {r['_id']: r for r in mongo_db.responses.aggregate(pipeline)}
 
-        locations = get_locations()
-        user_scores = []
+            # Questions count per quiz — one query
+            quiz_totals = {}
+            for q in mongo_db.questions.aggregate([
+                {"$group": {"_id": "$quiz", "count": {"$sum": 1}}}
+            ]):
+                quiz_totals[q['_id']] = q['count']
 
-        for user in users:
-            try:
-                score_dict = {
-                    'id': user['id'],
-                    'name': user['name'],
-                    'phone_number': user['phone_number'],
-                    'location': user['location'] if user['location'] else 'Unknown'
-                }
-                
-                # Initialize all ranges in score_dict
-                for range_key in quiz_ranges:
-                    score_dict[range_key] = {}
+            # Records count per user — one query
+            records_data = {}
+            for r in mongo_db.records.aggregate([
+                {"$group": {"_id": "$user_id", "count": {"$sum": 1}}}
+            ]):
+                records_data[r['_id']] = r['count']
 
-                for range_key in quiz_ranges:
-                    if range_key == 'all':
-                        # Get ALL quiz results from unified responses table
-                        results = conn.execute("""
-                            SELECT
-                                SUM(CASE WHEN correct = 1 THEN 1 ELSE 0 END) as total_correct_answers,
-                                COUNT(*) as total_questions_attempted,
-                                COUNT(DISTINCT quiz) as quizzes_taken,
-                                MAX(timestamp) as last_quiz_date,
-                                GROUP_CONCAT(DISTINCT quiz) as attempted_quizzes
-                            FROM responses
-                            WHERE user_id = ?
-                        """, (user['id'],)).fetchone()
-                        
-                        total_correct = results['total_correct_answers'] or 0
-                        total_attempted = results['total_questions_attempted'] or 0
-                        total_quizzes = results['quizzes_taken'] or 0
-                        last_date = results['last_quiz_date'] or 'N/A'
-                        
-                        # Calculate total possible questions for all attempted quizzes
-                        total_possible = 0
-                        if results['attempted_quizzes']:
-                            attempted_quiz_list = results['attempted_quizzes'].split(',')
-                            quiz_placeholders = ', '.join(['?' for _ in attempted_quiz_list])
-                            quiz_questions = conn.execute(f"""
-                                SELECT quiz, COUNT(DISTINCT question) as question_count 
-                                FROM questions 
-                                WHERE quiz IN ({quiz_placeholders})
-                                GROUP BY quiz
-                            """, attempted_quiz_list).fetchall()
-                            total_possible = sum(row['question_count'] for row in quiz_questions)
-                        
-                    else:
-                        # Parse range (e.g., "1-5" -> quizzes 1,2,3,4,5)
-                        start, end = map(int, range_key.split('-'))
-                        
-                        # Get quiz names in this range that actually exist
-                        range_quiz_names = [f'quiz{i}' for i in range(start, end+1) if i in quiz_numbers]
-                        
-                        if not range_quiz_names:
-                            # No quizzes in this range
-                            score_dict[range_key] = {
-                                'total_correct_answers': 0,
-                                'total_questions_attempted': 0,
-                                'quizzes_taken': 0,
-                                'total_possible': 0,
-                                'last_quiz_date': 'N/A',
-                                'percentage': 0,
-                                'pass_fail': 'N/A'
-                            }
-                            continue
-                        
-                        # Get results for this range from unified responses table
-                        placeholders = ', '.join(['?' for _ in range_quiz_names])
-                        results = conn.execute(f"""
-                            SELECT
-                                SUM(CASE WHEN correct = 1 THEN 1 ELSE 0 END) as total_correct_answers,
-                                COUNT(*) as total_questions_attempted,
-                                COUNT(DISTINCT quiz) as quizzes_taken,
-                                MAX(timestamp) as last_quiz_date,
-                                GROUP_CONCAT(DISTINCT quiz) as attempted_quizzes
-                            FROM responses
-                            WHERE user_id = ? AND quiz IN ({placeholders})
-                        """, [user['id']] + range_quiz_names).fetchone()
-                        
-                        total_correct = results['total_correct_answers'] or 0
-                        total_attempted = results['total_questions_attempted'] or 0
-                        total_quizzes = results['quizzes_taken'] or 0
-                        last_date = results['last_quiz_date'] or 'N/A'
-                        
-                        # Calculate total possible for this range
-                        total_possible = 0
-                        if results['attempted_quizzes']:
-                            attempted_quiz_list = results['attempted_quizzes'].split(',')
-                            quiz_placeholders = ', '.join(['?' for _ in attempted_quiz_list])
-                            quiz_questions = conn.execute(f"""
-                                SELECT quiz, COUNT(DISTINCT question) as question_count 
-                                FROM questions 
-                                WHERE quiz IN ({quiz_placeholders})
-                                GROUP BY quiz
-                            """, attempted_quiz_list).fetchall()
-                            total_possible = sum(row['question_count'] for row in quiz_questions)
+            # All users — one query
+            users = list(mongo_db.users.find(
+                {}, {"_id": 1, "name": 1, "phone_number": 1, "location": 1}
+            ))
 
-                    # Store results for this range
-                    score_dict[range_key] = {
-                        'total_correct_answers': int(total_correct),
-                        'total_questions_attempted': int(total_attempted),
-                        'quizzes_taken': int(total_quizzes),
+            # Clean locations
+            raw_locations = mongo_db.users.distinct("location")
+            locations = sorted([
+                l.strip().strip('"') for l in raw_locations
+                if l and l.strip().strip('"') not in ('', 'null')
+            ])
+            if 'Agege' not in locations:
+                locations.insert(0, 'Agege')
+
+            user_scores = []
+            for user in users:
+                user_id = str(user['_id'])
+                rd = response_data.get(user_id, {})
+
+                quizzes_taken = len(rd.get('quizzes', []))
+                total_correct = rd.get('total_correct', 0)
+                total_possible = sum(
+                    quiz_totals.get(q, 0) for q in rd.get('quizzes', [])
+                )
+                percentage = round(
+                    (total_correct / total_possible * 100), 1
+                ) if total_possible > 0 else 0
+                pass_fail = 'Pass' if (
+                    percentage >= pass_percentage and
+                    quizzes_taken >= min_quizzes
+                ) else 'Fail'
+
+                user_scores.append({
+                    'id': user_id,
+                    'name': user.get('name', 'Unknown'),
+                    'phone_number': user.get('phone_number', ''),
+                    'location': (user.get('location') or 'Unknown').strip().strip('"'),
+                    'images_uploaded': records_data.get(user_id, 0),
+                    'last_image_date': 'N/A',
+                    'unique_upload_days': 0,
+                    'all': {
+                        'total_correct_answers': total_correct,
                         'total_possible': total_possible,
-                        'last_quiz_date': last_date
+                        'quizzes_taken': quizzes_taken,
+                        'percentage': percentage,
+                        'pass_fail': pass_fail,
+                        'last_quiz_date': 'N/A'
                     }
-
-                    # Calculate percentage and pass/fail
-                    if total_attempted > 0 and total_possible > 0:
-                        percentage = (total_correct / total_possible) * 100
-                        score_dict[range_key]['percentage'] = percentage
-                        score_dict[range_key]['pass_fail'] = 'Pass' if percentage >= pass_percentage and total_quizzes >= min_quizzes else 'Fail'
-                    else:
-                        score_dict[range_key]['percentage'] = 0
-                        score_dict[range_key]['pass_fail'] = 'N/A'
-
-                # Get additional user data (images) - this stays the same
-                additional_data = conn.execute("""
-                    SELECT
-                        MAX(records.upload_date) as last_image_date,
-                        COUNT(DISTINCT records.id) as images_uploaded,
-                        COUNT(DISTINCT DATE(records.upload_date)) as unique_upload_days
-                    FROM records
-                    WHERE user_id = ?
-                """, (user['id'],)).fetchone()
-
-                score_dict.update({
-                    'last_image_date': additional_data['last_image_date'] if additional_data['last_image_date'] else 'N/A',
-                    'images_uploaded': additional_data['images_uploaded'] or 0,
-                    'unique_upload_days': additional_data['unique_upload_days'] or 0
                 })
 
-                user_scores.append(score_dict)
+            user_scores.sort(key=lambda x: x['all']['percentage'], reverse=True)
 
-            except Exception as user_error:
-                app.logger.error(f"Error processing user {user['id']}: {str(user_error)}")
+            if is_ajax:
+                return jsonify({
+                    'scores': user_scores,
+                    'locations': locations,
+                    'quiz_ranges': ['all']
+                })
 
-        # Sort by 'all' percentage
-        user_scores.sort(key=lambda x: x['all']['percentage'], reverse=True)
-
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({
-                'scores': user_scores,
-                'pass_percentage': pass_percentage,
-                'min_quizzes': min_quizzes,
-                'locations': locations,
-                'selected_location': selected_location,
-                'quiz_ranges': quiz_ranges,
-                'available_quizzes': all_quiz_names,
-                'debug_info': {
-                    'quiz_numbers': quiz_numbers,
-                    'max_quiz': max(quiz_numbers) if quiz_numbers else 0,
-                    'total_available_quizzes': len(all_quiz_names),
-                    'unified_system': True
-                }
-            })
-        else:
             return render_template('scoreboardbootcamp.html',
                                    scores=user_scores,
                                    pass_percentage=pass_percentage,
                                    min_quizzes=min_quizzes,
                                    locations=locations,
-                                   selected_location=selected_location,
-                                   quiz_ranges=quiz_ranges,
-                                   available_quizzes=all_quiz_names)
+                                   selected_location='all',
+                                   quiz_ranges=['all'])
 
     except Exception as e:
-        app.logger.error(f"An error occurred in scoreboard route: {str(e)}")
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'error': str(e)}), 500
-        else:
-            return f"An error occurred while loading the scoreboard: {str(e)}", 500
-
-    finally:
-        conn.close()
+        import traceback
+        logging.error(f"scoreboardbootcamp error: {e}")
+        logging.error(traceback.format_exc())
+        return f"<pre>ERROR: {e}\n\n{traceback.format_exc()}</pre>", 500
         
+
+@app.route('/quizslider')
+def quizslider():
+    return render_template('quizslider.html')
+
+
         
         
 # # Function to fetch user data from the database
@@ -7291,15 +8037,34 @@ def get_locations():
     locations = sorted(set([loc[0] for loc in locations_raw if loc[0] and loc[0].strip() != '']))
     return locations
 
+
+
+
 @app.route('/userdashboard')
 def userdashboard():
-    # Optional: you can get a query param if you want server-side filtering
     selected_location = request.args.get('location', 'all')
-    
-    users = get_users(selected_location)
-    locations = get_locations()
+
+    if USE_MONGODB:
+        from db_mongo import get_mongo_db
+        mongo_db = get_mongo_db()
+
+        if selected_location.lower() != 'all':
+            users = list(mongo_db.users.find({"location": selected_location}))
+        else:
+            users = list(mongo_db.users.find({}))
+
+        locations = sorted([l for l in mongo_db.users.distinct("location") if l])
+
+        # Normalize for template compatibility
+        for u in users:
+            u['id'] = str(u['_id'])
+    else:
+        users = get_users(selected_location)
+        locations = get_locations()
+
     return render_template('userdashboard.html', users=users, locations=locations)
-  
+
+
   
   
     
@@ -7593,20 +8358,54 @@ def generate_generic_message(user_id, conn):
 # You can start the scheduler in a separate thread or process
 # import threading
 # threading.Thread(target=run_scheduler, daemon=True).start()
-
-
 if __name__ == '__main__':
-    print("Initializing database...")
-    init_db()
-
-    print("Populating database with quiz data...")
-    populate_database_from_json_files()
-
-    # send_daily_summary()
-    # start_keep_alive()
-
+    print("=" * 80)
+    print("EMPOWERBOT INITIALIZATION")
+    print("=" * 80)
+    
+    if USE_MONGODB:
+        print("🍃 USING MONGODB")
+        print(f"✅ MongoDB URI configured: {os.getenv('MONGODB_URI')[:30]}...")
+        from db_mongo import init_mongodb
+        init_mongodb()
+        try:
+            test_user = db.get_user_by_phone("2348169686473")
+            if test_user:
+                print(f"✅ MongoDB connection verified - Found user: {test_user.get('name')}")
+            print(f"✅ Bot will save all new data to MongoDB")
+        except Exception as e:
+            print(f"❌ MongoDB connection failed: {e}")
+            print("⚠️  Falling back to SQLite")
+            USE_MONGODB = False
+    else:
+        print("💾 USING SQLITE (Local Database)")
+        print("⚠️  Set MONGODB_URI in .env to use MongoDB")
+        init_db()
+        populate_database_from_json_files()
+    
+    print("=" * 80)
+    
+    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        print("🔄 Loading quiz visibility (after Flask reloader)...")
+        try:
+            load_quiz_visibility_from_db()
+            loaded_visibility = app.config.get('QUIZ_VISIBILITY', {})
+            print(f"✅ Loaded {len(loaded_visibility)} quiz statuses into memory")
+            if loaded_visibility:
+                enabled_count = sum(1 for v in loaded_visibility.values() if v)
+                disabled_count = len(loaded_visibility) - enabled_count
+                print(f"   📊 Enabled: {enabled_count} | Disabled: {disabled_count}")
+                disabled_quizzes = [k for k, v in loaded_visibility.items() if not v]
+                if disabled_quizzes:
+                    print(f"   🚫 Disabled: {disabled_quizzes}")
+        except Exception as e:
+            print(f"❌ Error loading quiz visibility: {e}")
+            import traceback
+            traceback.print_exc()
+    else:
+        print("⏭️  Skipping quiz visibility load (parent process - will load after reloader starts)")
+    
+    print("=" * 80)
     print("Starting Flask app...")
-    port = int(os.environ.get("PORT", 5000))  # Render provides this
+    port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
-
-

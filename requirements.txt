@@ -1,10 +1,11 @@
 flask
 requests
 python-dotenv
-fuzzywuzzy
+rapidfuzz
 python-Levenshtein
 pytz
 schedule
 werkzeug
 gunicorn
-google-cloud-storage
+pymongo
+dnspython
