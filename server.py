@@ -8358,6 +8358,544 @@ def generate_generic_message(user_id, conn):
 # You can start the scheduler in a separate thread or process
 # import threading
 # threading.Thread(target=run_scheduler, daemon=True).start()
+# ─── ADMIN PIN VERIFICATION ─────────────────────────────────────────────────
+
+@app.route('/api/admin/verify-pin', methods=['POST'])
+def verify_admin_pin():
+    data = request.get_json()
+    if not data or 'pin' not in data:
+        return jsonify({'error': 'Missing pin'}), 400
+    admin_pin = os.getenv('ADMIN_PIN', '2025')
+    if str(data['pin']) == str(admin_pin):
+        return jsonify({'valid': True})
+    return jsonify({'valid': False}), 401
+
+
+# ─── QUIZ EDITOR PAGES ───────────────────────────────────────────────────────
+
+@app.route('/quizeditor')
+def quiz_editor_page():
+    return render_template('quizeditor.html')
+
+
+@app.route('/engagementdashboard')
+def engagement_dashboard_page():
+    return render_template('engagementdashboard.html')
+
+
+# ─── QUESTIONS API ───────────────────────────────────────────────────────────
+
+@app.route('/api/questions/<quiz_name>', methods=['GET'])
+def get_quiz_questions_route(quiz_name):
+    try:
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+            qs = list(mongo_db.questions.find(
+                {'quiz': quiz_name},
+                {'_id': 0}
+            ).sort('question_number', 1))
+        else:
+            conn = get_db_connection()
+            rows = conn.execute(
+                'SELECT * FROM questions WHERE quiz = ? ORDER BY question_number',
+                (quiz_name,)
+            ).fetchall()
+            qs = []
+            for row in rows:
+                q = dict(row)
+                q['options'] = json.loads(q['options']) if isinstance(q['options'], str) else q['options']
+                qs.append(q)
+            conn.close()
+        return jsonify(qs)
+    except Exception as e:
+        logging.error(f'get_quiz_questions_route error: {e}')
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/questions/update', methods=['PUT'])
+def update_question_route():
+    try:
+        data = request.get_json()
+        quiz = data['quiz']
+        question_number = int(data['question_number'])
+        updates = {
+            'question': data['question'],
+            'options': data['options'],
+            'answer': data['answer'],
+        }
+        if data.get('media_url'):
+            updates['media_url'] = data['media_url']
+
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+            result = mongo_db.questions.update_one(
+                {'quiz': quiz, 'question_number': question_number},
+                {'$set': updates}
+            )
+            if result.matched_count == 0:
+                return jsonify({'error': 'Question not found'}), 404
+        else:
+            conn = get_db_connection()
+            conn.execute(
+                'UPDATE questions SET question=?, options=?, answer=? WHERE quiz=? AND question_number=?',
+                (updates['question'], json.dumps(updates['options']), updates['answer'], quiz, question_number)
+            )
+            conn.commit()
+            conn.close()
+
+        return jsonify({'success': True})
+    except Exception as e:
+        logging.error(f'update_question_route error: {e}')
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/questions/add', methods=['POST'])
+def add_question_route():
+    try:
+        data = request.get_json()
+        new_q = {
+            'quiz': data['quiz'],
+            'question_number': int(data['question_number']),
+            'question': data.get('question', ''),
+            'options': data.get('options', ['', '', '']),
+            'answer': data.get('answer', 'A'),
+            'media_url': data.get('media_url', None),
+        }
+
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+            mongo_db.questions.insert_one({**new_q})
+            new_q.pop('_id', None)
+        else:
+            conn = get_db_connection()
+            conn.execute(
+                'INSERT INTO questions (quiz, question, options, answer, question_number) VALUES (?,?,?,?,?)',
+                (new_q['quiz'], new_q['question'], json.dumps(new_q['options']), new_q['answer'], new_q['question_number'])
+            )
+            conn.commit()
+            conn.close()
+
+        return jsonify(new_q)
+    except Exception as e:
+        logging.error(f'add_question_route error: {e}')
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/questions/delete', methods=['DELETE'])
+def delete_question_route():
+    try:
+        data = request.get_json()
+        quiz = data['quiz']
+        question_number = int(data['question_number'])
+
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+            mongo_db.questions.delete_one({'quiz': quiz, 'question_number': question_number})
+        else:
+            conn = get_db_connection()
+            conn.execute('DELETE FROM questions WHERE quiz=? AND question_number=?', (quiz, question_number))
+            conn.commit()
+            conn.close()
+
+        return jsonify({'success': True})
+    except Exception as e:
+        logging.error(f'delete_question_route error: {e}')
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/quiz-stats/<quiz_name>', methods=['GET'])
+def quiz_stats_route(quiz_name):
+    try:
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+            total = mongo_db.responses.count_documents({'quiz': quiz_name})
+            correct = mongo_db.responses.count_documents({'quiz': quiz_name, 'correct': True})
+            avg_correct = round((correct / total * 100), 1) if total > 0 else 0
+        else:
+            conn = get_db_connection()
+            total = conn.execute('SELECT COUNT(*) FROM responses WHERE quiz=?', (quiz_name,)).fetchone()[0]
+            correct = conn.execute('SELECT COUNT(*) FROM responses WHERE quiz=? AND correct=1', (quiz_name,)).fetchone()[0]
+            avg_correct = round((correct / total * 100), 1) if total > 0 else 0
+            conn.close()
+
+        return jsonify({'total_responses': total, 'correct_responses': correct, 'avg_correct': avg_correct})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ─── ENGAGEMENT METRICS API ──────────────────────────────────────────────────
+
+@app.route('/api/engagement/metrics', methods=['GET'])
+def engagement_metrics_route():
+    try:
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            from bson import ObjectId
+            mongo_db = get_mongo_db()
+
+            total_users = mongo_db.users.count_documents({})
+            total_responses = mongo_db.responses.count_documents({})
+            ai_chats = mongo_db.conversation_history.count_documents({'is_ai': True})
+
+            week_ago = datetime.utcnow() - timedelta(days=7)
+            active_ids = mongo_db.responses.distinct('user_id', {'timestamp': {'$gte': week_ago}})
+            active_this_week = len(active_ids)
+
+            today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+            messages_today = mongo_db.processed_messages.count_documents({'processed_at': {'$gte': today_start}})
+
+            # Location breakdown
+            loc_pipeline = [
+                {'$group': {'_id': '$location', 'count': {'$sum': 1}}},
+                {'$sort': {'count': -1}},
+                {'$limit': 10}
+            ]
+            locations = list(mongo_db.users.aggregate(loc_pipeline))
+
+            # Quiz stats (correct vs incorrect per quiz)
+            quiz_pipeline = [
+                {'$group': {
+                    '_id': '$quiz',
+                    'total': {'$sum': 1},
+                    'correct': {'$sum': {'$cond': ['$correct', 1, 0]}}
+                }},
+                {'$sort': {'_id': 1}}
+            ]
+            quiz_stats = list(mongo_db.responses.aggregate(quiz_pipeline))
+
+            # Per-user stats for the table
+            user_pipeline = [
+                {'$group': {
+                    '_id': '$user_id',
+                    'quizzes_taken': {'$addToSet': '$quiz'},
+                    'total_responses': {'$sum': 1},
+                    'correct_responses': {'$sum': {'$cond': ['$correct', 1, 0]}},
+                    'last_active': {'$max': '$timestamp'}
+                }}
+            ]
+            user_stats = {r['_id']: r for r in mongo_db.responses.aggregate(user_pipeline)}
+
+            users_raw = list(mongo_db.users.find({}, {'_id': 1, 'name': 1, 'location': 1}))
+            users_table = []
+            for u in users_raw:
+                uid = str(u['_id'])
+                stats = user_stats.get(uid, {})
+                total_r = stats.get('total_responses', 0)
+                correct_r = stats.get('correct_responses', 0)
+                users_table.append({
+                    'name': u.get('name', '—'),
+                    'location': (u.get('location') or '—').strip().strip('"'),
+                    'quizzes_taken': len(stats.get('quizzes_taken', [])),
+                    'total_responses': total_r,
+                    'correct_pct': round(correct_r / total_r * 100, 1) if total_r > 0 else 0,
+                    'last_active': stats.get('last_active', '').isoformat() if stats.get('last_active') else None
+                })
+
+            users_table.sort(key=lambda u: u['total_responses'], reverse=True)
+
+            return jsonify({
+                'total_users': total_users,
+                'active_this_week': active_this_week,
+                'total_responses': total_responses,
+                'ai_chats': ai_chats,
+                'messages_today': messages_today,
+                'locations': locations,
+                'quiz_stats': quiz_stats,
+                'users': users_table,
+            })
+
+        else:
+            conn = get_db_connection()
+            total_users = conn.execute('SELECT COUNT(*) FROM users').fetchone()[0]
+            total_responses = conn.execute('SELECT COUNT(*) FROM responses').fetchone()[0]
+            conn.close()
+            return jsonify({
+                'total_users': total_users, 'active_this_week': 0,
+                'total_responses': total_responses, 'ai_chats': 0,
+                'messages_today': 0, 'locations': [], 'quiz_stats': [], 'users': []
+            })
+
+    except Exception as e:
+        import traceback as tb
+        logging.error(f'engagement_metrics_route error: {e}')
+        logging.error(tb.format_exc())
+        return jsonify({'error': str(e)}), 500
+
+
+# ─── ADMIN PIN VERIFICATION ─────────────────────────────────────────────────
+
+@app.route('/api/admin/verify-pin', methods=['POST'])
+def verify_admin_pin():
+    data = request.get_json()
+    if not data or 'pin' not in data:
+        return jsonify({'error': 'Missing pin'}), 400
+    admin_pin = os.getenv('ADMIN_PIN', '2025')
+    if str(data['pin']) == str(admin_pin):
+        return jsonify({'valid': True})
+    return jsonify({'valid': False}), 401
+
+
+# ─── QUIZ EDITOR PAGES ───────────────────────────────────────────────────────
+
+@app.route('/quizeditor')
+def quiz_editor_page():
+    return render_template('quizeditor.html')
+
+
+@app.route('/engagementdashboard')
+def engagement_dashboard_page():
+    return render_template('engagementdashboard.html')
+
+
+# ─── QUESTIONS API ───────────────────────────────────────────────────────────
+
+@app.route('/api/questions/<quiz_name>', methods=['GET'])
+def get_quiz_questions_route(quiz_name):
+    try:
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+            qs = list(mongo_db.questions.find(
+                {'quiz': quiz_name},
+                {'_id': 0}
+            ).sort('question_number', 1))
+        else:
+            conn = get_db_connection()
+            rows = conn.execute(
+                'SELECT * FROM questions WHERE quiz = ? ORDER BY question_number',
+                (quiz_name,)
+            ).fetchall()
+            qs = []
+            for row in rows:
+                q = dict(row)
+                q['options'] = json.loads(q['options']) if isinstance(q['options'], str) else q['options']
+                qs.append(q)
+            conn.close()
+        return jsonify(qs)
+    except Exception as e:
+        logging.error(f'get_quiz_questions_route error: {e}')
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/questions/update', methods=['PUT'])
+def update_question_route():
+    try:
+        data = request.get_json()
+        quiz = data['quiz']
+        question_number = int(data['question_number'])
+        updates = {
+            'question': data['question'],
+            'options': data['options'],
+            'answer': data['answer'],
+        }
+        if data.get('media_url'):
+            updates['media_url'] = data['media_url']
+
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+            result = mongo_db.questions.update_one(
+                {'quiz': quiz, 'question_number': question_number},
+                {'$set': updates}
+            )
+            if result.matched_count == 0:
+                return jsonify({'error': 'Question not found'}), 404
+        else:
+            conn = get_db_connection()
+            conn.execute(
+                'UPDATE questions SET question=?, options=?, answer=? WHERE quiz=? AND question_number=?',
+                (updates['question'], json.dumps(updates['options']), updates['answer'], quiz, question_number)
+            )
+            conn.commit()
+            conn.close()
+
+        return jsonify({'success': True})
+    except Exception as e:
+        logging.error(f'update_question_route error: {e}')
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/questions/add', methods=['POST'])
+def add_question_route():
+    try:
+        data = request.get_json()
+        new_q = {
+            'quiz': data['quiz'],
+            'question_number': int(data['question_number']),
+            'question': data.get('question', ''),
+            'options': data.get('options', ['', '', '']),
+            'answer': data.get('answer', 'A'),
+            'media_url': data.get('media_url', None),
+        }
+
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+            mongo_db.questions.insert_one({**new_q})
+            new_q.pop('_id', None)
+        else:
+            conn = get_db_connection()
+            conn.execute(
+                'INSERT INTO questions (quiz, question, options, answer, question_number) VALUES (?,?,?,?,?)',
+                (new_q['quiz'], new_q['question'], json.dumps(new_q['options']), new_q['answer'], new_q['question_number'])
+            )
+            conn.commit()
+            conn.close()
+
+        return jsonify(new_q)
+    except Exception as e:
+        logging.error(f'add_question_route error: {e}')
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/questions/delete', methods=['DELETE'])
+def delete_question_route():
+    try:
+        data = request.get_json()
+        quiz = data['quiz']
+        question_number = int(data['question_number'])
+
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+            mongo_db.questions.delete_one({'quiz': quiz, 'question_number': question_number})
+        else:
+            conn = get_db_connection()
+            conn.execute('DELETE FROM questions WHERE quiz=? AND question_number=?', (quiz, question_number))
+            conn.commit()
+            conn.close()
+
+        return jsonify({'success': True})
+    except Exception as e:
+        logging.error(f'delete_question_route error: {e}')
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/quiz-stats/<quiz_name>', methods=['GET'])
+def quiz_stats_route(quiz_name):
+    try:
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+            total = mongo_db.responses.count_documents({'quiz': quiz_name})
+            correct = mongo_db.responses.count_documents({'quiz': quiz_name, 'correct': True})
+            avg_correct = round((correct / total * 100), 1) if total > 0 else 0
+        else:
+            conn = get_db_connection()
+            total = conn.execute('SELECT COUNT(*) FROM responses WHERE quiz=?', (quiz_name,)).fetchone()[0]
+            correct = conn.execute('SELECT COUNT(*) FROM responses WHERE quiz=? AND correct=1', (quiz_name,)).fetchone()[0]
+            avg_correct = round((correct / total * 100), 1) if total > 0 else 0
+            conn.close()
+
+        return jsonify({'total_responses': total, 'correct_responses': correct, 'avg_correct': avg_correct})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ─── ENGAGEMENT METRICS API ──────────────────────────────────────────────────
+
+@app.route('/api/engagement/metrics', methods=['GET'])
+def engagement_metrics_route():
+    try:
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            from bson import ObjectId
+            mongo_db = get_mongo_db()
+
+            total_users = mongo_db.users.count_documents({})
+            total_responses = mongo_db.responses.count_documents({})
+            ai_chats = mongo_db.conversation_history.count_documents({'is_ai': True})
+
+            week_ago = datetime.utcnow() - timedelta(days=7)
+            active_ids = mongo_db.responses.distinct('user_id', {'timestamp': {'$gte': week_ago}})
+            active_this_week = len(active_ids)
+
+            today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+            messages_today = mongo_db.processed_messages.count_documents({'processed_at': {'$gte': today_start}})
+
+            # Location breakdown
+            loc_pipeline = [
+                {'$group': {'_id': '$location', 'count': {'$sum': 1}}},
+                {'$sort': {'count': -1}},
+                {'$limit': 10}
+            ]
+            locations = list(mongo_db.users.aggregate(loc_pipeline))
+
+            # Quiz stats (correct vs incorrect per quiz)
+            quiz_pipeline = [
+                {'$group': {
+                    '_id': '$quiz',
+                    'total': {'$sum': 1},
+                    'correct': {'$sum': {'$cond': ['$correct', 1, 0]}}
+                }},
+                {'$sort': {'_id': 1}}
+            ]
+            quiz_stats = list(mongo_db.responses.aggregate(quiz_pipeline))
+
+            # Per-user stats for the table
+            user_pipeline = [
+                {'$group': {
+                    '_id': '$user_id',
+                    'quizzes_taken': {'$addToSet': '$quiz'},
+                    'total_responses': {'$sum': 1},
+                    'correct_responses': {'$sum': {'$cond': ['$correct', 1, 0]}},
+                    'last_active': {'$max': '$timestamp'}
+                }}
+            ]
+            user_stats = {r['_id']: r for r in mongo_db.responses.aggregate(user_pipeline)}
+
+            users_raw = list(mongo_db.users.find({}, {'_id': 1, 'name': 1, 'location': 1}))
+            users_table = []
+            for u in users_raw:
+                uid = str(u['_id'])
+                stats = user_stats.get(uid, {})
+                total_r = stats.get('total_responses', 0)
+                correct_r = stats.get('correct_responses', 0)
+                users_table.append({
+                    'name': u.get('name', '—'),
+                    'location': (u.get('location') or '—').strip().strip('"'),
+                    'quizzes_taken': len(stats.get('quizzes_taken', [])),
+                    'total_responses': total_r,
+                    'correct_pct': round(correct_r / total_r * 100, 1) if total_r > 0 else 0,
+                    'last_active': stats.get('last_active', '').isoformat() if stats.get('last_active') else None
+                })
+
+            users_table.sort(key=lambda u: u['total_responses'], reverse=True)
+
+            return jsonify({
+                'total_users': total_users,
+                'active_this_week': active_this_week,
+                'total_responses': total_responses,
+                'ai_chats': ai_chats,
+                'messages_today': messages_today,
+                'locations': locations,
+                'quiz_stats': quiz_stats,
+                'users': users_table,
+            })
+
+        else:
+            conn = get_db_connection()
+            total_users = conn.execute('SELECT COUNT(*) FROM users').fetchone()[0]
+            total_responses = conn.execute('SELECT COUNT(*) FROM responses').fetchone()[0]
+            conn.close()
+            return jsonify({
+                'total_users': total_users, 'active_this_week': 0,
+                'total_responses': total_responses, 'ai_chats': 0,
+                'messages_today': 0, 'locations': [], 'quiz_stats': [], 'users': []
+            })
+
+    except Exception as e:
+        import traceback as tb
+        logging.error(f'engagement_metrics_route error: {e}')
+        logging.error(tb.format_exc())
+        return jsonify({'error': str(e)}), 500
+
+
 if __name__ == '__main__':
     print("=" * 80)
     print("EMPOWERBOT INITIALIZATION")
