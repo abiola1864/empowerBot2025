@@ -9,6 +9,59 @@ load_dotenv()
 
 from db_adapter import db, USE_MONGODB
 
+import chromadb
+from chromadb.utils.embedding_functions import GoogleGenerativeAiEmbeddingFunction
+
+_rag_col = None
+
+def get_rag_collection():
+    global _rag_col
+    if _rag_col is not None:
+        return _rag_col
+    try:
+        ef = GoogleGenerativeAiEmbeddingFunction(
+            api_key=GEMINI_API_KEY, model_name="models/text-embedding-004")
+        client = chromadb.EphemeralClient()
+        _rag_col = client.get_or_create_collection("empowerbot_quiz", embedding_function=ef)
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mdb = get_mongo_db()
+            qs = list(mdb.questions.find({}, {"quiz":1,"question":1,"options":1,"answer":1,"_id":0}))
+            docs, ids, metas = [], [], []
+            for q in qs:
+                if not q.get("question"): continue
+                opts = q.get("options", [])
+                if isinstance(opts, str):
+                    import json as _j
+                    try: opts = _j.loads(opts)
+                    except: opts = []
+                doc = f"Quiz: {q.get('quiz','')}\nQuestion: {q['question']}\nOptions: {' | '.join(str(o) for o in opts if o)}\nCorrect answer: {q.get('answer','')}"
+                uid = f"{q.get('quiz','q')}_{abs(hash(q['question'])) % 9999999}"
+                docs.append(doc); ids.append(uid)
+                metas.append({"quiz": q.get("quiz",""), "answer": q.get("answer","")})
+            for i in range(0, len(docs), 50):
+                _rag_col.upsert(documents=docs[i:i+50], ids=ids[i:i+50], metadatas=metas[i:i+50])
+            logging.info(f"RAG: indexed {len(docs)} quiz questions")
+    except Exception as _re:
+        logging.error(f"RAG init error: {_re}")
+        _rag_col = None
+    return _rag_col
+
+def rag_search(message, threshold=0.75):
+    """Returns (is_relevant, context_string). Falls back gracefully if unavailable."""
+    try:
+        col = get_rag_collection()
+        if col is None: return True, ""
+        res = col.query(query_texts=[message], n_results=3)
+        if not res["documents"] or not res["documents"][0]: return False, ""
+        if min(res["distances"][0]) > threshold: return False, ""
+        return True, "\n\n".join(res["documents"][0])
+    except Exception as _se:
+        logging.warning(f"RAG search error: {_se}")
+        return True, ""
+
+
+
 
 
 
@@ -1880,13 +1933,21 @@ def handle_ai_chat(phone_number: str, message: str, conn):
                     "It's my pleasure to assist you.",
                     "Glad I could be of help!",
                 ])
-            elif not is_related_to_question(message, question_context):
-                return handle_unrelated_message(phone_number, user, message, conn)
             else:
+                _relevant, _ctx = rag_search(message)
+                if not _relevant:
+                    return handle_unrelated_message(phone_number, user, message, conn)
                 prompt = create_followup_prompt(question_context, message, conversation_history, user)
+                if _ctx:
+                    prompt += f"\n\n[Relevant EmpowerBot quiz content:\n{_ctx}]\nUse this to ground your response."
                 response = generate_text(prompt)
         else:
+            _relevant, _ctx = rag_search(message)
+            if not _relevant:
+                return handle_unrelated_message(phone_number, user, message, conn)
             prompt = create_followup_prompt(question_context, message, conversation_history, user)
+            if _ctx:
+                prompt += f"\n\n[Relevant EmpowerBot quiz content:\n{_ctx}]\nUse this to ground your response."
             response = generate_text(prompt)
 
         if response is None:
