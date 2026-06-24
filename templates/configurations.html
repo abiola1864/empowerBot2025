@@ -4,242 +4,191 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Configurations — EmpowerBot</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#0D1117;--sf:#161B22;--sf2:#1C2430;--sf3:#243040;--sf4:#2C3A4E;
-  --bd:#30363D;--bd2:#484F58;
-  --ac:#22D3EE;--ac-bg:rgba(34,211,238,.07);--ac-bg2:rgba(34,211,238,.14);
-  --ok:#3FB950;--ok-bg:rgba(63,185,80,.08);--ok-bg2:rgba(63,185,80,.16);
-  --er:#F85149;--er-bg:rgba(248,81,73,.08);
-  --wn:#D29922;--wn-bg:rgba(210,153,34,.10);
-  --pu:#BC8CFF;--pu-bg:rgba(188,140,255,.08);
-  --or:#F0883E;--or-bg:rgba(240,136,62,.08);
-  --t1:#E6EDF3;--t2:#8B949E;--t3:#484F58;
+  --bg:#F1F5F9;--sf:#FFFFFF;--sf2:#F8FAFC;--sf3:#F1F5F9;
+  --bd:#E2E8F0;--bd2:#CBD5E1;
+  --ac:#2563EB;--ac-bg:rgba(37,99,235,.06);--ac-bg2:rgba(37,99,235,.12);
+  --ok:#16A34A;--ok-bg:rgba(22,163,74,.07);--ok-bg2:rgba(22,163,74,.14);
+  --er:#DC2626;--er-bg:rgba(220,38,38,.07);
+  --wn:#D97706;--wn-bg:rgba(217,119,6,.08);
+  --pu:#7C3AED;--pu-bg:rgba(124,58,237,.07);
+  --t1:#0F172A;--t2:#475569;--t3:#94A3B8;
   --r:8px;--rl:12px;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,.08);
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);font-size:14px;-webkit-font-smoothing:antialiased;}
+html,body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);font-size:14px;-webkit-font-smoothing:antialiased;min-height:100vh;}
 button,input,select,textarea{font-family:inherit;}
 
-/* LOCK */
-#lock{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:99;transition:opacity .4s,transform .4s;}
-#lock.out{opacity:0;transform:scale(1.03);pointer-events:none;}
-.lc{background:var(--sf);border:1px solid var(--bd);border-radius:20px;padding:56px 52px;width:400px;display:flex;flex-direction:column;align-items:center;box-shadow:0 32px 80px rgba(0,0,0,.7);}
-.lic{width:62px;height:62px;border-radius:16px;background:var(--pu-bg);border:1px solid rgba(188,140,255,.2);display:flex;align-items:center;justify-content:center;margin-bottom:28px;}
-.lic svg{width:28px;height:28px;stroke:var(--pu);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
-.lt{font-size:22px;font-weight:600;letter-spacing:-.3px;margin-bottom:6px;}
-.ls{font-size:13px;color:var(--t2);margin-bottom:40px;text-align:center;line-height:1.6;}
-.pins{display:flex;gap:12px;margin-bottom:28px;}
-.pin{width:62px;height:70px;background:var(--sf2);border:1.5px solid var(--bd);border-radius:12px;text-align:center;font-size:24px;font-family:'JetBrains Mono',monospace;color:var(--t1);outline:none;transition:border-color .15s,box-shadow .15s;}
-.pin:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--ac-bg2);}
-.pin.sh{border-color:var(--er);animation:sh .35s ease;}
-@keyframes sh{0%,100%{transform:translateX(0)}25%,75%{transform:translateX(-6px)}50%{transform:translateX(6px)}}
-.lb{width:100%;padding:14px;background:var(--ac);color:#031218;border:none;border-radius:11px;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s,transform .1s;}
-.lb:hover{opacity:.86;}.lb:active{transform:scale(.98);}
-.le{margin-top:16px;font-size:12.5px;color:var(--er);min-height:16px;text-align:center;}
+/* REDIRECT LOCK (if not authed, show briefly) */
+#noauth{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:99;}
+#noauth.gone{display:none;}
+.na-msg{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:28px 32px;text-align:center;box-shadow:var(--shadow-md);}
+.na-msg h3{font-size:15px;font-weight:600;margin-bottom:6px;}
+.na-msg p{font-size:13px;color:var(--t2);}
 
-/* LAYOUT */
-#app{display:grid;grid-template-columns:260px 1fr;height:100vh;opacity:0;transition:opacity .35s .2s;}
-#app.show{opacity:1;}
+/* HEADER */
+.hdr{background:var(--sf);border-bottom:1px solid var(--bd);padding:0 24px;display:flex;align-items:center;gap:14px;height:56px;position:sticky;top:0;z-index:20;box-shadow:var(--shadow);}
+.hdr-logo{width:28px;height:28px;border-radius:7px;background:var(--ac-bg2);border:1px solid rgba(37,99,235,.15);display:flex;align-items:center;justify-content:center;}
+.hdr-logo svg{width:14px;height:14px;stroke:var(--ac);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.hdr-t{font-size:14.5px;font-weight:700;color:var(--t1);}
+.hdr-sep{width:1px;height:18px;background:var(--bd);margin:0 4px;}
+.hdr-cr{font-size:12.5px;color:var(--t2);}
+.hdr-sp{flex:1;}
+.nav-links{display:flex;gap:3px;}
+.nav-a{padding:5px 11px;border-radius:6px;font-size:12px;font-weight:500;color:var(--t2);text-decoration:none;transition:all .12s;}
+.nav-a:hover{background:var(--sf2);color:var(--t1);}
+.nav-a.here{background:var(--ac-bg2);color:var(--ac);}
 
-/* SIDEBAR */
-.sb{background:var(--sf);border-right:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden;}
-.sbt{padding:18px 16px 14px;border-bottom:1px solid var(--bd);}
-.sbb{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
-.sblo{width:32px;height:32px;border-radius:8px;background:var(--pu-bg);border:1px solid rgba(188,140,255,.15);display:flex;align-items:center;justify-content:center;}
-.sblo svg{width:15px;height:15px;stroke:var(--pu);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.sbn{font-size:13.5px;font-weight:600;}.sbv{font-size:11px;color:var(--t3);margin-top:1px;}
-.sb-nav{padding:10px 8px 4px;border-bottom:1px solid var(--bd);display:flex;flex-direction:column;gap:2px;}
-.sb-nav-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;color:var(--t2);font-size:12.5px;font-weight:500;transition:all .12s;text-decoration:none;}
-.sb-nav-item:hover{background:var(--sf2);color:var(--t1);}
-.sb-nav-item.active{background:var(--pu-bg);color:var(--pu);}
-.sb-nav-item svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
-.sb-sect{padding:8px 16px 4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--t3);}
-.sbl{flex:1;overflow-y:auto;padding:6px 8px;}
-.sbl::-webkit-scrollbar{width:3px;}.sbl::-webkit-scrollbar-thumb{background:var(--sf3);border-radius:2px;}
-.ci{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r);cursor:pointer;transition:background .12s;border:1px solid transparent;}
-.ci:hover{background:var(--sf2);}
-.ci.active{background:var(--sf2);border-color:var(--bd);}
-.ci-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-.ci-body{flex:1;min-width:0;}
-.ci-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.ci-count{font-size:11px;color:var(--t3);margin-top:1px;}
-.ci-badge{font-size:9.5px;padding:2px 7px;border-radius:20px;font-weight:600;flex-shrink:0;background:var(--sf3);color:var(--t2);}
-.sb-add{margin:8px;padding:9px;border-radius:var(--r);border:1.5px dashed var(--bd);background:transparent;color:var(--t2);font-size:12.5px;font-weight:500;cursor:pointer;width:calc(100% - 16px);display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s;}
-.sb-add:hover{border-color:var(--pu);color:var(--pu);background:var(--pu-bg);}
-.sb-add svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
-.sbf{padding:12px 14px;border-top:1px solid var(--bd);font-size:11.5px;color:var(--t3);}
+/* MAIN LAYOUT */
+#app{display:none;}
+#app.show{display:block;}
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:calc(100vh - 56px);}
 
-/* MAIN */
-.main{display:flex;flex-direction:column;overflow:hidden;}
-.mh{padding:14px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bd);background:var(--sf);min-height:60px;gap:12px;}
-.mhl h1{font-size:16px;font-weight:600;letter-spacing:-.2px;}.mhl p{font-size:12px;color:var(--t2);margin-top:2px;}
-.mhr{display:flex;align-items:center;gap:10px;}
-.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:7px;border:none;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .12s;}
-.btn:active{transform:scale(.97);}
-.bp{background:var(--ac);color:#031218;}.bp:hover{opacity:.86;}
-.bs{background:var(--sf2);color:var(--t1);border:1px solid var(--bd);}.bs:hover{border-color:var(--bd2);background:var(--sf3);}
-.bd-btn{background:var(--er-bg);color:var(--er);}.bd-btn:hover{background:rgba(248,81,73,.16);}
-.bpu{background:var(--pu-bg);color:var(--pu);border:1px solid rgba(188,140,255,.2);}.bpu:hover{background:rgba(188,140,255,.16);}
-.btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+/* LEFT PANEL */
+.lp{background:var(--sf);border-right:1px solid var(--bd);display:flex;flex-direction:column;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;}
+.lp::-webkit-scrollbar{width:3px;}.lp::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px;}
+.lp-head{padding:16px 16px 12px;border-bottom:1px solid var(--bd);}
+.lp-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--t3);margin-bottom:12px;}
+.new-cfg-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:9px;border-radius:var(--r);border:1.5px dashed var(--bd2);background:transparent;color:var(--t2);font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s;}
+.new-cfg-btn:hover{border-color:var(--ac);color:var(--ac);background:var(--ac-bg);}
+.new-cfg-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+.cfg-list{flex:1;padding:8px;}
+.cfg-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r);cursor:pointer;transition:background .1s;border:1px solid transparent;margin-bottom:3px;}
+.cfg-item:hover{background:var(--sf2);}
+.cfg-item.active{background:var(--sf2);border-color:var(--bd);}
+.cfg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.cfg-body{flex:1;min-width:0;}
+.cfg-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--t1);}
+.cfg-meta{font-size:11px;color:var(--t3);margin-top:1px;}
+.cfg-uc{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600;background:var(--sf3);color:var(--t2);border:1px solid var(--bd);flex-shrink:0;}
+.lp-foot{padding:12px 14px;border-top:1px solid var(--bd);font-size:11.5px;color:var(--t3);}
 
-/* PANELS */
-.panels{display:grid;grid-template-columns:1fr 380px;flex:1;overflow:hidden;}
-.panel{overflow-y:auto;padding:22px 24px;}
-.panel::-webkit-scrollbar{width:4px;}.panel::-webkit-scrollbar-thumb{background:var(--sf3);border-radius:2px;}
-.panel-r{border-left:1px solid var(--bd);background:var(--sf);}
+/* RIGHT PANEL */
+.rp{padding:24px;}
+.rp-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;gap:10px;color:var(--t3);}
+.rp-empty svg{width:40px;height:40px;stroke:currentColor;fill:none;stroke-width:1.2;opacity:.35;}
+.rp-empty h3{font-size:15px;font-weight:600;color:var(--t2);}
+.rp-empty p{font-size:13px;text-align:center;max-width:280px;line-height:1.6;}
 
-/* EMPTY STATE */
-.emp{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:var(--t3);}
-.emp svg{width:42px;height:42px;stroke:currentColor;fill:none;stroke-width:1.3;opacity:.4;}
-.emp h3{font-size:15px;font-weight:500;color:var(--t2);}.emp p{font-size:12.5px;text-align:center;line-height:1.6;max-width:260px;}
+/* EDITOR CARD */
+.ecard{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rl);margin-bottom:16px;box-shadow:var(--shadow);overflow:hidden;}
+.ecard-h{padding:13px 18px;border-bottom:1px solid var(--bd);background:var(--sf2);display:flex;align-items:center;gap:8px;}
+.ecard-h svg{width:15px;height:15px;stroke:var(--t2);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ecard-ht{font-size:13px;font-weight:600;color:var(--t1);}
+.ecard-b{padding:18px 20px;}
 
 /* FORM */
-.form-sec{margin-bottom:24px;}
-.form-sec-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--t3);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:7px;}
-.form-sec-title svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .fl{margin-bottom:14px;}
-.flb{font-size:11px;font-weight:600;color:var(--t2);margin-bottom:6px;display:flex;align-items:center;gap:5px;}
+.flb{font-size:11.5px;font-weight:600;color:var(--t2);margin-bottom:6px;}
 .fi{width:100%;padding:9px 12px;background:var(--sf2);border:1.5px solid var(--bd);border-radius:7px;color:var(--t1);font-size:13.5px;outline:none;transition:border-color .15s,box-shadow .15s;}
 .fi:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--ac-bg);}.fi::placeholder{color:var(--t3);}
 
-/* COLOR PICKER */
+/* COLOR CHIPS */
 .color-row{display:flex;gap:8px;flex-wrap:wrap;}
-.cchip{width:28px;height:28px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s;display:flex;align-items:center;justify-content:center;}
-.cchip.sel{border-color:var(--t1);transform:scale(1.15);}
-.cchip svg{width:12px;height:12px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;}
+.cchip{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2.5px solid transparent;transition:all .15s;display:flex;align-items:center;justify-content:center;}
+.cchip.sel{border-color:var(--t1);transform:scale(1.18);}
+.cchip svg{width:11px;height:11px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;}
 
-/* FEATURE CHECKLIST */
-.feat-grid{display:flex;flex-direction:column;gap:3px;}
-.feat-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:7px;cursor:pointer;transition:background .12s;border:1px solid transparent;user-select:none;}
+/* FEATURE GRID */
+.feat-section{margin-bottom:16px;}
+.feat-section-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--t3);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--bd);}
+.feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+.feat-item{display:flex;align-items:flex-start;gap:9px;padding:9px 11px;border-radius:7px;cursor:pointer;transition:background .1s;user-select:none;border:1px solid transparent;}
 .feat-item:hover{background:var(--sf2);}
-.feat-item.checked{background:rgba(34,211,238,.04);border-color:rgba(34,211,238,.1);}
-.feat-cb{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--bd);background:var(--sf3);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all .15s;}
-.feat-item.checked .feat-cb{background:var(--ac);border-color:var(--ac);}
-.feat-cb svg{width:10px;height:10px;stroke:#031218;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:opacity .15s;}
-.feat-item.checked .feat-cb svg{opacity:1;}
-.feat-info{flex:1;}
-.feat-name{font-size:13px;font-weight:500;color:var(--t1);}
-.feat-desc{font-size:11.5px;color:var(--t3);margin-top:2px;line-height:1.5;}
-.feat-badge{font-size:9.5px;padding:1px 6px;border-radius:20px;font-weight:600;margin-left:6px;vertical-align:middle;}
-.fb-a{background:rgba(63,185,80,.15);color:var(--ok);}
-.fb-b{background:rgba(34,211,238,.12);color:var(--ac);}
-.fb-new{background:rgba(188,140,255,.15);color:var(--pu);}
+.feat-item.checked{background:rgba(37,99,235,.04);border-color:rgba(37,99,235,.12);}
+.fcb{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--bd2);background:var(--sf2);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all .15s;}
+.feat-item.checked .fcb{background:var(--ac);border-color:var(--ac);}
+.fcb svg{width:9px;height:9px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:opacity .12s;}
+.feat-item.checked .fcb svg{opacity:1;}
+.feat-name{font-size:12.5px;font-weight:500;color:var(--t1);}
+.feat-desc{font-size:11px;color:var(--t3);margin-top:1px;line-height:1.4;}
 
-/* QUIZ SELECTION */
+/* QUIZ CHIPS */
 .quiz-grid{display:flex;flex-wrap:wrap;gap:6px;}
-.quiz-chip{padding:5px 11px;border-radius:20px;font-size:12px;font-family:'JetBrains Mono',monospace;cursor:pointer;border:1.5px solid var(--bd);background:transparent;color:var(--t2);transition:all .15s;user-select:none;}
+.quiz-chip{padding:4px 11px;border-radius:20px;font-size:12px;font-family:'JetBrains Mono',monospace;cursor:pointer;border:1.5px solid var(--bd);background:var(--sf2);color:var(--t2);transition:all .15s;user-select:none;}
 .quiz-chip:hover{border-color:var(--bd2);color:var(--t1);}
 .quiz-chip.sel{background:var(--ac-bg2);border-color:var(--ac);color:var(--ac);}
 
 /* USERS TABLE */
-.utbl{width:100%;border-collapse:collapse;font-size:12.5px;}
-.utbl th{padding:8px 12px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--t3);border-bottom:1px solid var(--bd);white-space:nowrap;}
-.utbl td{padding:9px 12px;border-bottom:1px solid rgba(48,54,61,.6);}
+.users-srch{width:100%;padding:8px 11px;background:var(--sf2);border:1px solid var(--bd);border-radius:7px;color:var(--t1);font-size:12.5px;outline:none;margin-bottom:12px;}
+.users-srch:focus{border-color:var(--ac);}
+.users-srch::placeholder{color:var(--t3);}
+.utbl{width:100%;border-collapse:collapse;}
+.utbl th{padding:8px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--t3);border-bottom:1px solid var(--bd);}
+.utbl td{padding:9px 12px;font-size:12.5px;border-bottom:1px solid var(--bd);}
 .utbl tr:last-child td{border-bottom:none;}
 .utbl tr:hover td{background:var(--sf2);}
-.cfg-pill{padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600;}
+.ucfg-sel{padding:5px 8px;background:var(--sf2);border:1px solid var(--bd);border-radius:6px;color:var(--t1);font-size:12px;outline:none;cursor:pointer;}
+.ucfg-sel:focus{border-color:var(--ac);}
 
-.sel-cfg{background:var(--sf2);border:1px solid var(--bd);border-radius:6px;padding:4px 8px;color:var(--t1);font-size:11.5px;outline:none;cursor:pointer;transition:border-color .15s;}
-.sel-cfg:focus{border-color:var(--ac);}
-
-/* CARD */
-.card{background:var(--bg);border:1px solid var(--bd);border-radius:var(--rl);margin-bottom:14px;overflow:hidden;}
-.card-h{padding:14px 18px;border-bottom:1px solid var(--bd);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;}
-.card-h svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.card-b{padding:16px 18px;}
-
-/* CONFIG PREVIEW CARD */
-.cfg-preview{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rl);padding:18px;margin-bottom:16px;position:relative;overflow:hidden;}
-.cfg-preview-accent{position:absolute;left:0;top:0;bottom:0;width:4px;}
-.cfg-preview-name{font-size:16px;font-weight:600;margin-bottom:4px;}
-.cfg-preview-desc{font-size:12.5px;color:var(--t2);margin-bottom:12px;}
-.cfg-preview-features{display:flex;flex-wrap:wrap;gap:5px;}
-.cfg-feat-tag{font-size:10.5px;padding:2px 8px;border-radius:20px;background:var(--sf3);color:var(--t2);}
-
-/* SAVE ACTIONS */
-.save-bar{position:sticky;bottom:0;background:var(--sf);border-top:1px solid var(--bd);padding:14px 18px;display:flex;gap:8px;align-items:center;}
-
-/* SKELETON */
-.sk{height:60px;background:var(--sf2);border-radius:var(--r);margin-bottom:8px;overflow:hidden;position:relative;}
-.sk::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.025),transparent);animation:shim 1.4s infinite;}
-@keyframes shim{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+/* SAVE BAR */
+.save-bar{position:sticky;bottom:0;background:var(--sf);border-top:1px solid var(--bd);padding:13px 20px;display:flex;gap:8px;align-items:center;margin:0 -20px;box-shadow:0 -2px 8px rgba(0,0,0,.05);}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:8px;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all .12s;}
+.btn:active{transform:scale(.97);}
+.bp{background:var(--ac);color:#fff;box-shadow:0 1px 4px rgba(37,99,235,.25);}.bp:hover{opacity:.9;}
+.bs{background:var(--sf2);color:var(--t1);border:1px solid var(--bd);}.bs:hover{border-color:var(--bd2);}
+.bd-btn{color:var(--er);background:var(--er-bg);}.bd-btn:hover{background:rgba(220,38,38,.14);}
+.btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
 
 /* TOAST */
 .tray{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:7px;z-index:200;}
-.t{display:flex;align-items:center;gap:8px;padding:10px 15px;border-radius:8px;font-size:13px;font-weight:500;min-width:230px;box-shadow:0 8px 24px rgba(0,0,0,.5);animation:ti .25s ease;}
+.t{display:flex;align-items:center;gap:8px;padding:10px 15px;border-radius:9px;font-size:13px;font-weight:500;min-width:230px;box-shadow:var(--shadow-md);animation:ti .25s ease;}
 .t svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
-@keyframes ti{from{transform:translateX(12px);opacity:0}to{transform:translateX(0);opacity:1}}
-.tok{background:#0D2419;border:1px solid rgba(63,185,80,.35);color:var(--ok);}
-.ter{background:#2A100E;border:1px solid rgba(248,81,73,.35);color:var(--er);}
+@keyframes ti{from{transform:translateX(14px);opacity:0}to{transform:translateX(0);opacity:1}}
+.tok{background:#F0FDF4;border:1px solid rgba(22,163,74,.3);color:var(--ok);}
+.ter{background:#FEF2F2;border:1px solid rgba(220,38,38,.3);color:var(--er);}
 </style>
 </head>
 <body>
-<div id="lock">
-  <div class="lc">
-    <div class="lic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg></div>
-    <div class="lt">Configurations</div>
-    <div class="ls">EmpowerBot admin · manage user configurations</div>
-    <div class="pins">
-      <input class="pin" type="password" maxlength="1" inputmode="numeric">
-      <input class="pin" type="password" maxlength="1" inputmode="numeric">
-      <input class="pin" type="password" maxlength="1" inputmode="numeric">
-      <input class="pin" type="password" maxlength="1" inputmode="numeric">
-    </div>
-    <button class="lb" id="lb">Unlock →</button>
-    <div class="le" id="le"></div>
+
+<div id="noauth">
+  <div class="na-msg">
+    <h3>Please log in first</h3>
+    <p>Redirecting to quiz editor to unlock...</p>
   </div>
 </div>
 
 <div id="app">
-  <aside class="sb">
-    <div class="sbt">
-      <div class="sbb">
-        <div class="sblo"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg></div>
-        <div><div class="sbn">EmpowerBot admin</div><div class="sbv">Configurations</div></div>
-      </div>
+  <div class="hdr">
+    <div class="hdr-logo"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg></div>
+    <div class="hdr-t">EmpowerBot</div>
+    <div class="hdr-sep"></div>
+    <div class="hdr-cr">Configurations</div>
+    <div class="hdr-sp"></div>
+    <div class="nav-links">
+      <a class="nav-a" href="/quizeditor">Quiz editor</a>
+      <a class="nav-a here" href="/configurations">Configurations</a>
+      <a class="nav-a" href="/location-admin">Locations</a>
+      <a class="nav-a" href="/engagementdashboard">Engagement</a>
     </div>
-    <div class="sb-nav">
-      <a class="sb-nav-item" href="/quizeditor"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>Quiz editor</a>
-      <a class="sb-nav-item active" href="/configurations"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Configurations</a>
-      <a class="sb-nav-item" href="/engagementdashboard"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Engagement</a>
-    </div>
-    <div class="sb-sect">Configurations</div>
-    <div class="sbl" id="clist"></div>
-    <button class="sb-add" onclick="newConfig()">
-      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      New configuration
-    </button>
-    <div class="sbf" id="sbf">Loading...</div>
-  </aside>
+  </div>
 
-  <div class="main">
-    <div class="mh">
-      <div class="mhl"><h1 id="mht">Configurations</h1><p id="mhs">Create named configurations and assign users</p></div>
-      <div class="mhr">
-        <button class="btn bpu" onclick="showUsers()">
-          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          Assign users
+  <div class="layout">
+    <!-- LEFT: config list -->
+    <div class="lp">
+      <div class="lp-head">
+        <div class="lp-title">All configurations</div>
+        <button class="new-cfg-btn" onclick="newConfig()">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New configuration
         </button>
       </div>
+      <div class="cfg-list" id="cfg-list">
+        <div style="padding:20px;text-align:center;font-size:12.5px;color:var(--t3)">Loading...</div>
+      </div>
+      <div class="lp-foot" id="cfg-foot">—</div>
     </div>
 
-    <div class="panels" id="panels">
-      <!-- Left: config editor / right: users or empty -->
-      <div class="panel" id="left-panel">
-        <div class="emp">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-          <h3>No configuration selected</h3>
-          <p>Choose a configuration from the sidebar or create a new one to get started</p>
-        </div>
-      </div>
-      <div class="panel panel-r" id="right-panel">
-        <div class="emp">
-          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-          <h3>User assignment</h3>
-          <p>Select a configuration first, then assign users here</p>
-        </div>
+    <!-- RIGHT: editor -->
+    <div class="rp" id="rp">
+      <div class="rp-empty">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        <h3>No configuration selected</h3>
+        <p>Select a configuration from the list, or create a new one to get started.</p>
       </div>
     </div>
   </div>
@@ -247,225 +196,216 @@ button,input,select,textarea{font-family:inherit;}
 <div class="tray" id="tray"></div>
 
 <script>
-const COLORS=['#22D3EE','#3FB950','#F85149','#D29922','#BC8CFF','#F0883E','#58A6FF','#EC4899'];
+const SESSION_KEY='empowerbot_admin_ts';
+const SESSION_TTL=24*60*60*1000;
+function isUnlocked(){const ts=localStorage.getItem(SESSION_KEY);return ts&&(Date.now()-parseInt(ts)<SESSION_TTL);}
+
+// Check auth on load
+window.addEventListener('DOMContentLoaded',()=>{
+  if(isUnlocked()){
+    document.getElementById('noauth').classList.add('gone');
+    document.getElementById('app').classList.add('show');
+    loadAll();
+  } else {
+    setTimeout(()=>window.location.href='/quizeditor',1500);
+  }
+});
+
+const COLORS=['#2563EB','#16A34A','#DC2626','#D97706','#7C3AED','#EA580C','#0EA5E9','#EC4899'];
 const FEATURES=[
-  {id:'quiz_modules',name:'Quiz modules',desc:'Access to interactive quiz content and comprehension questions',cat:'Education',tor:'B'},
-  {id:'ai_explanations',name:'AI explanations',desc:'AI-generated explanations after answering questions',cat:'Education',tor:'B'},
-  {id:'media_in_quizzes',name:'Media in quizzes',desc:'Images and infographics displayed alongside questions',cat:'Education',tor:'B'},
-  {id:'ai_chatbot',name:'AI chatbot',desc:'Free-form AI chat for reviewing content and asking questions',cat:'Education',tor:'B'},
-  {id:'forum_alerts',name:'Forum alerts',desc:'Automated notifications about upcoming public participation forums',cat:'Information',tor:'A'},
-  {id:'budget_briefs',name:'Budget briefs',desc:'Plain-language summaries of budget proposals with optional infographics',cat:'Information',tor:'A'},
-  {id:'post_forum_feedback',name:'Post-forum feedback',desc:'Structured summaries of forum proceedings delivered after the event',cat:'Information',tor:'A'},
-  {id:'rsvp_checkin',name:'RSVP & check-in',desc:'Users can RSVP for forums and confirm attendance; responses tracked',cat:'Participation',tor:'B',new:true},
-  {id:'issue_logging',name:'Issue logging',desc:'Users submit issues to raise at forums; timestamped and linked to profile',cat:'Participation',tor:'B',new:true},
-  {id:'submission_templates',name:'Submission templates',desc:'Guided prompts to help users formulate specific issues for forums',cat:'Participation',tor:'B',new:true},
-  {id:'scoreboard',name:'Scoreboard',desc:'User appears on the quiz leaderboard',cat:'Platform',tor:null},
-  {id:'record_keeping',name:'Record keeping',desc:'Ability to upload and view business records',cat:'Platform',tor:null},
+  {id:'quiz_modules',name:'Quiz modules',desc:'Access to quiz content and comprehension questions',cat:'Education'},
+  {id:'ai_explanations',name:'AI explanations',desc:'AI-generated explanations after answering questions',cat:'Education'},
+  {id:'media_in_quizzes',name:'Media in quizzes',desc:'Images/video displayed alongside questions',cat:'Education'},
+  {id:'ai_chatbot',name:'AI chatbot',desc:'Free-form AI chat and question review',cat:'Education'},
+  {id:'forum_alerts',name:'Forum alerts',desc:'Notifications about upcoming participation forums',cat:'Information'},
+  {id:'budget_briefs',name:'Budget briefs',desc:'Plain-language budget summaries with infographics',cat:'Information'},
+  {id:'post_forum_feedback',name:'Post-forum feedback',desc:'Summaries of forum proceedings delivered after the event',cat:'Information'},
+  {id:'rsvp_checkin',name:'RSVP & attendance',desc:'RSVP for forums and confirm attendance',cat:'Participation'},
+  {id:'issue_logging',name:'Issue logging',desc:'Submit issues to raise at forums (timestamped)',cat:'Participation'},
+  {id:'submission_templates',name:'Submission templates',desc:'Guided prompts to formulate specific forum inputs',cat:'Participation'},
+  {id:'scoreboard',name:'Scoreboard',desc:'Appear on the quiz leaderboard',cat:'Platform'},
+  {id:'record_keeping',name:'Record keeping',desc:'Upload and view business records',cat:'Platform'},
 ];
-const CATS=['Information','Education','Participation','Platform'];
+const CATS=['Education','Information','Participation','Platform'];
 
 let configs=[],quizList=[],curCfg=null,selColor=COLORS[0];
-
-// PIN
-const pins=[...document.querySelectorAll('.pin')];
-pins.forEach((p,i)=>{
-  p.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!p.value&&i>0)pins[i-1].focus();if(e.key==='Enter')unlock();});
-  p.addEventListener('input',()=>{if(p.value&&i<3)pins[i+1].focus();});
-});
-pins[0].focus();
-document.getElementById('lb').onclick=unlock;
-
-async function unlock(){
-  const pin=pins.map(p=>p.value).join('');
-  try{
-    const r=await fetch('/api/admin/verify-pin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin})});
-    if(r.ok){document.getElementById('lock').classList.add('out');setTimeout(()=>{document.getElementById('lock').style.display='none';document.getElementById('app').classList.add('show');loadAll();},400);}
-    else{pins.forEach(p=>{p.classList.add('sh');p.value='';});document.getElementById('le').textContent='Incorrect PIN';setTimeout(()=>pins.forEach(p=>p.classList.remove('sh')),400);pins[0].focus();}
-  }catch(e){document.getElementById('le').textContent='Cannot connect';}
-}
 
 async function loadAll(){
   try{
     const [cr,qr]=await Promise.all([fetch('/api/configs'),fetch('/api/quizzes')]);
     configs=await cr.json();
     const qd=await qr.json();quizList=qd.map(q=>q.quiz);
-    renderConfigList();
-    document.getElementById('sbf').textContent=configs.length+' configuration'+(configs.length!==1?'s':'');
-  }catch(e){document.getElementById('sbf').textContent='Failed to load';toast('Could not connect','er');}
+    renderList();
+  }catch(e){toast('Could not load configurations','er');}
 }
 
-function renderConfigList(){
-  const el=document.getElementById('clist');el.innerHTML='';
-  if(!configs.length){el.innerHTML='<div style="padding:20px 16px;text-align:center;font-size:12.5px;color:var(--t3)">No configurations yet.<br>Click "New configuration" to start.</div>';return;}
+function renderList(){
+  const el=document.getElementById('cfg-list');
+  document.getElementById('cfg-foot').textContent=configs.length+' configuration'+(configs.length!==1?'s':'');
+  if(!configs.length){
+    el.innerHTML='<div style="padding:24px 16px;text-align:center;font-size:12.5px;color:var(--t3);line-height:1.6">No configurations yet.<br>Click "New configuration" to create your first one.</div>';
+    return;
+  }
+  el.innerHTML='';
   configs.forEach(c=>{
     const d=document.createElement('div');
-    d.className='ci'+(curCfg&&curCfg._id===c._id?' active':'');
+    d.className='cfg-item'+(curCfg&&curCfg._id===c._id?' active':'');
     d.dataset.id=c._id;
-    d.innerHTML=`<div class="ci-dot" style="background:${c.color||'#22D3EE'}"></div>
-      <div class="ci-body">
-        <div class="ci-name">${esc(c.name)}</div>
-        <div class="ci-count">${c.user_count||0} users · ${(c.features||[]).length} features</div>
-      </div>`;
+    d.innerHTML=`<div class="cfg-dot" style="background:${c.color||'#2563EB'}"></div>
+      <div class="cfg-body">
+        <div class="cfg-name">${esc(c.name)}</div>
+        <div class="cfg-meta">${(c.features||[]).length} features · ${(c.quizzes||[]).length} quizzes</div>
+      </div>
+      <div class="cfg-uc">${c.user_count||0} users</div>`;
     d.onclick=()=>selConfig(c);
     el.appendChild(d);
   });
 }
 
 function selConfig(c){
-  curCfg=c;
-  document.querySelectorAll('.ci').forEach(el=>el.classList.remove('active'));
+  curCfg=c;selColor=c.color||COLORS[0];
+  document.querySelectorAll('.cfg-item').forEach(el=>el.classList.remove('active'));
   const el=document.querySelector(`[data-id="${c._id}"]`);if(el)el.classList.add('active');
   renderEditor(c);
-  renderUserPanel(c);
 }
 
 function renderEditor(c){
-  const lp=document.getElementById('left-panel');
-  selColor=c.color||COLORS[0];
-  const colorChips=COLORS.map(col=>`<div class="cchip${col===selColor?' sel':''}" style="background:${col}" onclick="pickColor('${col}')" data-col="${col}">${col===selColor?`<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`:''}</div>`).join('');
-  const selectedFeats=c.features||[];
+  const rp=document.getElementById('rp');
+  const selFeats=c.features||[];
+  const selQuizzes=c.quizzes||[];
+
+  const colorChips=COLORS.map(col=>`<div class="cchip${col===selColor?' sel':''}" style="background:${col}" data-col="${col}" onclick="pickColor('${col}')">${col===selColor?`<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`:''}</div>`).join('');
+
   const featHtml=CATS.map(cat=>{
     const feats=FEATURES.filter(f=>f.cat===cat);
-    const items=feats.map(f=>`<div class="feat-item${selectedFeats.includes(f.id)?' checked':''}" id="feat-${f.id}" onclick="toggleFeat('${f.id}')">
-      <div class="feat-cb"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      <div class="feat-info">
-        <span class="feat-name">${f.name}</span>
-        ${f.tor?`<span class="feat-badge ${f.tor==='A'?'fb-a':'fb-b'}">Config ${f.tor}</span>`:''}
-        ${f.new?`<span class="feat-badge fb-new">New</span>`:''}
-        <div class="feat-desc">${f.desc}</div>
-      </div>
-    </div>`).join('');
-    return `<div class="form-sec">
-      <div class="form-sec-title">${getCatIcon(cat)} ${cat}</div>
-      <div class="feat-grid">${items}</div>
+    return `<div class="feat-section">
+      <div class="feat-section-title">${cat}</div>
+      <div class="feat-grid">${feats.map(f=>`<div class="feat-item${selFeats.includes(f.id)?' checked':''}" id="feat-${f.id}" onclick="toggleFeat('${f.id}')">
+        <div class="fcb"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div><div class="feat-name">${f.name}</div><div class="feat-desc">${f.desc}</div></div>
+      </div>`).join('')}</div>
     </div>`;
   }).join('');
-  const selectedQuizzes=c.quizzes||[];
-  const quizChips=quizList.map(q=>`<div class="quiz-chip${selectedQuizzes.includes(q)?' sel':''}" id="qchip-${q}" onclick="toggleQuiz('${q}')">${q}</div>`).join('');
 
-  lp.innerHTML=`
-    <div class="card">
-      <div class="card-h" style="color:${c.color||'var(--ac)'}">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-        Configuration details
-      </div>
-      <div class="card-b">
-        <div class="fl"><div class="flb">Configuration name</div>
-          <input class="fi" id="cfg-name" type="text" placeholder="e.g. Treatment A, Control Group, Full Access..." value="${esc(c.name)}">
-        </div>
-        <div class="fl"><div class="flb">Description</div>
-          <input class="fi" id="cfg-desc" type="text" placeholder="Brief description of what users in this config receive..." value="${esc(c.description||'')}">
-        </div>
-        <div class="fl"><div class="flb">Colour label</div>
-          <div class="color-row">${colorChips}</div>
+  const quizChips=quizList.map(q=>`<div class="quiz-chip${selQuizzes.includes(q)?' sel':''}" id="qchip-${q}" onclick="toggleQuiz('${q}')">${q}</div>`).join('');
+
+  rp.innerHTML=`
+    <div style="max-width:860px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+        <div>
+          <h2 style="font-size:18px;font-weight:700;letter-spacing:-.2px">${esc(c.name)}</h2>
+          <p style="font-size:12.5px;color:var(--t2);margin-top:3px">${c.user_count||0} users assigned · last updated ${c.updated_at?new Date(c.updated_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'—'}</p>
         </div>
       </div>
-    </div>
-    <div class="form-sec-title" style="margin-bottom:12px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--t3);">
-      <svg viewBox="0 0 24 24" width="13" height="13" stroke="var(--t3)" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-      Features
-      <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--t3);margin-left:6px;padding:2px 8px;background:var(--sf2);border:1px solid var(--bd);border-radius:4px;font-size:10px">Config A = informational · Config B = educational + participatory</span>
-    </div>
-    ${featHtml}
-    <div class="card">
-      <div class="card-h"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>Quizzes included</div>
-      <div class="card-b"><div class="quiz-grid">${quizChips||'<span style="font-size:12.5px;color:var(--t3)">No quizzes loaded</span>'}</div></div>
-    </div>
-    <div class="save-bar">
-      <button class="btn bp" onclick="saveCfg()">
-        <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg>
-        Save configuration
-      </button>
-      <button class="btn bd-btn" onclick="delCfg()">Delete</button>
+
+      <!-- DETAILS -->
+      <div class="ecard">
+        <div class="ecard-h"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg><span class="ecard-ht">Details</span></div>
+        <div class="ecard-b">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="fl"><div class="flb">Configuration name</div>
+              <input class="fi" id="cfg-name" type="text" placeholder="e.g. Control, Treatment A, Full access..." value="${esc(c.name)}">
+            </div>
+            <div class="fl"><div class="flb">Description</div>
+              <input class="fi" id="cfg-desc" type="text" placeholder="Brief description..." value="${esc(c.description||'')}">
+            </div>
+          </div>
+          <div class="fl"><div class="flb">Colour label</div><div class="color-row">${colorChips}</div></div>
+        </div>
+      </div>
+
+      <!-- FEATURES -->
+      <div class="ecard">
+        <div class="ecard-h"><svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="ecard-ht">Features</span><span style="font-size:12px;color:var(--t2);margin-left:8px">— choose which features users in this configuration can access</span></div>
+        <div class="ecard-b">${featHtml}</div>
+      </div>
+
+      <!-- QUIZZES -->
+      <div class="ecard">
+        <div class="ecard-h"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg><span class="ecard-ht">Quizzes included</span><span style="font-size:12px;color:var(--t2);margin-left:8px">— which quizzes are available to users in this configuration</span></div>
+        <div class="ecard-b"><div class="quiz-grid" style="padding:2px 0">${quizChips||'<span style="font-size:12.5px;color:var(--t3)">No quizzes loaded</span>'}</div></div>
+      </div>
+
+      <!-- USERS -->
+      <div class="ecard">
+        <div class="ecard-h"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="ecard-ht">User assignment</span></div>
+        <div class="ecard-b">
+          <input class="users-srch" type="text" placeholder="Search users by name or phone..." oninput="filterUsers(this.value)">
+          <div id="users-tbl-wrap"><div style="padding:16px;text-align:center;font-size:12.5px;color:var(--t3)">Loading users...</div></div>
+        </div>
+      </div>
+
+      <div class="save-bar">
+        <button class="btn bp" onclick="saveCfg()">
+          <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save configuration
+        </button>
+        <button class="btn bd-btn" onclick="delCfg()">Delete</button>
+      </div>
     </div>`;
+
+  loadUsers();
 }
 
-function renderUserPanel(c){
-  const rp=document.getElementById('right-panel');
-  rp.innerHTML='<div style="padding:14px 0 8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--t3);margin-bottom:12px">Users in this configuration</div><div id="user-list"><div style="text-align:center;padding:24px;font-size:12.5px;color:var(--t3)">Loading users...</div></div>';
-  loadUsersForConfig(c._id);
-}
-
-async function loadUsersForConfig(cfgId){
+async function loadUsers(){
   try{
     const r=await fetch('/api/users/config-list');
     const users=await r.json();
-    const ul=document.getElementById('user-list');
-    if(!ul)return;
-    const inConfig=users.filter(u=>u.configuration===cfgId||(curCfg&&u.configuration===curCfg.name));
-    const others=users.filter(u=>!inConfig.find(x=>x._id===u._id));
-    const rows=users.map(u=>{
-      const isCur=u.configuration===cfgId||(curCfg&&u.configuration===curCfg.name);
-      const cfgInfo=configs.find(c=>c._id===u.configuration||c.name===u.configuration);
-      const pill=cfgInfo?`<span class="cfg-pill" style="background:${cfgInfo.color+'22'};color:${cfgInfo.color};border:1px solid ${cfgInfo.color+'44'}">${cfgInfo.name}</span>`:'<span style="color:var(--t3);font-size:11px">None</span>';
-      const opts=configs.map(c=>`<option value="${c._id}" ${(u.configuration===c._id||u.configuration===c.name)?'selected':''}>${c.name}</option>`).join('');
-      return `<tr>
-        <td style="font-weight:500;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(u.name||'—')}</td>
-        <td style="color:var(--t2);font-size:11.5px">${(u.phone_number||'').slice(0,8)}***</td>
-        <td>
-          <select class="sel-cfg" onchange="assignUser('${u._id}',this.value)">
-            <option value="">— none —</option>
-            ${opts}
-          </select>
-        </td>
-      </tr>`;
-    }).join('');
-    ul.innerHTML=`<div style="margin-bottom:10px;display:flex;gap:8px;align-items:center">
-      <input type="text" placeholder="Search users..." oninput="filterUsers(this.value)" style="flex:1;padding:7px 11px;background:var(--sf2);border:1px solid var(--bd);border-radius:7px;color:var(--t1);font-size:12.5px;outline:none;">
-      <span style="font-size:11.5px;color:var(--t3)">${inConfig.length} assigned</span>
-    </div>
-    <div style="overflow-x:auto"><table class="utbl" id="utbl">
-      <thead><tr><th>Name</th><th>Phone</th><th>Configuration</th></tr></thead>
-      <tbody id="utbody">${rows}</tbody>
-    </table></div>`;
-  }catch(e){const ul=document.getElementById('user-list');if(ul)ul.innerHTML='<div style="padding:16px;font-size:12.5px;color:var(--t3)">Could not load users</div>';}
+    renderUsers(users);
+  }catch(e){
+    const w=document.getElementById('users-tbl-wrap');
+    if(w)w.innerHTML='<div style="padding:12px;color:var(--t3);font-size:12.5px">Could not load users</div>';
+  }
+}
+
+function renderUsers(users){
+  const w=document.getElementById('users-tbl-wrap');if(!w)return;
+  if(!users.length){w.innerHTML='<div style="padding:12px;color:var(--t3);font-size:12.5px">No users registered yet</div>';return;}
+  const rows=users.map(u=>{
+    const opts='<option value="">— none —</option>'+configs.map(c=>`<option value="${c._id}"${(u.configuration===c._id||u.configuration===c.name)?'selected':''}>${esc(c.name)}</option>`).join('');
+    const cfgInfo=configs.find(c=>c._id===u.configuration||c.name===u.configuration);
+    const badge=cfgInfo?`<span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:20px;background:${cfgInfo.color+'18'};color:${cfgInfo.color};border:1px solid ${cfgInfo.color+'33'}">${esc(cfgInfo.name)}</span>`:'<span style="font-size:11px;color:var(--t3)">—</span>';
+    return`<tr>
+      <td style="font-weight:500">${esc(u.name||'—')}</td>
+      <td style="color:var(--t2);font-size:11.5px">${(u.phone_number||'').slice(0,8)}***</td>
+      <td style="color:var(--t2)">${esc(u.location||'—')}</td>
+      <td>${badge}</td>
+      <td><select class="ucfg-sel" onchange="assignUser('${u._id}',this.value)">${opts}</select></td>
+    </tr>`;
+  }).join('');
+  w.innerHTML=`<table class="utbl"><thead><tr><th>Name</th><th>Phone</th><th>Location</th><th>Current config</th><th>Assign to</th></tr></thead><tbody id="utbody">${rows}</tbody></table>`;
 }
 
 function filterUsers(v){
-  const rows=[...document.querySelectorAll('#utbody tr')];
-  rows.forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(v.toLowerCase())?'':'none';});
+  [...document.querySelectorAll('#utbody tr')].forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(v.toLowerCase())?'':'none';});
 }
 
 async function assignUser(userId,cfgId){
   try{
-    const r=await fetch('/api/users/assign-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:userId,config_id:cfgId})});
-    if(r.ok){toast('User assignment updated','ok');await loadAll();}
-    else toast('Assignment failed','er');
-  }catch(e){toast('Network error','er');}
-}
-
-function getCatIcon(cat){
-  const icons={Information:`<svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,Education:`<svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`,Participation:`<svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,Platform:`<svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`};
-  return icons[cat]||'';
+    await fetch('/api/users/assign-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:userId,config_id:cfgId})});
+    toast('User assignment updated','ok');
+    await loadAll();
+  }catch(e){toast('Assignment failed','er');}
 }
 
 function pickColor(col){
   selColor=col;
   document.querySelectorAll('.cchip').forEach(c=>{
-    const isThis=c.dataset.col===col;
-    c.classList.toggle('sel',isThis);
+    const isThis=c.dataset.col===col;c.classList.toggle('sel',isThis);
     c.innerHTML=isThis?`<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`:'';
   });
 }
 
-function toggleFeat(id){
-  const item=document.getElementById('feat-'+id);
-  if(item)item.classList.toggle('checked');
-}
-
-function toggleQuiz(q){
-  const chip=document.getElementById('qchip-'+q);
-  if(chip)chip.classList.toggle('sel');
-}
-
-function getSelectedFeats(){return[...document.querySelectorAll('.feat-item.checked')].map(el=>el.id.replace('feat-',''));}
-function getSelectedQuizzes(){return[...document.querySelectorAll('.quiz-chip.sel')].map(el=>el.id.replace('qchip-',''));}
+function toggleFeat(id){const el=document.getElementById('feat-'+id);if(el)el.classList.toggle('checked');}
+function toggleQuiz(q){const el=document.getElementById('qchip-'+q);if(el)el.classList.toggle('sel');}
+function getSelFeats(){return[...document.querySelectorAll('.feat-item.checked')].map(el=>el.id.replace('feat-',''));}
+function getSelQuizzes(){return[...document.querySelectorAll('.quiz-chip.sel')].map(el=>el.id.replace('qchip-',''));}
 
 async function saveCfg(){
   if(!curCfg)return;
-  const name=document.getElementById('cfg-name').value.trim();
-  if(!name){toast('Name is required','er');return;}
-  const payload={name,description:document.getElementById('cfg-desc').value.trim(),color:selColor,features:getSelectedFeats(),quizzes:getSelectedQuizzes()};
+  const name=(document.getElementById('cfg-name')||{value:''}).value.trim();
+  if(!name){toast('Configuration name is required','er');return;}
+  const payload={name,description:(document.getElementById('cfg-desc')||{value:''}).value.trim(),color:selColor,features:getSelFeats(),quizzes:getSelQuizzes()};
   try{
     const r=await fetch('/api/configs/'+curCfg._id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     if(r.ok){toast('Configuration saved','ok');await loadAll();const updated=configs.find(c=>c._id===curCfg._id);if(updated){curCfg=updated;selConfig(updated);}}
@@ -478,7 +418,7 @@ async function delCfg(){
   if(!confirm(`Delete "${curCfg.name}"? Users assigned to it will be unassigned.`))return;
   try{
     const r=await fetch('/api/configs/'+curCfg._id,{method:'DELETE'});
-    if(r.ok){toast('Configuration deleted','ok');curCfg=null;await loadAll();document.getElementById('left-panel').innerHTML='<div class="emp"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg><h3>Configuration deleted</h3><p>Select or create another configuration</p></div>';document.getElementById('right-panel').innerHTML='<div class="emp"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><h3>User assignment</h3><p>Select a configuration first</p></div>';}
+    if(r.ok){toast('Deleted','ok');curCfg=null;await loadAll();document.getElementById('rp').innerHTML='<div class="rp-empty"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg><h3>Configuration deleted</h3><p>Select or create another configuration.</p></div>';}
     else toast('Delete failed','er');
   }catch(e){toast('Network error','er');}
 }
@@ -486,14 +426,9 @@ async function delCfg(){
 async function newConfig(){
   try{
     const r=await fetch('/api/configs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'New configuration',description:'',color:COLORS[configs.length%COLORS.length],features:[],quizzes:[]})});
-    if(r.ok){const c=await r.json();await loadAll();const found=configs.find(x=>x._id===c._id)||configs[configs.length-1];if(found)selConfig(found);toast('New configuration created — give it a name and save','ok');}
+    if(r.ok){const c=await r.json();await loadAll();const found=configs.find(x=>x._id===c._id)||configs[configs.length-1];if(found)selConfig(found);toast('Created — give it a name and save','ok');}
     else toast('Could not create','er');
   }catch(e){toast('Network error','er');}
-}
-
-function showUsers(){
-  if(curCfg)renderUserPanel(curCfg);
-  else toast('Select a configuration first','er');
 }
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
