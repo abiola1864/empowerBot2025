@@ -1157,9 +1157,9 @@ def generate_text(prompt):
         return "I apologize, but I'm having difficulty generating a response right now. Please try again later."
 
     MODELS = [
-        "gemini-2.5-flash",      # primary — working
-        "gemini-2.0-flash",      # fallback
-        "gemini-2.0-flash-lite", # last resort
+        "gemini-2.5-pro",        # primary — best instruction following
+        "gemini-2.5-flash",      # fallback
+        "gemini-2.0-flash",      # last resort
     ]
 
     headers = {'Content-Type': 'application/json'}
@@ -1167,7 +1167,7 @@ def generate_text(prompt):
     data = {
         "contents": [{"role": "user", "parts": [{"text": prompt}]}],
         "generationConfig": {
-            "temperature": 0.7,
+            "temperature": 0.4,
             "maxOutputTokens": 2000,
             "topP": 1,
             "topK": 40
