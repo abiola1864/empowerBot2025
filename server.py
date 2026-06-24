@@ -1104,9 +1104,9 @@ def generate_text(prompt):
         return "I apologize, but I'm having difficulty generating a response right now. Please try again later."
 
     MODELS = [
-        "gemini-1.5-flash",      # 1,500/day free — primary
-        "gemini-1.5-flash-8b",   # 15,000/day free — fallback
-        "gemini-1.5-pro",        # 50/day free — last resort
+        "gemini-2.5-flash",      # primary — working
+        "gemini-2.0-flash",      # fallback
+        "gemini-2.0-flash-lite", # last resort
     ]
 
     headers = {'Content-Type': 'application/json'}
