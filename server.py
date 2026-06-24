@@ -5770,16 +5770,32 @@ def handle_text_message(phone_number, message_body, user, conn):
 
         elif user['state'] == 'awaiting_age':
             db.update_user_field(phone_number, {"age": message_body, "state": "awaiting_gender"})
-            send_message(phone_number, "Thank you! Please type your gender in the chat (male, female, or other).")
+            send_interactive_message(phone_number, "What is your gender?", [
+                {"type": "reply", "reply": {"id": "gender_male",   "title": "Male"}},
+                {"type": "reply", "reply": {"id": "gender_female", "title": "Female"}},
+                {"type": "reply", "reply": {"id": "gender_other",  "title": "Prefer not to say"}},
+            ])
 
         elif user['state'] == 'awaiting_gender':
-            db.update_user_field(phone_number, {"gender": message_body, "state": "awaiting_business_type"})
-            send_message(phone_number, "Great! Please type in the chat the type of business or services you deal with.")
-
+            _gmap = {"gender_male":"Male","gender_female":"Female","gender_other":"Prefer not to say"}
+            _g = _gmap.get(message_body, message_body.capitalize())
+            db.update_user_field(phone_number, {"gender": _g, "state": "awaiting_business_type"})
+            _bl = {"type":"list","header":{"type":"text","text":"Business type"},"body":{"text":"What type of business or service do you run?"},"footer":{"text":"Scroll to see all options"},"action":{"button":"See options","sections":[{"title": "Products & Trade", "rows": [{"id": "biz_food", "title": "Food & Beverages"}, {"id": "biz_fashion", "title": "Fashion & Clothing"}, {"id": "biz_beauty", "title": "Hair Salon & Beauty"}, {"id": "biz_electronics", "title": "Electronics & Gadgets"}, {"id": "biz_phone", "title": "Phone & Computer Repair"}, {"id": "biz_trading", "title": "Trading & Merchandise"}, {"id": "biz_agric", "title": "Agriculture & Farming"}, {"id": "biz_wholesale", "title": "Wholesale & Distribution"}]}, {"title": "Services", "rows": [{"id": "biz_transport", "title": "Transport & Logistics"}, {"id": "biz_construction", "title": "Construction & Property"}, {"id": "biz_education", "title": "Education & Training"}, {"id": "biz_health", "title": "Healthcare & Pharmacy"}, {"id": "biz_finance", "title": "Financial Services"}, {"id": "biz_auto", "title": "Auto Repair & Parts"}, {"id": "biz_events", "title": "Entertainment & Events"}, {"id": "biz_media", "title": "Media & Printing"}]}, {"title": "Other types", "rows": [{"id": "biz_mfg", "title": "Manufacturing"}, {"id": "biz_hospitality", "title": "Hospitality & Catering"}, {"id": "biz_artisan", "title": "Artisan & Crafts"}, {"id": "biz_ict", "title": "ICT & Digital Services"}, {"id": "biz_cleaning", "title": "Cleaning & Laundry"}, {"id": "biz_photo", "title": "Photography & Video"}, {"id": "biz_consulting", "title": "Consulting & Legal"}, {"id": "biz_others", "title": "Others (type your own)"}]}]}}
+            send_interactive_message(phone_number, _bl)
         elif user['state'] == 'awaiting_business_type':
-            # Direct capitalize - no Gemini
-            business_type = ' '.join(word.capitalize() for word in message_body.strip().split() if word)
-            db.update_user_field(phone_number, {"business_type": business_type, "state": "awaiting_location"})
+            _bmap = {"biz_food":"Food & Beverages","biz_fashion":"Fashion & Clothing","biz_beauty":"Hair Salon & Beauty","biz_electronics":"Electronics & Gadgets","biz_phone":"Phone & Computer Repair","biz_trading":"Trading & Merchandise","biz_agric":"Agriculture & Farming","biz_wholesale":"Wholesale & Distribution","biz_transport":"Transport & Logistics","biz_construction":"Construction & Property","biz_education":"Education & Training","biz_health":"Healthcare & Pharmacy","biz_finance":"Financial Services","biz_auto":"Auto Repair & Parts","biz_events":"Entertainment & Events","biz_media":"Media & Printing","biz_mfg":"Manufacturing","biz_hospitality":"Hospitality & Catering","biz_artisan":"Artisan & Crafts","biz_ict":"ICT & Digital Services","biz_cleaning":"Cleaning & Laundry","biz_photo":"Photography & Video","biz_consulting":"Consulting & Legal"}
+            if message_body == "biz_others":
+                db.update_user_field(phone_number, {"state": "awaiting_custom_biz_type"})
+                send_message(phone_number, "Please type your business type:")
+            else:
+                _biz = _bmap.get(message_body, " ".join(w.capitalize() for w in message_body.strip().split() if w))
+                db.update_user_field(phone_number, {"business_type": _biz, "state": "awaiting_location"})
+                handle_location_selection(phone_number, user, conn)
+
+        elif user['state'] == 'awaiting_custom_biz_type':
+            _biz = " ".join(w.capitalize() for w in message_body.strip().split() if w)
+            db.update_user_field(phone_number, {"business_type": _biz, "state": "awaiting_location"})
+            handle_location_selection(phone_number, user, conn)
             handle_location_selection(phone_number, user, conn)
 
         elif user['state'] == 'awaiting_location':
@@ -9209,6 +9225,46 @@ def validate_location_code(code_input):
 # exact patch for your specific flow.
 # ─────────────────────────────────────────────────────────────────────────────
 
+
+@app.route('/api/quizzes/import-csv', methods=['POST'])
+def import_quiz_questions():
+    """Bulk import questions from JSON array (sent from the quiz editor frontend)."""
+    try:
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+        
+        data = request.json
+        quiz_name = data.get('quiz')
+        questions = data.get('questions', [])
+        
+        if not quiz_name or not questions:
+            return jsonify({'error': 'quiz and questions are required'}), 400
+        
+        imported = 0
+        for q in questions:
+            qn = q.get('question_number', 1)
+            doc = {
+                'quiz':            quiz_name,
+                'question_number': qn,
+                'question':        q.get('question', ''),
+                'options':         q.get('options', []),
+                'answer':          q.get('answer', 'A'),
+                'media_url':       q.get('media_url') or None,
+            }
+            if USE_MONGODB:
+                mongo_db.questions.update_one(
+                    {'quiz': quiz_name, 'question_number': qn},
+                    {'$set': doc},
+                    upsert=True
+                )
+            imported += 1
+        
+        return jsonify({'success': True, 'imported': imported})
+    
+    except Exception as e:
+        logging.error(f'import_quiz_questions error: {e}')
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     print("=" * 80)
