@@ -7536,6 +7536,9 @@ def send_quiz_question(phone_number, question_index, conn, quiz_name, retries=3)
         current_question = QUIZ_QUESTIONS[question_index]
         options = current_question['options']
 
+        question_message = f"Question {question_index + 1} out of {len(QUIZ_QUESTIONS)}:\n\n{current_question['question']}\n\n"
+        for option in options:
+            question_message += f"{option}\n"
         # send media if stored in MongoDB — image+question together as caption
         _media_sent = False
         if USE_MONGODB:
@@ -7550,9 +7553,6 @@ def send_quiz_question(phone_number, question_index, conn, quiz_name, retries=3)
                     time.sleep(1.5)
             except Exception as _me:
                 logging.warning(f"Could not send media: {_me}")
-        question_message = f"Question {question_index + 1} out of {len(QUIZ_QUESTIONS)}:\n\n{current_question['question']}\n\n"
-        for option in options:
-            question_message += f"{option}\n"
        
         buttons = [
             {
