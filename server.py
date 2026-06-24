@@ -5765,6 +5765,40 @@ def handle_text_message(phone_number, message_body, user, conn):
             present_options(phone_number, user, conn)
             return
 
+        # Guard: if user types free text when a dropdown/button is expected, resend the prompt
+        _DROPDOWN_STATES = {
+            'awaiting_gender', 'awaiting_business_type',
+            'awaiting_location', 'awaiting_business_size', 'awaiting_financial_status',
+            'awaiting_main_challenge', 'awaiting_record_keeping',
+            'awaiting_growth_goal', 'awaiting_funding_need',
+        }
+        if message_type == 'text' and user.get('state') in _DROPDOWN_STATES:
+            _st = user['state']
+            if _st == 'awaiting_gender':
+                send_interactive_message(phone_number, "Please choose using the buttons below:", [
+                    {"type":"reply","reply":{"id":"gender_male","title":"Male"}},
+                    {"type":"reply","reply":{"id":"gender_female","title":"Female"}},
+                    {"type":"reply","reply":{"id":"gender_other","title":"Prefer not to say"}},
+                ])
+            elif _st == 'awaiting_business_type':
+                _blist = {"type":"list","header":{"type":"text","text":"Business type"},"body":{"text":"What type of business or service do you run?"},"footer":{"text":"Scroll to see all options"},"action":{"button":"See options","sections":[{"title":"Select business type","rows":[{"id":"biz_food","title":"Food & Beverages"},{"id":"biz_fashion","title":"Fashion & Clothing"},{"id":"biz_beauty","title":"Hair Salon & Beauty"},{"id":"biz_trading","title":"Trading & Merchandise"},{"id":"biz_transport","title":"Transport & Logistics"},{"id":"biz_agric","title":"Agriculture & Farming"},{"id":"biz_health","title":"Healthcare & Pharmacy"},{"id":"biz_education","title":"Education & Training"},{"id":"biz_ict","title":"ICT & Digital Services"},{"id":"biz_others","title":"Others (type your own)"}]}]}}
+                send_interactive_message(phone_number, _blist)
+            elif _st == 'awaiting_location':
+                handle_location_selection(phone_number, user, conn)
+            elif _st == 'awaiting_business_size':
+                handle_business_size_selection(phone_number, user, conn)
+            elif _st == 'awaiting_financial_status':
+                handle_financial_status_selection(phone_number, user, conn)
+            elif _st == 'awaiting_main_challenge':
+                handle_main_challenge_selection(phone_number, user, conn)
+            elif _st == 'awaiting_record_keeping':
+                handle_record_keeping_selection(phone_number, user, conn)
+            elif _st == 'awaiting_growth_goal':
+                handle_growth_goal_selection(phone_number, user, conn)
+            elif _st == 'awaiting_funding_need':
+                handle_funding_need_selection(phone_number, user, conn)
+            return
+
         # Step-by-step profile completion flow
         if user['state'] == 'awaiting_location_code':
             _code = message_body.strip().upper()
@@ -5808,25 +5842,12 @@ def handle_text_message(phone_number, message_body, user, conn):
             ])
 
         elif user['state'] == 'awaiting_gender':
-            _valid_g = {"gender_male","gender_female","gender_other","Male","Female","Prefer not to say"}
-            if message_body not in _valid_g:
-                send_interactive_message(phone_number, "Please choose your gender using the buttons:", [
-                    {"type":"reply","reply":{"id":"gender_male","title":"Male"}},
-                    {"type":"reply","reply":{"id":"gender_female","title":"Female"}},
-                    {"type":"reply","reply":{"id":"gender_other","title":"Prefer not to say"}},
-                ])
-                return
             _gmap = {"gender_male":"Male","gender_female":"Female","gender_other":"Prefer not to say","Male":"Male","Female":"Female","Prefer not to say":"Prefer not to say"}
             _g = _gmap.get(message_body, message_body)
             db.update_user_field(phone_number, {"gender": _g, "state": "awaiting_business_type"})
             _bl = {"type":"list","header":{"type":"text","text":"Business type"},"body":{"text":"What type of business or service do you run?"},"footer":{"text":"Scroll to see all options"},"action":{"button":"See options","sections": [{"title": "Select business type", "rows": [{"id": "biz_food", "title": "Food & Beverages"}, {"id": "biz_fashion", "title": "Fashion & Clothing"}, {"id": "biz_beauty", "title": "Hair Salon & Beauty"}, {"id": "biz_trading", "title": "Trading & Merchandise"}, {"id": "biz_transport", "title": "Transport & Logistics"}, {"id": "biz_agric", "title": "Agriculture & Farming"}, {"id": "biz_health", "title": "Healthcare & Pharmacy"}, {"id": "biz_education", "title": "Education & Training"}, {"id": "biz_ict", "title": "ICT & Digital Services"}, {"id": "biz_others", "title": "Others (type your own)"}]}]}}
             send_interactive_message(phone_number, _bl)
         elif user['state'] == 'awaiting_business_type':
-            _valid_biz_ids = {"biz_food","biz_fashion","biz_beauty","biz_trading","biz_transport","biz_agric","biz_health","biz_education","biz_ict","biz_others"}
-            _valid_biz_titles = {"Food & Beverages","Fashion & Clothing","Hair Salon & Beauty","Trading & Merchandise","Transport & Logistics","Agriculture & Farming","Healthcare & Pharmacy","Education & Training","ICT & Digital Services","Others (type your own)","others"}
-            if message_body not in _valid_biz_ids and message_body not in _valid_biz_titles:
-                send_interactive_message(phone_number, '{"type":"list","header":{"type":"text","text":"Business type"},"body":{"text":"What type of business or service do you run?"},"footer":{"text":"Scroll to see all options"},"action":{"button":"See options","sections": [{"title": "Select business type", "rows": [{"id": "biz_food", "title": "Food & Beverages"}, {"id": "biz_fashion", "title": "Fashion & Clothing"}, {"id": "biz_beauty", "title": "Hair Salon & Beauty"}, {"id": "biz_trading", "title": "Trading & Merchandise"}, {"id": "biz_transport", "title": "Transport & Logistics"}, {"id": "biz_agric", "title": "Agriculture & Farming"}, {"id": "biz_health", "title": "Healthcare & Pharmacy"}, {"id": "biz_education", "title": "Education & Training"}, {"id": "biz_ict", "title": "ICT & Digital Services"}, {"id": "biz_others", "title": "Others (type your own)"}]}]}}')
-                return
             _bmap = {"biz_food":"Food & Beverages","biz_fashion":"Fashion & Clothing","biz_beauty":"Hair Salon & Beauty","biz_electronics":"Electronics & Gadgets","biz_phone":"Phone & Computer Repair","biz_trading":"Trading & Merchandise","biz_agric":"Agriculture & Farming","biz_wholesale":"Wholesale & Distribution","biz_transport":"Transport & Logistics","biz_construction":"Construction & Property","biz_education":"Education & Training","biz_health":"Healthcare & Pharmacy","biz_finance":"Financial Services","biz_auto":"Auto Repair & Parts","biz_events":"Entertainment & Events","biz_media":"Media & Printing","biz_mfg":"Manufacturing","biz_hospitality":"Hospitality & Catering","biz_artisan":"Artisan & Crafts","biz_ict":"ICT & Digital Services","biz_cleaning":"Cleaning & Laundry","biz_photo":"Photography & Video","biz_consulting":"Consulting & Legal"}
             if message_body in ("biz_others", "Others (type your own)", "others"):
                 db.update_user_field(phone_number, {"state": "awaiting_custom_biz_type"})
