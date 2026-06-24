@@ -5772,7 +5772,7 @@ def handle_text_message(phone_number, message_body, user, conn):
             'awaiting_main_challenge', 'awaiting_record_keeping',
             'awaiting_growth_goal', 'awaiting_funding_need',
         }
-        if message_type == 'text' and user.get('state') in _DROPDOWN_STATES:
+        if user.get('state') in _DROPDOWN_STATES:
             _st = user['state']
             _hint = "👇 Please tap the button or list below to choose — typing won't work for this question."
             send_message(phone_number, _hint)
@@ -6447,51 +6447,21 @@ def handle_settings_command(phone_number, user, conn):
         
         
 def handle_remove_account_request(phone_number, user, conn):
-    confirmation_message = {
-        "type": "interactive",
-        "interactive": {
-            "type": "button",
-            "header": {
-                "type": "text",
-                "text": "Remove Account Confirmation"
-            },
-            "body": {
-                "text": "Are you sure you want to remove your account? This action cannot be undone. All your data will be permanently deleted."
-            },
-            "action": {
-                "buttons": [
-                    {
-                        "type": "reply",
-                        "reply": {
-                            "id": "confirm_remove",
-                            "title": "Yes, Remove Account"
-                        }
-                    },
-                    {
-                        "type": "reply",
-                        "reply": {
-                            "id": "cancel_remove",
-                            "title": "No, Keep Account"
-                        }
-                    }
-                ]
-            }
-        }
-    }
-    
-    success, message = send_interactive_message(phone_number, confirmation_message)
+    _buttons = [
+        {"type": "reply", "reply": {"id": "confirm_remove", "title": "Yes, Remove"}},
+        {"type": "reply", "reply": {"id": "cancel_remove", "title": "No, Keep Account"}},
+    ]
+    success, _msg = send_interactive_message(
+        phone_number,
+        "Are you sure you want to remove your account? This cannot be undone - all your data will be permanently deleted.",
+        _buttons
+    )
     if success:
-        db.update_user_field(phone_number, {"state": "removing_account"})
         log_image_event(f"Sent account removal confirmation to {phone_number}")
     else:
-        log_image_event(f"Failed to send account removal confirmation to {phone_number}: {message}")
-        # Fallback to plain text message
-        fallback_message = "Are you sure you want to remove your account? This action cannot be undone. All your data will be permanently deleted. Reply with 'YES' to confirm or 'NO' to cancel."
-        send_message(phone_number, fallback_message)
-        db.update_user_field(phone_number, {"state": "removing_account"})
-        
-        
-        
+        log_image_event(f"Button send failed ({_msg}), using plain text fallback")
+        send_message(phone_number, "Are you sure you want to remove your account? Reply YES to confirm or NO to cancel.")
+    db.update_user_field(phone_number, {"state": "removing_account"})
 
 def remove_user_account(phone_number, conn):
     try:
