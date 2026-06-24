@@ -4632,12 +4632,12 @@ def handle_message(message):
 
         if user is None:
             try:
-                user = db.create_new_user(phone_number, state="awaiting_full_info")
+                user = db.create_new_user(phone_number, state="awaiting_location_code")
             except Exception:
                 user = db.get_user_by_phone(phone_number)
                 if user is None:
                     return
-            send_message(phone_number, "Welcome to EmpowerBot! What's your full name?")
+            send_message(phone_number, "👋 Welcome to EmpowerBot!\n\nPlease enter your *location code* to get started.\n\nDon't have a code? Type *OPEN* to continue.")
             log_image_event(f"New user created for {phone_number}, awaiting name")
 
         else:
@@ -5762,7 +5762,34 @@ def handle_text_message(phone_number, message_body, user, conn):
             return
 
         # Step-by-step profile completion flow
-        if user['state'] == 'awaiting_full_info':
+        if user['state'] == 'awaiting_location_code':
+            _code = message_body.strip().upper()
+            if _code == 'OPEN':
+                db.update_user_field(phone_number, {'state': 'awaiting_full_info'})
+                send_message(phone_number, "No problem! Continuing without a location code.\n\nWhat's your full name?")
+            else:
+                _valid, _loc, _cfg = False, None, None
+                if USE_MONGODB:
+                    try:
+                        from db_mongo import get_mongo_db as _gmdb
+                        _mdb = _gmdb()
+                        _ldoc = _mdb.location_codes.find_one({'code': _code, 'active': {'$ne': False}})
+                        if _ldoc:
+                            _valid = True
+                            _loc = _ldoc.get('location', 'Unknown')
+                            if _ldoc.get('detail'): _loc += ', ' + _ldoc['detail']
+                            _cfg = _ldoc.get('config_id')
+                    except Exception as _le:
+                        logging.warning(f'Location code lookup: {_le}')
+                if _valid:
+                    _upd = {'state': 'awaiting_full_info', 'location_code': _code, 'location': _loc}
+                    if _cfg: _upd['configuration'] = _cfg
+                    db.update_user_field(phone_number, _upd)
+                    send_message(phone_number, f"✅ Location confirmed: *{_loc}*\n\nWhat's your full name?")
+                else:
+                    send_message(phone_number, "❌ That code wasn't recognised.\n\nTry again or type *OPEN* to continue.")
+
+        elif user['state'] == 'awaiting_full_info':
             # Direct capitalize - no Gemini
             new_name = ' '.join(word.capitalize() for word in message_body.strip().split() if word)
             db.update_user_field(phone_number, {"name": new_name, "state": "awaiting_age"})
