@@ -5782,9 +5782,6 @@ def handle_text_message(phone_number, message_body, user, conn):
         # Guard: if user types free text when a dropdown/button is expected, resend the prompt
         _DROPDOWN_STATES = {
             'awaiting_gender', 'awaiting_business_type',
-            'awaiting_location', 'awaiting_business_size', 'awaiting_financial_status',
-            'awaiting_main_challenge', 'awaiting_record_keeping',
-            'awaiting_growth_goal', 'awaiting_funding_need',
         }
         if user.get('state') in _DROPDOWN_STATES:
             _st = user['state']
