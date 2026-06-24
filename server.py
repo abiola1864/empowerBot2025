@@ -1797,7 +1797,7 @@ def handle_ai_chat(phone_number: str, message: str, conn):
         current_question = user.get('current_question', 0)
         quiz_in_review = user.get('quiz_in_review')
 
-        if user_state not in ['awaiting_explanation', 'awaiting_followup', 'post_explanation', 'awaiting_action']:
+        if user_state not in ['awaiting_explanation', 'awaiting_followup', 'post_explanation', 'awaiting_action', 'ai_chat']:
             logger.info(f"AI CHAT: Skipping - user in wrong state: {user_state}")
             return
 
@@ -1881,7 +1881,7 @@ def handle_ai_chat(phone_number: str, message: str, conn):
                     "Glad I could be of help!",
                 ])
             elif not is_related_to_question(message, question_context):
-                return handle_unrelated_followup(phone_number, message, user, conn)
+                return handle_unrelated_message(phone_number, user, message, conn)
             else:
                 prompt = create_followup_prompt(question_context, message, conversation_history, user)
                 response = generate_text(prompt)
@@ -2024,48 +2024,30 @@ def provide_additional_insight(answer):
 
    
    
-def handle_unrelated_followup(phone_number, message, user, conn):
-    current_question_index = int(user['current_question']) - 1
-    incorrect_questions = get_incorrect_questions(user['id'], conn)
-    question_context = incorrect_questions[current_question_index]
 
-    response = f"""
-    I understand that you're curious about something else, or your question might not include wording that's clearly related to our current quiz question.
-    Original Question: {question_context['question']}
-    Your previous answer: {question_context['response']}
-    Correct Answer: {question_context['answer']}
-    Understanding {question_context['answer']} is important because it gives you a better understanding of how to improve your business operations. For example, {question_context['answer']} can be crucial for effective business strategies and operations.
 
-    If you believe your recent question is related to our discussion, please rephrase it to include more relevant details and ask again.
-    """
+def handle_unrelated_message(phone_number, user, message, conn):
+    """Called when user sends a message unrelated to their quiz or business context."""
+    user_name = (user.get('name') or 'there').split()[0].capitalize()
+    business_type = user.get('business_type', 'business')
+    prompt = f"""You are a friendly WhatsApp business education chatbot helping {user_name}, who runs a {business_type} business in Nigeria.
 
-    send_message(phone_number, response)
+The user just sent this message: "{message}"
 
-    # Do not store this interaction in the conversation history
-    prompt_next_action(phone_number, conn)
-   
-    log_image_event(f"Handled unrelated followup for user {phone_number}")
-   
+This message is NOT related to business education, quiz questions, or their business. Do NOT answer it.
 
-   
-   
-   
-def handle_unrelated_followup(phone_number, message, user, conn):
-    current_question_index = int(user['current_question'])
-    incorrect_questions = get_incorrect_questions(user['id'], conn)
-    question_context = incorrect_questions[current_question_index]
-    response = f"""
-    Thank you for your message. I'd be happy to help with questions relating to the quiz question we're currently reviewing:
-    Question: {question_context['question']}
-    Correct Answer: {question_context['answer']}
-    """
+Instead, respond warmly in 2-3 short sentences:
+1. Acknowledge their message with a light touch (you can use a little humour)
+2. Gently explain you can only help with business topics and quiz questions
+3. Invite them to ask a business question or use "End Chat" to return to the menu
+
+Keep it friendly, use a little Nigerian English flavour. Maximum 60 words."""
+    response = generate_text(prompt)
+    if not response:
+        response = f"Ha {user_name}! That one dey outside my area o 😄 I only handle business education and quiz questions. Ask me anything about your {business_type} business, or tap End Chat to go back to the menu!"
     send_message(phone_number, response)
     prompt_next_action(phone_number, conn)
-    log_image_event(f"Handled unrelated followup for user {phone_number}")
-    
-    
-   
-   
+
 def is_related_to_question(user_message, question_context):
     normalized_message = user_message.lower().strip()
    
