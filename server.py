@@ -5774,8 +5774,10 @@ def handle_text_message(phone_number, message_body, user, conn):
         }
         if message_type == 'text' and user.get('state') in _DROPDOWN_STATES:
             _st = user['state']
+            _hint = "👇 Please tap the button or list below to choose — typing won't work for this question."
+            send_message(phone_number, _hint)
             if _st == 'awaiting_gender':
-                send_interactive_message(phone_number, "Please choose using the buttons below:", [
+                send_interactive_message(phone_number, "What is your gender?", [
                     {"type":"reply","reply":{"id":"gender_male","title":"Male"}},
                     {"type":"reply","reply":{"id":"gender_female","title":"Female"}},
                     {"type":"reply","reply":{"id":"gender_other","title":"Prefer not to say"}},
