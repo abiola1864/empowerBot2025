@@ -8987,6 +8987,229 @@ def users_config_list():
 #       # allow quiz access
 
 
+@app.route('/location-admin')
+def location_admin_page():
+    return render_template('location_admin.html')
+
+
+@app.route('/api/location-codes', methods=['GET'])
+def list_location_codes():
+    try:
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+            codes = list(mongo_db.location_codes.find({}).sort('created_at', -1))
+            for c in codes:
+                c['_id'] = str(c['_id'])
+                c['user_count'] = mongo_db.users.count_documents({'location_code': c['code']})
+                if 'created_at' in c:
+                    c['created_at'] = c['created_at'].isoformat()
+            return jsonify(codes)
+        return jsonify([])
+    except Exception as e:
+        logging.error(f'list_location_codes error: {e}')
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/location-codes', methods=['POST'])
+def create_location_codes():
+    """Generate one or more location codes for a given location."""
+    try:
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+            data = request.json
+            location  = data.get('location', '').strip()
+            detail    = data.get('detail', '').strip()
+            config_id = data.get('config_id') or None
+            count     = min(50, max(1, int(data.get('count', 1))))
+
+            if not location:
+                return jsonify({'error': 'Location name is required'}), 400
+
+            # Generate prefix: first 3 letters of location, uppercase
+            prefix = ''.join(filter(str.isalpha, location))[:3].upper()
+            if len(prefix) < 3:
+                prefix = (prefix + 'LOC')[:3]
+
+            # Find highest existing number for this prefix
+            existing = list(mongo_db.location_codes.find(
+                {'code': {'$regex': f'^{prefix}'}},
+                {'code': 1}
+            ))
+            existing_nums = []
+            for e in existing:
+                try:
+                    existing_nums.append(int(e['code'][3:]))
+                except:
+                    pass
+            start_num = (max(existing_nums) + 1) if existing_nums else 1
+
+            created = []
+            for i in range(count):
+                code = f"{prefix}{str(start_num + i).zfill(2)}"
+                doc = {
+                    'code':       code,
+                    'location':   location,
+                    'detail':     detail,
+                    'config_id':  config_id,
+                    'active':     True,
+                    'created_at': datetime.utcnow(),
+                }
+                mongo_db.location_codes.insert_one(doc)
+                doc['_id'] = str(doc['_id'])
+                doc['created_at'] = doc['created_at'].isoformat()
+                created.append(doc)
+
+            return jsonify({'codes': created}), 201
+        return jsonify({'error': 'MongoDB not enabled'}), 400
+    except Exception as e:
+        logging.error(f'create_location_codes error: {e}')
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/location-codes/<code_id>', methods=['PUT'])
+def update_location_code(code_id):
+    try:
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            from bson import ObjectId
+            mongo_db = get_mongo_db()
+            data = request.json
+            update = {'$set': {k: v for k, v in data.items() if k != '_id'}}
+            mongo_db.location_codes.update_one({'_id': ObjectId(code_id)}, update)
+            return jsonify({'success': True})
+        return jsonify({'error': 'MongoDB not enabled'}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/location-codes/<code_id>', methods=['DELETE'])
+def delete_location_code(code_id):
+    try:
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            from bson import ObjectId
+            mongo_db = get_mongo_db()
+            mongo_db.location_codes.delete_one({'_id': ObjectId(code_id)})
+            return jsonify({'success': True})
+        return jsonify({'error': 'MongoDB not enabled'}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ── SECTION B: BOT ONBOARDING PATCH ──────────────────────────────────────────
+#
+# Add this function to server.py:
+
+def validate_location_code(code_input):
+    """
+    Check a location code entered by a user.
+    Returns: (valid: bool, location: str, config_id: str|None)
+    Special keyword: 'OPEN' → skip code, location = 'Unspecified'
+    """
+    if not USE_MONGODB:
+        return True, 'Unspecified', None
+
+    code_upper = code_input.strip().upper()
+
+    if code_upper == 'OPEN':
+        return True, 'Unspecified', None
+
+    try:
+        from db_mongo import get_mongo_db
+        mongo_db = get_mongo_db()
+        doc = mongo_db.location_codes.find_one({
+            'code': code_upper,
+            'active': True
+        })
+        if doc:
+            location = doc.get('location', 'Unknown')
+            if doc.get('detail'):
+                location += f", {doc['detail']}"
+            return True, location, doc.get('config_id')
+        return False, None, None
+    except Exception as e:
+        logging.error(f'validate_location_code error: {e}')
+        return False, None, None
+
+
+#
+# ── SECTION C: BOT FLOW PATCH ─────────────────────────────────────────────────
+#
+# Find the part of your bot that handles NEW USER registration.
+# It likely looks something like:
+#
+#   if not user:
+#       # new user - ask for name
+#       send_message(phone_number, "Welcome! What is your name?")
+#       ...
+#
+# REPLACE with:
+#
+#   if not user:
+#       # Check if location codes are enabled (set to True to activate)
+#       LOCATION_CODES_ENABLED = True
+#
+#       if LOCATION_CODES_ENABLED:
+#           # Check if user is in 'awaiting_location_code' state
+#           temp_state = get_temp_state(phone_number)  # or however you track state
+#
+#           if temp_state != 'awaiting_location_code':
+#               # First message from new user - ask for location code
+#               send_message(phone_number,
+#                   "👋 Welcome to EmpowerBot!\n\n"
+#                   "To get started, please enter your *location code*.\n\n"
+#                   "Don't have a code? Type *OPEN* to continue."
+#               )
+#               set_temp_state(phone_number, 'awaiting_location_code')
+#               return
+#
+#           else:
+#               # User has sent their location code
+#               code_input = incoming_message.strip()
+#               valid, location, config_id = validate_location_code(code_input)
+#
+#               if valid:
+#                   # Store location and config for use during registration
+#                   set_temp_data(phone_number, {
+#                       'location': location,
+#                       'configuration': config_id
+#                   })
+#                   # Store location_code used
+#                   set_temp_data(phone_number, {
+#                       'location_code': code_input.upper() if code_input.upper() != 'OPEN' else None
+#                   })
+#                   if location != 'Unspecified':
+#                       send_message(phone_number,
+#                           f"✅ Location confirmed: *{location}*\n\nWhat is your name?"
+#                       )
+#                   else:
+#                       send_message(phone_number,
+#                           "Continuing without a location code. You can add one later.\n\n"
+#                           "What is your name?"
+#                       )
+#                   set_temp_state(phone_number, 'awaiting_name')
+#               else:
+#                   send_message(phone_number,
+#                       "❌ That code wasn't recognised.\n\n"
+#                       "Please check your code and try again, or type *OPEN* to continue without one."
+#                   )
+#               return
+#
+# Then when saving the new user to MongoDB, include:
+#   user_doc['location'] = temp_data.get('location', 'Unspecified')
+#   user_doc['configuration'] = temp_data.get('configuration')
+#   user_doc['location_code'] = temp_data.get('location_code')
+#
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# NOTE: The exact implementation depends on how your bot currently manages
+# new user state. Share your handle_message() function and I'll write the
+# exact patch for your specific flow.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
 if __name__ == '__main__':
     print("=" * 80)
     print("EMPOWERBOT INITIALIZATION")

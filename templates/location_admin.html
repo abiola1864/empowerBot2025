@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Location Codes — EmpowerBot</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F0F4F8;--sf:#FFFFFF;--sf2:#F8FAFC;--sf3:#F1F5F9;--bd:#E2E8F0;--bd2:#CBD5E1;--ac:#0EA5E9;--ac-bg:rgba(14,165,233,.08);--ac-bg2:rgba(14,165,233,.15);--ok:#16A34A;--ok-bg:rgba(22,163,74,.08);--ok-bg2:rgba(22,163,74,.15);--er:#DC2626;--er-bg:rgba(220,38,38,.08);--wn:#D97706;--wn-bg:rgba(217,119,6,.08);--pu:#7C3AED;--pu-bg:rgba(124,58,237,.08);--t1:#0F172A;--t2:#475569;--t3:#94A3B8;--r:8px;--rl:12px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);font-size:14px;-webkit-font-smoothing:antialiased;}
+button,input,select,textarea{font-family:inherit;}
+
+/* LOCK */
+#lock{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:99;transition:opacity .4s,transform .4s;}
+#lock.out{opacity:0;transform:scale(1.03);pointer-events:none;}
+.lc{background:var(--sf);border:1px solid var(--bd);border-radius:20px;padding:52px 48px;width:400px;display:flex;flex-direction:column;align-items:center;box-shadow:0 8px 40px rgba(15,23,42,.1);}
+.lic{width:60px;height:60px;border-radius:15px;background:var(--ok-bg2);border:1px solid rgba(22,163,74,.2);display:flex;align-items:center;justify-content:center;margin-bottom:26px;}
+.lic svg{width:26px;height:26px;stroke:var(--ok);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.lt{font-size:21px;font-weight:700;letter-spacing:-.3px;margin-bottom:5px;}
+.ls{font-size:13px;color:var(--t2);margin-bottom:36px;text-align:center;}
+.pins{display:flex;gap:10px;margin-bottom:26px;}
+.pin{width:60px;height:68px;background:var(--sf2);border:1.5px solid var(--bd);border-radius:12px;text-align:center;font-size:22px;font-family:'JetBrains Mono',monospace;color:var(--t1);outline:none;transition:border-color .15s,box-shadow .15s;}
+.pin:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--ac-bg2);}
+.pin.sh{border-color:var(--er);animation:sh .35s ease;}
+@keyframes sh{0%,100%{transform:translateX(0)}25%,75%{transform:translateX(-5px)}50%{transform:translateX(5px)}}
+.lb{width:100%;padding:13px;background:var(--ac);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s;}
+.lb:hover{opacity:.88;} .le{margin-top:14px;font-size:12.5px;color:var(--er);min-height:16px;text-align:center;}
+
+/* APP */
+#app{min-height:100vh;opacity:0;transition:opacity .35s .2s;}
+#app.show{opacity:1;}
+
+/* HEADER */
+.hdr{background:var(--sf);border-bottom:1px solid var(--bd);padding:0 24px;display:flex;align-items:center;gap:14px;height:56px;position:sticky;top:0;z-index:20;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+.hdr-logo{width:28px;height:28px;border-radius:7px;background:var(--ok-bg2);border:1px solid rgba(22,163,74,.2);display:flex;align-items:center;justify-content:center;}
+.hdr-logo svg{width:14px;height:14px;stroke:var(--ok);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.hdr-title{font-size:14.5px;font-weight:600;}
+.hdr-sep{width:1px;height:18px;background:var(--bd);margin:0 4px;}
+.hdr-crumb{font-size:12.5px;color:var(--t2);}
+.hdr-sp{flex:1;}
+.nav-links{display:flex;gap:4px;}
+.nav-a{padding:5px 11px;border-radius:6px;font-size:12px;font-weight:500;color:var(--t2);text-decoration:none;transition:all .12s;}
+.nav-a:hover{background:var(--sf2);color:var(--t1);}
+.nav-a.here{background:var(--ok-bg2);color:var(--ok);}
+.hbtn{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:7px;font-size:12.5px;font-weight:500;cursor:pointer;border:1px solid var(--bd);background:var(--sf);color:var(--t2);transition:all .12s;}
+.hbtn:hover{border-color:var(--bd2);color:var(--t1);}
+.hbtn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+/* CONTENT */
+.con{max-width:1100px;margin:0 auto;padding:24px;}
+
+/* EXPLAINER */
+.explainer{background:linear-gradient(135deg,var(--ok-bg2),rgba(14,165,233,.06));border:1px solid rgba(22,163,74,.2);border-radius:var(--rl);padding:18px 22px;margin-bottom:22px;display:flex;gap:16px;align-items:flex-start;}
+.exp-ic{width:40px;height:40px;border-radius:10px;background:var(--ok-bg2);border:1px solid rgba(22,163,74,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.exp-ic svg{width:18px;height:18px;stroke:var(--ok);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.exp-title{font-size:14px;font-weight:600;margin-bottom:4px;}
+.exp-desc{font-size:12.5px;color:var(--t2);line-height:1.6;}
+.exp-code{font-family:'JetBrains Mono',monospace;background:rgba(15,23,42,.05);padding:2px 6px;border-radius:4px;font-size:12px;}
+
+/* GRID */
+.grid{display:grid;grid-template-columns:1fr 1.5fr;gap:18px;align-items:start;}
+
+/* CARD */
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rl);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.card-h{padding:14px 18px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;background:var(--sf2);}
+.card-ht{font-size:13px;font-weight:600;}
+.card-hs{font-size:11.5px;color:var(--t3);}
+.card-b{padding:18px;}
+
+/* FORM */
+.fl{margin-bottom:14px;}
+.flb{font-size:11.5px;font-weight:600;color:var(--t2);margin-bottom:6px;}
+.fi{width:100%;padding:9px 12px;background:var(--sf2);border:1.5px solid var(--bd);border-radius:7px;color:var(--t1);font-size:13.5px;outline:none;transition:border-color .15s,box-shadow .15s;}
+.fi:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--ac-bg);}
+.fi::placeholder{color:var(--t3);}
+.fsel{width:100%;padding:9px 12px;background:var(--sf2);border:1.5px solid var(--bd);border-radius:7px;color:var(--t1);font-size:13.5px;outline:none;cursor:pointer;}
+.fsel:focus{border-color:var(--ac);}
+
+/* CODE PREVIEW */
+.code-preview{background:var(--t1);border-radius:8px;padding:12px 16px;margin:12px 0;display:flex;align-items:center;justify-content:space-between;}
+.code-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:#22D3EE;letter-spacing:2px;}
+.code-copy{padding:5px 10px;background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.3);border-radius:6px;color:#22D3EE;font-size:11.5px;font-weight:600;cursor:pointer;transition:all .12s;}
+.code-copy:hover{background:rgba(34,211,238,.2);}
+
+/* BTN */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:9px 16px;border-radius:8px;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all .12s;}
+.btn:active{transform:scale(.97);}
+.bp{background:var(--ac);color:#fff;width:100%;justify-content:center;margin-top:4px;}
+.bp:hover{opacity:.88;}
+.btn-gen{background:var(--ok);color:#fff;}
+.btn-gen:hover{opacity:.88;}
+.btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+
+/* TABLE */
+.tcard{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rl);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.tbar{padding:12px 16px;background:var(--sf2);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px;}
+.tsearch{padding:7px 10px;background:var(--sf);border:1px solid var(--bd);border-radius:6px;color:var(--t1);font-size:12.5px;outline:none;width:200px;}
+.tsearch:focus{border-color:var(--ac);}
+.tsearch::placeholder{color:var(--t3);}
+.tsp{flex:1;}
+.count-l{font-size:12px;color:var(--t3);}
+.twrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+th{padding:9px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--t3);border-bottom:1px solid var(--bd);background:var(--sf2);white-space:nowrap;}
+td{padding:10px 14px;font-size:12.5px;border-bottom:1px solid var(--bd);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--sf2);}
+.mono{font-family:'JetBrains Mono',monospace;font-size:13px;}
+.code-chip{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;padding:3px 10px;border-radius:6px;background:rgba(14,165,233,.08);color:var(--ac);border:1px solid rgba(14,165,233,.2);}
+.pill{padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600;}
+.pon{background:var(--ok-bg2);color:var(--ok);}
+.poff{background:var(--er-bg);color:var(--er);}
+.act-btn{padding:4px 10px;border-radius:5px;border:1px solid var(--bd);background:var(--sf);color:var(--t2);font-size:11.5px;cursor:pointer;transition:all .12s;}
+.act-btn:hover{border-color:var(--bd2);color:var(--t1);}
+.act-del{border-color:var(--er-bg);color:var(--er);}
+.act-del:hover{background:var(--er-bg);}
+.tepty{padding:32px;text-align:center;color:var(--t3);}
+.cfg-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;}
+
+/* INFO BOX */
+.info-box{background:var(--ac-bg);border:1px solid rgba(14,165,233,.2);border-radius:8px;padding:12px 14px;font-size:12.5px;color:var(--t2);line-height:1.6;margin-top:12px;}
+.info-box strong{color:var(--t1);}
+
+/* TOAST */
+.tray{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:7px;z-index:200;}
+.t{display:flex;align-items:center;gap:8px;padding:10px 15px;border-radius:8px;font-size:13px;font-weight:500;min-width:230px;box-shadow:0 4px 16px rgba(0,0,0,.12);animation:ti .25s ease;}
+.t svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+@keyframes ti{from{transform:translateX(12px);opacity:0}to{transform:translateX(0);opacity:1}}
+.tok{background:#F0FDF4;border:1px solid rgba(22,163,74,.3);color:var(--ok);}
+.ter{background:#FEF2F2;border:1px solid rgba(220,38,38,.3);color:var(--er);}
+</style>
+</head>
+<body>
+<div id="lock">
+  <div class="lc">
+    <div class="lic"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+    <div class="lt">Location codes</div>
+    <div class="ls">EmpowerBot admin · manage location registration codes</div>
+    <div class="pins">
+      <input class="pin" type="password" maxlength="1" inputmode="numeric">
+      <input class="pin" type="password" maxlength="1" inputmode="numeric">
+      <input class="pin" type="password" maxlength="1" inputmode="numeric">
+      <input class="pin" type="password" maxlength="1" inputmode="numeric">
+    </div>
+    <button class="lb" id="lb">Unlock →</button>
+    <div class="le" id="le"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="hdr">
+    <div class="hdr-logo"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+    <div class="hdr-title">EmpowerBot</div>
+    <div class="hdr-sep"></div>
+    <div class="hdr-crumb">Location codes</div>
+    <div class="hdr-sp"></div>
+    <div class="nav-links">
+      <a class="nav-a" href="/quizeditor">Quiz editor</a>
+      <a class="nav-a" href="/configurations">Configurations</a>
+      <a class="nav-a here" href="/location-admin">Locations</a>
+      <a class="nav-a" href="/engagementdashboard">Engagement</a>
+    </div>
+    <button class="hbtn" onclick="loadCodes()"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>Refresh</button>
+  </div>
+
+  <div class="con">
+    <div class="explainer">
+      <div class="exp-ic"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+      <div>
+        <div class="exp-title">How location codes work</div>
+        <div class="exp-desc">
+          When a new user first messages the bot, they are asked to enter a <strong>location code</strong> before they can continue.
+          Codes are generated here and distributed to participants in each area (e.g. handed out at a community meeting or sent with an invitation).
+          Users who don't have a code can type <code class="exp-code">OPEN</code> to continue with location marked as <em>Unspecified</em>.
+          Each code is linked to a location and optionally to a configuration — so assigning a code automatically places the user in the correct research group.
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- CREATE CODE FORM -->
+      <div class="card">
+        <div class="card-h"><div class="card-ht">Generate new code</div></div>
+        <div class="card-b">
+          <div class="fl">
+            <div class="flb">Location name</div>
+            <input class="fi" id="loc-name" type="text" placeholder="e.g. Ikorodu LGA, Agege, Surulere..." oninput="previewCode()">
+          </div>
+          <div class="fl">
+            <div class="flb">Location detail <span style="font-weight:400;color:var(--t3)">(optional)</span></div>
+            <input class="fi" id="loc-detail" type="text" placeholder="e.g. North, Ward 2, Sub-county...">
+          </div>
+          <div class="fl">
+            <div class="flb">Assign to configuration <span style="font-weight:400;color:var(--t3)">(optional)</span></div>
+            <select class="fsel" id="loc-cfg">
+              <option value="">— none / assign manually later —</option>
+            </select>
+          </div>
+          <div class="fl">
+            <div class="flb">Number of codes to generate</div>
+            <input class="fi" id="loc-count" type="number" value="1" min="1" max="50" placeholder="1">
+          </div>
+
+          <div id="preview-wrap" style="display:none">
+            <div class="flb">Preview</div>
+            <div class="code-preview">
+              <div class="code-val" id="code-preview-val">—</div>
+              <button class="code-copy" onclick="copyPreview()">Copy</button>
+            </div>
+          </div>
+
+          <button class="btn bp" onclick="generateCodes()">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Generate codes
+          </button>
+
+          <div class="info-box">
+            <strong>Code format:</strong> First 3 letters of location + 2-digit number (e.g. <code style="font-family:monospace;background:rgba(14,165,233,.1);padding:1px 5px;border-radius:3px">IKR01</code>, <code style="font-family:monospace;background:rgba(14,165,233,.1);padding:1px 5px;border-radius:3px">AGE03</code>).
+            Users type this code at the start of the bot. If generating multiple codes, each gets a unique suffix. Codes are <strong>case-insensitive</strong>.
+          </div>
+        </div>
+      </div>
+
+      <!-- BOT FLOW PREVIEW -->
+      <div class="card">
+        <div class="card-h"><div class="card-ht">Bot registration flow</div><div class="card-hs">What new users see</div></div>
+        <div class="card-b">
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+            <div style="background:var(--sf2);border:1px solid var(--bd);border-radius:10px;border-bottom-left-radius:2px;padding:10px 14px;max-width:85%">
+              👋 Welcome to EmpowerBot!<br><br>
+              To get started, please enter your <strong>location code</strong>.<br><br>
+              Don't have a code? Type <strong>OPEN</strong> to continue.
+            </div>
+            <div style="background:var(--ac-bg2);border:1px solid rgba(14,165,233,.2);border-radius:10px;border-bottom-right-radius:2px;padding:10px 14px;max-width:85%;align-self:flex-end">
+              IKR01
+            </div>
+            <div style="background:var(--sf2);border:1px solid var(--bd);border-radius:10px;border-bottom-left-radius:2px;padding:10px 14px;max-width:85%">
+              ✅ Location confirmed: <strong>Ikorodu</strong><br><br>
+              What is your name?
+            </div>
+          </div>
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--bd)">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--t3);margin-bottom:8px">If code is invalid</div>
+            <div style="background:var(--sf2);border:1px solid var(--bd);border-radius:10px;border-bottom-left-radius:2px;padding:10px 14px;font-size:13px;max-width:85%">
+              ❌ That code wasn't recognised.<br>Please check your code and try again, or type <strong>OPEN</strong> to continue without one.
+            </div>
+          </div>
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--bd)">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--t3);margin-bottom:8px">If user types OPEN</div>
+            <div style="background:var(--sf2);border:1px solid var(--bd);border-radius:10px;border-bottom-left-radius:2px;padding:10px 14px;font-size:13px;max-width:85%">
+              Continuing without a location code. You can add one later.<br><br>
+              What is your name?
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CODES TABLE -->
+    <div class="tcard" style="margin-top:18px">
+      <div class="tbar">
+        <input class="tsearch" type="text" placeholder="Search codes or locations..." oninput="filterTable(this.value)">
+        <div class="tsp"></div>
+        <span class="count-l" id="tcount">Loading...</span>
+        <button class="hbtn" onclick="exportCodes()" style="margin-left:6px">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export
+        </button>
+      </div>
+      <div class="twrap"><table>
+        <thead><tr>
+          <th>Code</th><th>Location</th><th>Detail</th><th>Configuration</th><th>Users</th><th>Active</th><th>Created</th><th>Actions</th>
+        </tr></thead>
+        <tbody id="codes-body"><tr><td colspan="8" class="tepty">Loading...</td></tr></tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+<div class="tray" id="tray"></div>
+
+<script>
+let codes=[],configs=[];
+
+const pins=[...document.querySelectorAll('.pin')];
+pins.forEach((p,i)=>{
+  p.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!p.value&&i>0)pins[i-1].focus();if(e.key==='Enter')unlock();});
+  p.addEventListener('input',()=>{if(p.value&&i<3)pins[i+1].focus();});
+});
+pins[0].focus();
+document.getElementById('lb').onclick=unlock;
+
+async function unlock(){
+  const pin=pins.map(p=>p.value).join('');
+  try{
+    const r=await fetch('/api/admin/verify-pin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin})});
+    if(r.ok){document.getElementById('lock').classList.add('out');setTimeout(()=>{document.getElementById('lock').style.display='none';document.getElementById('app').classList.add('show');loadAll();},400);}
+    else{pins.forEach(p=>{p.classList.add('sh');p.value='';});document.getElementById('le').textContent='Incorrect PIN';setTimeout(()=>pins.forEach(p=>p.classList.remove('sh')),400);pins[0].focus();}
+  }catch(e){document.getElementById('le').textContent='Cannot connect';}
+}
+
+async function loadAll(){
+  const [cr,cfgr]=await Promise.all([fetch('/api/location-codes'),fetch('/api/configs')]);
+  codes=await cr.json();configs=await cfgr.json();
+  const cfgSel=document.getElementById('loc-cfg');
+  cfgSel.innerHTML='<option value="">— none / assign manually later —</option>'+configs.map(c=>`<option value="${c._id}">${esc(c.name)}</option>`).join('');
+  renderTable(codes);
+}
+
+async function loadCodes(){
+  const r=await fetch('/api/location-codes');codes=await r.json();renderTable(codes);
+}
+
+function renderTable(data){
+  const tbody=document.getElementById('codes-body');
+  document.getElementById('tcount').textContent=data.length+' codes';
+  if(!data.length){tbody.innerHTML='<tr><td colspan="8" class="tepty">No codes yet — generate your first one above</td></tr>';return;}
+  tbody.innerHTML=data.map(c=>{
+    const cfg=configs.find(x=>x._id===c.config_id);
+    const cfgHTML=cfg?`<span><span class="cfg-dot" style="background:${cfg.color}"></span>${esc(cfg.name)}</span>`:'<span style="color:var(--t3)">None</span>';
+    const date=c.created_at?new Date(c.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'2-digit'}):'—';
+    return`<tr>
+      <td><span class="code-chip">${esc(c.code)}</span></td>
+      <td style="font-weight:500">${esc(c.location)}</td>
+      <td style="color:var(--t2)">${esc(c.detail||'—')}</td>
+      <td>${cfgHTML}</td>
+      <td class="mono">${c.user_count||0}</td>
+      <td><span class="pill ${c.active!==false?'pon':'poff'}">${c.active!==false?'Active':'Disabled'}</span></td>
+      <td style="color:var(--t2);font-size:11.5px">${date}</td>
+      <td style="display:flex;gap:5px">
+        <button class="act-btn" onclick="copyCode('${esc(c.code)}')">Copy</button>
+        <button class="act-btn ${c.active!==false?'':'pon'}" onclick="toggleCode('${c._id}',${c.active!==false})">${c.active!==false?'Disable':'Enable'}</button>
+        <button class="act-btn act-del" onclick="deleteCode('${c._id}','${esc(c.code)}')">Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterTable(v){
+  const rows=[...document.querySelectorAll('#codes-body tr')];
+  rows.forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(v.toLowerCase())?'':'none';});
+}
+
+function previewCode(){
+  const name=document.getElementById('loc-name').value.trim();
+  const pw=document.getElementById('preview-wrap');
+  if(!name){pw.style.display='none';return;}
+  const prefix=name.replace(/[^a-zA-Z]/g,'').substring(0,3).toUpperCase();
+  document.getElementById('code-preview-val').textContent=prefix+'01';
+  pw.style.display='block';
+}
+
+function copyPreview(){
+  const val=document.getElementById('code-preview-val').textContent;
+  navigator.clipboard.writeText(val).then(()=>toast('Code copied: '+val,'ok'));
+}
+
+function copyCode(code){
+  navigator.clipboard.writeText(code).then(()=>toast('Copied: '+code,'ok'));
+}
+
+async function generateCodes(){
+  const name=document.getElementById('loc-name').value.trim();
+  if(!name){toast('Enter a location name first','er');return;}
+  const detail=document.getElementById('loc-detail').value.trim();
+  const cfgId=document.getElementById('loc-cfg').value;
+  const count=Math.min(50,Math.max(1,parseInt(document.getElementById('loc-count').value)||1));
+  try{
+    const r=await fetch('/api/location-codes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:name,detail,config_id:cfgId||null,count})});
+    if(r.ok){const result=await r.json();toast('Generated '+result.codes.length+' code'+(result.codes.length>1?'s':''),'ok');await loadCodes();document.getElementById('loc-name').value='';document.getElementById('loc-detail').value='';document.getElementById('preview-wrap').style.display='none';}
+    else toast('Generate failed','er');
+  }catch(e){toast('Network error','er');}
+}
+
+async function toggleCode(id,currentActive){
+  try{
+    const r=await fetch('/api/location-codes/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({active:!currentActive})});
+    if(r.ok){await loadCodes();toast(currentActive?'Code disabled':'Code enabled','ok');}
+    else toast('Update failed','er');
+  }catch(e){toast('Network error','er');}
+}
+
+async function deleteCode(id,code){
+  if(!confirm('Delete code '+code+'? Users already registered with this code keep their location, but the code can no longer be used.'))return;
+  try{
+    const r=await fetch('/api/location-codes/'+id,{method:'DELETE'});
+    if(r.ok){await loadCodes();toast('Code deleted','ok');}
+    else toast('Delete failed','er');
+  }catch(e){toast('Network error','er');}
+}
+
+function exportCodes(){
+  if(!codes.length){alert('No codes to export');return;}
+  const cols=['code','location','detail','config_id','user_count','active','created_at'];
+  const csv=[cols.join(','),...codes.map(c=>cols.map(k=>String(c[k]??'').replace(/"/g,'""')).join(','))].join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='location_codes_'+new Date().toISOString().split('T')[0]+'.csv';a.click();
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function toast(msg,type){
+  const c=document.getElementById('tray');const t=document.createElement('div');
+  t.className='t '+(type==='ok'?'tok':'ter');
+  const ico=type==='ok'?`<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`:`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`;
+  t.innerHTML=ico+msg;c.appendChild(t);
+  setTimeout(()=>{t.style.cssText='opacity:0;transition:opacity .25s;';setTimeout(()=>t.remove(),250);},3500);
+}
+</script>
+</body>
+</html>
