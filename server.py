@@ -5811,7 +5811,7 @@ def handle_text_message(phone_number, message_body, user, conn):
             send_interactive_message(phone_number, _bl)
         elif user['state'] == 'awaiting_business_type':
             _bmap = {"biz_food":"Food & Beverages","biz_fashion":"Fashion & Clothing","biz_beauty":"Hair Salon & Beauty","biz_electronics":"Electronics & Gadgets","biz_phone":"Phone & Computer Repair","biz_trading":"Trading & Merchandise","biz_agric":"Agriculture & Farming","biz_wholesale":"Wholesale & Distribution","biz_transport":"Transport & Logistics","biz_construction":"Construction & Property","biz_education":"Education & Training","biz_health":"Healthcare & Pharmacy","biz_finance":"Financial Services","biz_auto":"Auto Repair & Parts","biz_events":"Entertainment & Events","biz_media":"Media & Printing","biz_mfg":"Manufacturing","biz_hospitality":"Hospitality & Catering","biz_artisan":"Artisan & Crafts","biz_ict":"ICT & Digital Services","biz_cleaning":"Cleaning & Laundry","biz_photo":"Photography & Video","biz_consulting":"Consulting & Legal"}
-            if message_body == "biz_others":
+            if message_body in ("biz_others", "Others (type your own)", "others"):
                 db.update_user_field(phone_number, {"state": "awaiting_custom_biz_type"})
                 send_message(phone_number, "Please type your business type:")
             else:
