@@ -7620,14 +7620,16 @@ def send_message(phone_number, message, is_ai=False):
   
 
 def send_image_message(phone_number, image_url, caption=""):
-    """Send an image to a WhatsApp user via URL link."""
+    """Send an image or video to a WhatsApp user via URL link."""
     url = f"https://graph.facebook.com/v11.0/{YOUR_PHONE_NUMBER_ID}/messages"
     headers = {"Authorization": f"Bearer {WHATSAPP_TOKEN}", "Content-Type": "application/json"}
+    is_video = any(x in image_url.lower() for x in ['.mp4', '.mov', '.avi', 'export=download'])
+    media_type = "video" if is_video else "image"
     data = {
         "messaging_product": "whatsapp",
         "to": phone_number,
-        "type": "image",
-        "image": {"link": image_url, "caption": caption}
+        "type": media_type,
+        media_type: {"link": image_url, "caption": caption}
     }
     try:
         response = requests.post(url, headers=headers, json=data)
