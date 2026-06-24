@@ -1117,7 +1117,7 @@ def generate_text(prompt):
             "temperature": 0.7,
             "maxOutputTokens": 2000,
             "topP": 1,
-            "topK": 1
+            "topK": 40
         },
         "safetySettings": [
             {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_ONLY_HIGH"},
@@ -4613,8 +4613,12 @@ def handle_message(message):
         if USE_MONGODB:
             from db_mongo import get_mongo_db
             mongo_db = get_mongo_db()
-            processed = mongo_db.processed_messages.find_one({"message_id": message_id})
-            if processed:
+            _dup = mongo_db.processed_messages.update_one(
+                {"message_id": message_id},
+                {"$setOnInsert": {"message_id": message_id}},
+                upsert=True
+            )
+            if _dup.matched_count > 0:
                 log_image_event(f"Message {message_id} already processed, skipping")
                 return
         else:
@@ -5804,12 +5808,25 @@ def handle_text_message(phone_number, message_body, user, conn):
             ])
 
         elif user['state'] == 'awaiting_gender':
-            _gmap = {"gender_male":"Male","gender_female":"Female","gender_other":"Prefer not to say"}
-            _g = _gmap.get(message_body, message_body.capitalize())
+            _valid_g = {"gender_male","gender_female","gender_other","Male","Female","Prefer not to say"}
+            if message_body not in _valid_g:
+                send_interactive_message(phone_number, "Please choose your gender using the buttons:", [
+                    {"type":"reply","reply":{"id":"gender_male","title":"Male"}},
+                    {"type":"reply","reply":{"id":"gender_female","title":"Female"}},
+                    {"type":"reply","reply":{"id":"gender_other","title":"Prefer not to say"}},
+                ])
+                return
+            _gmap = {"gender_male":"Male","gender_female":"Female","gender_other":"Prefer not to say","Male":"Male","Female":"Female","Prefer not to say":"Prefer not to say"}
+            _g = _gmap.get(message_body, message_body)
             db.update_user_field(phone_number, {"gender": _g, "state": "awaiting_business_type"})
             _bl = {"type":"list","header":{"type":"text","text":"Business type"},"body":{"text":"What type of business or service do you run?"},"footer":{"text":"Scroll to see all options"},"action":{"button":"See options","sections": [{"title": "Select business type", "rows": [{"id": "biz_food", "title": "Food & Beverages"}, {"id": "biz_fashion", "title": "Fashion & Clothing"}, {"id": "biz_beauty", "title": "Hair Salon & Beauty"}, {"id": "biz_trading", "title": "Trading & Merchandise"}, {"id": "biz_transport", "title": "Transport & Logistics"}, {"id": "biz_agric", "title": "Agriculture & Farming"}, {"id": "biz_health", "title": "Healthcare & Pharmacy"}, {"id": "biz_education", "title": "Education & Training"}, {"id": "biz_ict", "title": "ICT & Digital Services"}, {"id": "biz_others", "title": "Others (type your own)"}]}]}}
             send_interactive_message(phone_number, _bl)
         elif user['state'] == 'awaiting_business_type':
+            _valid_biz_ids = {"biz_food","biz_fashion","biz_beauty","biz_trading","biz_transport","biz_agric","biz_health","biz_education","biz_ict","biz_others"}
+            _valid_biz_titles = {"Food & Beverages","Fashion & Clothing","Hair Salon & Beauty","Trading & Merchandise","Transport & Logistics","Agriculture & Farming","Healthcare & Pharmacy","Education & Training","ICT & Digital Services","Others (type your own)","others"}
+            if message_body not in _valid_biz_ids and message_body not in _valid_biz_titles:
+                send_interactive_message(phone_number, '{"type":"list","header":{"type":"text","text":"Business type"},"body":{"text":"What type of business or service do you run?"},"footer":{"text":"Scroll to see all options"},"action":{"button":"See options","sections": [{"title": "Select business type", "rows": [{"id": "biz_food", "title": "Food & Beverages"}, {"id": "biz_fashion", "title": "Fashion & Clothing"}, {"id": "biz_beauty", "title": "Hair Salon & Beauty"}, {"id": "biz_trading", "title": "Trading & Merchandise"}, {"id": "biz_transport", "title": "Transport & Logistics"}, {"id": "biz_agric", "title": "Agriculture & Farming"}, {"id": "biz_health", "title": "Healthcare & Pharmacy"}, {"id": "biz_education", "title": "Education & Training"}, {"id": "biz_ict", "title": "ICT & Digital Services"}, {"id": "biz_others", "title": "Others (type your own)"}]}]}}')
+                return
             _bmap = {"biz_food":"Food & Beverages","biz_fashion":"Fashion & Clothing","biz_beauty":"Hair Salon & Beauty","biz_electronics":"Electronics & Gadgets","biz_phone":"Phone & Computer Repair","biz_trading":"Trading & Merchandise","biz_agric":"Agriculture & Farming","biz_wholesale":"Wholesale & Distribution","biz_transport":"Transport & Logistics","biz_construction":"Construction & Property","biz_education":"Education & Training","biz_health":"Healthcare & Pharmacy","biz_finance":"Financial Services","biz_auto":"Auto Repair & Parts","biz_events":"Entertainment & Events","biz_media":"Media & Printing","biz_mfg":"Manufacturing","biz_hospitality":"Hospitality & Catering","biz_artisan":"Artisan & Crafts","biz_ict":"ICT & Digital Services","biz_cleaning":"Cleaning & Laundry","biz_photo":"Photography & Video","biz_consulting":"Consulting & Legal"}
             if message_body in ("biz_others", "Others (type your own)", "others"):
                 db.update_user_field(phone_number, {"state": "awaiting_custom_biz_type"})
@@ -5822,7 +5839,6 @@ def handle_text_message(phone_number, message_body, user, conn):
         elif user['state'] == 'awaiting_custom_biz_type':
             _biz = " ".join(w.capitalize() for w in message_body.strip().split() if w)
             db.update_user_field(phone_number, {"business_type": _biz, "state": "awaiting_location"})
-            handle_location_selection(phone_number, user, conn)
             handle_location_selection(phone_number, user, conn)
 
         elif user['state'] == 'awaiting_location':
