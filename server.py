@@ -8788,6 +8788,205 @@ def engagement_csv_route():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/configurations')
+# And add templates/configurations.html (provided separately)
+
+# ── 1. CONFIGURATIONS PAGE ────────────────────────────────────────────────────
+
+@app.route('/configurations')
+def configurations_page():
+    return render_template('configurations.html')
+
+
+# ── 2. LIST ALL CONFIGURATIONS ───────────────────────────────────────────────
+
+@app.route('/api/configs', methods=['GET'])
+def list_configs():
+    try:
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            from bson import ObjectId
+            mongo_db = get_mongo_db()
+            configs = list(mongo_db.configurations.find({}).sort('created_at', 1))
+            for c in configs:
+                c['_id'] = str(c['_id'])
+                c['user_count'] = mongo_db.users.count_documents({
+                    '$or': [
+                        {'configuration': c['_id']},
+                        {'configuration': c['name']}
+                    ]
+                })
+                if 'created_at' in c:
+                    c['created_at'] = c['created_at'].isoformat()
+            return jsonify(configs)
+        return jsonify([])
+    except Exception as e:
+        logging.error(f'list_configs error: {e}')
+        return jsonify({'error': str(e)}), 500
+
+
+# ── 3. CREATE CONFIGURATION ───────────────────────────────────────────────────
+
+@app.route('/api/configs', methods=['POST'])
+def create_config():
+    try:
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            from bson import ObjectId
+            data = request.json
+            mongo_db = get_mongo_db()
+            doc = {
+                'name':        data.get('name', 'New Configuration'),
+                'description': data.get('description', ''),
+                'color':       data.get('color', '#22D3EE'),
+                'features':    data.get('features', []),
+                'quizzes':     data.get('quizzes', []),
+                'created_at':  datetime.utcnow(),
+                'updated_at':  datetime.utcnow(),
+            }
+            result = mongo_db.configurations.insert_one(doc)
+            doc['_id'] = str(result.inserted_id)
+            doc['created_at'] = doc['created_at'].isoformat()
+            doc['updated_at'] = doc['updated_at'].isoformat()
+            return jsonify(doc), 201
+        return jsonify({'error': 'MongoDB not enabled'}), 400
+    except Exception as e:
+        logging.error(f'create_config error: {e}')
+        return jsonify({'error': str(e)}), 500
+
+
+# ── 4. UPDATE CONFIGURATION ───────────────────────────────────────────────────
+
+@app.route('/api/configs/<config_id>', methods=['PUT'])
+def update_config(config_id):
+    try:
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            from bson import ObjectId
+            mongo_db = get_mongo_db()
+            data = request.json
+            update = {
+                '$set': {
+                    'name':        data.get('name', ''),
+                    'description': data.get('description', ''),
+                    'color':       data.get('color', '#22D3EE'),
+                    'features':    data.get('features', []),
+                    'quizzes':     data.get('quizzes', []),
+                    'updated_at':  datetime.utcnow(),
+                }
+            }
+            mongo_db.configurations.update_one({'_id': ObjectId(config_id)}, update)
+            return jsonify({'success': True})
+        return jsonify({'error': 'MongoDB not enabled'}), 400
+    except Exception as e:
+        logging.error(f'update_config error: {e}')
+        return jsonify({'error': str(e)}), 500
+
+
+# ── 5. DELETE CONFIGURATION ───────────────────────────────────────────────────
+
+@app.route('/api/configs/<config_id>', methods=['DELETE'])
+def delete_config(config_id):
+    try:
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            from bson import ObjectId
+            mongo_db = get_mongo_db()
+            # Unassign users from this config
+            mongo_db.users.update_many(
+                {'configuration': config_id},
+                {'$unset': {'configuration': ''}}
+            )
+            mongo_db.configurations.delete_one({'_id': ObjectId(config_id)})
+            return jsonify({'success': True})
+        return jsonify({'error': 'MongoDB not enabled'}), 400
+    except Exception as e:
+        logging.error(f'delete_config error: {e}')
+        return jsonify({'error': str(e)}), 500
+
+
+# ── 6. ASSIGN USER TO CONFIGURATION ──────────────────────────────────────────
+
+@app.route('/api/users/assign-config', methods=['POST'])
+def assign_user_config():
+    try:
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            from bson import ObjectId
+            data = request.json
+            user_id  = data.get('user_id')
+            config_id = data.get('config_id')  # can be empty string to unassign
+            mongo_db = get_mongo_db()
+            if config_id:
+                mongo_db.users.update_one(
+                    {'_id': ObjectId(user_id)},
+                    {'$set': {'configuration': config_id}}
+                )
+            else:
+                mongo_db.users.update_one(
+                    {'_id': ObjectId(user_id)},
+                    {'$unset': {'configuration': ''}}
+                )
+            return jsonify({'success': True})
+        return jsonify({'error': 'MongoDB not enabled'}), 400
+    except Exception as e:
+        logging.error(f'assign_user_config error: {e}')
+        return jsonify({'error': str(e)}), 500
+
+
+# ── 7. LIST USERS WITH THEIR CONFIGURATIONS ───────────────────────────────────
+
+@app.route('/api/users/config-list', methods=['GET'])
+def users_config_list():
+    try:
+        if USE_MONGODB:
+            from db_mongo import get_mongo_db
+            mongo_db = get_mongo_db()
+            users = list(mongo_db.users.find({}, {
+                '_id': 1, 'name': 1, 'phone_number': 1,
+                'location': 1, 'configuration': 1
+            }).sort('name', 1))
+            for u in users:
+                u['_id'] = str(u['_id'])
+            return jsonify(users)
+        return jsonify([])
+    except Exception as e:
+        logging.error(f'users_config_list error: {e}')
+        return jsonify({'error': str(e)}), 500
+
+
+# ── 8. CHECK USER'S CONFIGURATION (use in WhatsApp handlers) ─────────────────
+#
+# Call this in your WhatsApp message handlers to check if a feature is enabled:
+#
+# def user_has_feature(phone_number, feature_key):
+#     """Check if a user's configuration includes a specific feature."""
+#     if not USE_MONGODB:
+#         return True  # default: allow all features if no MongoDB
+#     try:
+#         from db_mongo import get_mongo_db
+#         mongo_db = get_mongo_db()
+#         user = mongo_db.users.find_one({'phone_number': phone_number})
+#         if not user or not user.get('configuration'):
+#             return True  # no config assigned = full access
+#         cfg_id = user['configuration']
+#         config = mongo_db.configurations.find_one({
+#             '$or': [{'_id': ObjectId(cfg_id)}, {'name': cfg_id}]
+#         })
+#         if not config:
+#             return True
+#         return feature_key in (config.get('features') or [])
+#     except Exception as e:
+#         logging.warning(f'user_has_feature check failed: {e}')
+#         return True  # fail open
+#
+# Usage example:
+#   if user_has_feature(phone_number, 'ai_chatbot'):
+#       # show AI chat option
+#   if user_has_feature(phone_number, 'quiz_modules'):
+#       # allow quiz access
+
+
 if __name__ == '__main__':
     print("=" * 80)
     print("EMPOWERBOT INITIALIZATION")
