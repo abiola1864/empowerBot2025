@@ -1015,7 +1015,7 @@ def insert_question(conn, quiz, question, options, answer):
            
 #             print(f"Finished processing {filename}")
        
-#         conn.commit()
+#         if conn: conn.commit()
 #         cursor.execute("SELECT COUNT(*) FROM questions")
 #         count = cursor.fetchone()[0]
 #         print(f"Total questions inserted: {count}")
@@ -1322,7 +1322,7 @@ def extract_key_information(input_text: str, field: str) -> str:
 #         if current_question in ['business_type', 'age', 'gender', 'location']:
 #             extracted_info = extract_key_information(message, current_question)
 #             conn.execute(f"UPDATE users SET {current_question} = ? WHERE id = ?", (extracted_info, user_id))
-#             conn.commit()
+#             if conn: conn.commit()
 #             message = extracted_info
 
 #         current_question_index = int(current_question) 
@@ -1372,7 +1372,7 @@ def extract_key_information(input_text: str, field: str) -> str:
 #                     (user_id, quiz_name, quiz_question, followup_question, followup_date)
 #                     VALUES (?, ?, ?, ?, datetime('now'))
 #                 ''', (user_id, question_context['quiz'], question_context['question'], message))
-#                 conn.commit()
+#                 if conn: conn.commit()
 #                 logging.info(f"Stored follow-up question for user {user_id}")
 #             except sqlite3.Error as e:
 #                 logging.error(f"Error storing follow-up question: {e}")
@@ -1442,12 +1442,12 @@ def extract_key_information(input_text: str, field: str) -> str:
 #             if phone_number not in excluded_phone_numbers:
 #                 cursor.execute('''UPDATE user_scores SET score = score + ? WHERE user_id = ?''',
 #                                (score_increment, user_id))
-#                 conn.commit()
+#                 if conn: conn.commit()
 #             else:
 #                 logging.info(f"User with phone number {phone_number} is excluded from the winners board. Score not updated.")
 
 #         db.update_user_field(phone_number, {"state": "post_explanation"})
-#         conn.commit()
+#         if conn: conn.commit()
 
 #     except Exception as e:
 #         error_message = f"Error in handle_ai_chat: {str(e)}"
@@ -1498,7 +1498,7 @@ def extract_key_information(input_text: str, field: str) -> str:
 #         if current_question in ['business_type', 'age', 'gender', 'location']:
 #             extracted_info = extract_key_information(message, current_question)
 #             conn.execute(f"UPDATE users SET {current_question} = ? WHERE id = ?", (extracted_info, user_id))
-#             conn.commit()
+#             if conn: conn.commit()
 #             message = extracted_info
 
 #         current_question_index = int(current_question) - 1
@@ -1565,7 +1565,7 @@ def extract_key_information(input_text: str, field: str) -> str:
 #                     (user_id, quiz_name, quiz_question, followup_question, followup_date)
 #                     VALUES (?, ?, ?, ?, datetime('now'))
 #                 ''', (user_id, question_context['quiz'], question_context['question'], message))
-#                 conn.commit()
+#                 if conn: conn.commit()
 #                 logging.info(f"Stored follow-up question for user {user_id}")
 #             except sqlite3.Error as e:
 #                 logging.error(f"Error storing follow-up question: {e}")
@@ -1631,7 +1631,7 @@ def extract_key_information(input_text: str, field: str) -> str:
 #         # [...]
         
 #         db.update_user_field(phone_number, {"state": "post_explanation"})
-#         conn.commit()
+#         if conn: conn.commit()
 
 #     except Exception as e:
 #         error_message = f"Error in handle_ai_chat: {str(e)}"
@@ -1685,7 +1685,7 @@ def extract_key_information(input_text: str, field: str) -> str:
 #         if current_question in ['business_type', 'age', 'gender', 'location']:
 #             extracted_info = extract_key_information(message, current_question)
 #             conn.execute(f"UPDATE users SET {current_question} = ? WHERE id = ?", (extracted_info, user_id))
-#             conn.commit()
+#             if conn: conn.commit()
 #             message = extracted_info
 
 #         current_question_index = int(current_question) - 1
@@ -1782,7 +1782,7 @@ def extract_key_information(input_text: str, field: str) -> str:
 #                     (user_id, quiz_name, quiz_question, followup_question, followup_date)
 #                     VALUES (?, ?, ?, ?, datetime('now'))
 #                 ''', (user_id, question_context['quiz'], question_context['question'], message))
-#                 conn.commit()
+#                 if conn: conn.commit()
 #                 logger.info(f"Stored follow-up question for user {user_id}")
 #             except sqlite3.Error as e:
 #                 logger.error(f"Error storing follow-up question: {e}")
@@ -1824,7 +1824,7 @@ def extract_key_information(input_text: str, field: str) -> str:
 #             prompt_next_action(phone_number, conn)
 
 #         db.update_user_field(phone_number, {"state": "post_explanation"})
-#         conn.commit()
+#         if conn: conn.commit()
 
 #     except Exception as e:
 #         error_message = f"Error in handle_ai_chat: {str(e)}"
@@ -2040,7 +2040,7 @@ def check_repeated_explanation(user_id, quiz, question_number, conn):
         ''', (explanation_count, user_id, quiz, question_number))
         score_increment = 1
 
-    conn.commit()
+    if conn: conn.commit()
     return score_increment
   
   
@@ -2052,7 +2052,7 @@ def check_repeated_explanation(user_id, quiz, question_number, conn):
 def update_user_state(phone_number, conn, state):
     cursor = conn.cursor()
     cursor.execute('UPDATE users SET state = ? WHERE phone_number = ?', (state, phone_number))
-    conn.commit()
+    if conn: conn.commit()
    
    
 
@@ -2652,7 +2652,7 @@ def store_conversation(user_id, message, is_ai, conn):
             INSERT INTO conversation_history (user_id, message, is_ai)
             VALUES (?, ?, ?)
         ''', (user_id, message, is_ai))
-        conn.commit()
+        if conn: conn.commit()
     except sqlite3.Error as e:
         logging.error(f"Error storing conversation: {e}")
        
@@ -3142,7 +3142,7 @@ def handle_post_explanation_action(phone_number, action, user, conn):
         present_options(phone_number, user, conn)
     finally:
         # Ensure the connection is committed
-        conn.commit()
+        if conn: conn.commit()
        
        
        
@@ -3503,7 +3503,7 @@ def get_incorrect_questions(user_id, conn, quiz_name):
 #                 current_quiz = ? 
 #             WHERE phone_number = ?
 #         ''', ('awaiting_explanation', current_question + 1, quiz_name, phone_number))
-#         conn.commit()
+#         if conn: conn.commit()
 #         logging.info(f"Updated user {phone_number} state to awaiting_explanation and incremented current_question to {current_question + 1}")
        
 #     except ValueError as ve:
@@ -3813,7 +3813,7 @@ def init_db(db_file='user_data_bootcamp.db'):
         )
     ''')
 
-    conn.commit()
+    if conn: conn.commit()
     conn.close()
     logging.info("Database initialized successfully")
 
@@ -3950,7 +3950,7 @@ def api_update_quiz(quiz_name):
                 "ON CONFLICT(quiz) DO UPDATE SET enabled = ?",
                 (quiz_name, int(enabled), int(enabled))
             )
-            conn.commit()
+            if conn: conn.commit()
             conn.close()
 
         logging.info(f"Quiz '{quiz_name}' set to enabled={enabled}")
@@ -4021,7 +4021,7 @@ def populate_database_from_json_files():
 
             print(f"Finished processing {filename}")
 
-        conn.commit()
+        if conn: conn.commit()
 
         cursor.execute("SELECT COUNT(*) FROM questions")
         count = cursor.fetchone()[0]
@@ -4063,7 +4063,7 @@ def populate_database_from_json_files():
 #     for user_id, phone_number in user_data:
 #         c.execute('UPDATE user_scores SET phone_number = ? WHERE user_id = ?', (phone_number, user_id))
     
-#     conn.commit()
+#     if conn: conn.commit()
 #     conn.close()
 #     logging.info(f"Migrated {len(user_data)} user scores with phone numbers")
 
@@ -4137,7 +4137,7 @@ def debug_scoreboard():
 #             log_image_event(f"User {phone_number} initiated name change")
 #             conn.execute('UPDATE users SET state = ?, previous_state = ? WHERE phone_number = ?',
 #                          ('changing_name', user['state'], phone_number))
-#             conn.commit()
+#             if conn: conn.commit()
 #             send_message(phone_number, "Please enter your new name:")
 #         elif button_id == "view_name":
 #             log_image_event(f"User {phone_number} requested to view their name")
@@ -4173,7 +4173,7 @@ def debug_scoreboard():
 #             log_image_event(f"User {phone_number} is returning to previous activity")
 #             previous_state = conn.execute('SELECT previous_state FROM users WHERE phone_number = ?', (phone_number,)).fetchone()[0]
 #             db.update_user_field(phone_number, {"state": previous_state})
-#             conn.commit()
+#             if conn: conn.commit()
 #             send_message(phone_number, "Returning to previous activity.")
 #             present_options(phone_number, user, conn)
 #         elif button_id == "more":
@@ -4448,7 +4448,7 @@ def handle_button_response(phone_number, button_id, button_text, user, conn):
 #         if user is None:
 #             # This is a new user, let's create a record for them
 #             conn.execute('INSERT INTO users (phone_number, state) VALUES (?, ?)', (phone_number, 'awaiting_full_info'))
-#             conn.commit()
+#             if conn: conn.commit()
             
 #             send_message(phone_number, "Welcome to EmpowerBot! What's your full name?")
 #             log_image_event(f"New user created for {phone_number}, awaiting name")
@@ -4507,7 +4507,7 @@ def handle_button_response(phone_number, button_id, button_text, user, conn):
 #                 send_message(phone_number, "Unsupported message type. Please send text, image, or document.")
        
 #         conn.execute('INSERT INTO processed_messages (message_id) VALUES (?)', (message_id,))
-#         conn.commit()
+#         if conn: conn.commit()
    
 #     except Exception as e:
 #         log_image_event(f"Error processing message {message_id}: {str(e)}")
@@ -4544,7 +4544,7 @@ def handle_button_response(phone_number, button_id, button_text, user, conn):
 #         if user is None:
 #             # This is a new user, let's create a record for them
 #             conn.execute('INSERT INTO users (phone_number, state) VALUES (?, ?)', (phone_number, 'awaiting_full_info'))
-#             conn.commit()
+#             if conn: conn.commit()
             
 #             send_message(phone_number, "Welcome to EmpowerBot! What's your full name?")
 #             log_image_event(f"New user created for {phone_number}, awaiting name")
@@ -4608,7 +4608,7 @@ def handle_button_response(phone_number, button_id, button_text, user, conn):
 #                 send_message(phone_number, "Unsupported message type. Please send text, image, or document.")
        
 #         conn.execute('INSERT INTO processed_messages (message_id) VALUES (?)', (message_id,))
-#         conn.commit()
+#         if conn: conn.commit()
    
 #     except Exception as e:
 #         log_image_event(f"Error processing message {message_id}: {str(e)}")
@@ -4771,7 +4771,7 @@ def handle_message(message):
             conn = get_db_connection()
             try:
                 conn.execute('INSERT INTO processed_messages (message_id) VALUES (?)', (message_id,))
-                conn.commit()
+                if conn: conn.commit()
             finally:
                 conn.close()
 
@@ -4980,7 +4980,7 @@ def handle_message(message):
 #                 cursor = conn.cursor()
 #                 cursor.execute('INSERT INTO followup_questions (user_id, question) VALUES (?, ?)',
 #                              (user['id'], message_body))
-#                 conn.commit()
+#                 if conn: conn.commit()
             
 #             handle_ai_chat(phone_number, message_body, conn)
             
@@ -5072,7 +5072,7 @@ def handle_media_message(phone_number, message, message_type, user, conn):
                     'INSERT INTO records (user_id, media_url) VALUES (?, ?)',
                     (user['id'], filename)
                 )
-                conn.commit()
+                if conn: conn.commit()
 
             base_url = "https://empowerbot2025-1.onrender.com"
             user_url = f"{base_url}/user/{user_id}/{random_number}"
@@ -5158,7 +5158,7 @@ def check_quiz_state(conn, user_id, quiz_name):
 #                 handle_quiz_selection(phone_number, message_body, user, conn)
 #             elif message_lower in ['records', 'record keeping']:
 #                 db.update_user_field(phone_number, {"state": "records"})
-#                 conn.commit()
+#                 if conn: conn.commit()
 #                 send_message(phone_number, f"Welcome {user['name']}, please upload your business record as an image or PDF.")
 #             elif message_lower == 'settings':
 #                 handle_settings_command(phone_number, user, conn)
@@ -5177,7 +5177,7 @@ def check_quiz_state(conn, user_id, quiz_name):
 #             new_name = message_body.strip()
 #             conn.execute('UPDATE users SET name = ?, state = ? WHERE phone_number = ?',
 #                          (new_name, user['previous_state'], phone_number))
-#             conn.commit()
+#             if conn: conn.commit()
 #             send_message(phone_number, f"Your name has been updated to: {new_name}")
 #             user = db.get_user_by_phone(phone_number,)
 #             present_options(phone_number, user, conn)
@@ -5188,35 +5188,35 @@ def check_quiz_state(conn, user_id, quiz_name):
 #             # Step 1: Collect full name
 #             conn.execute('UPDATE users SET name = ?, state = ? WHERE phone_number = ?',
 #                          (message_body, 'awaiting_age', phone_number))
-#             conn.commit()
+#             if conn: conn.commit()
 #             send_message(phone_number, "Nice to meet you, {}! Please type your age is the chat".format(message_body))
         
 #         elif user['state'] == 'awaiting_age':
 #             # Step 2: Collect age
 #             conn.execute('UPDATE users SET age = ?, state = ? WHERE phone_number = ?',
 #                          (message_body, 'awaiting_gender', phone_number))
-#             conn.commit()
+#             if conn: conn.commit()
 #             send_message(phone_number, "Thank you! Please type your gender in the chat. (Please reply with 'male', 'female', or 'other')")
         
 #         elif user['state'] == 'awaiting_gender':
 #             # Step 3: Collect gender
 #             conn.execute('UPDATE users SET gender = ?, state = ? WHERE phone_number = ?',
 #                          (message_body, 'awaiting_business_type', phone_number))
-#             conn.commit()
+#             if conn: conn.commit()
 #             send_message(phone_number, "Great! Please type in the chat the type of business or services you deal on?")
         
 #         elif user['state'] == 'awaiting_business_type':
 #             # Step 4: Collect business type
 #             conn.execute('UPDATE users SET business_type = ?, state = ? WHERE phone_number = ?',
 #                          (message_body, 'awaiting_location', phone_number))
-#             conn.commit()
+#             if conn: conn.commit()
 #             send_message(phone_number, "Thank you! Type in the chat where your business is located?")
         
 #         elif user['state'] == 'awaiting_location':
 #             # Step 5: Collect location
 #             conn.execute('UPDATE users SET location = ?, state = ? WHERE phone_number = ?',
 #                          (message_body, 'awaiting_choice', phone_number))
-#             conn.commit()
+#             if conn: conn.commit()
 #             send_message(phone_number, "Thank you for providing your information! What would you like to do next?")
 #             present_options(phone_number, user, conn)
 #         elif user['state'] == 'awaiting_choice':
@@ -5227,11 +5227,11 @@ def check_quiz_state(conn, user_id, quiz_name):
 #             cursor = conn.cursor()
 #             cursor.execute('INSERT INTO followup_questions (user_id, question) VALUES (?, ?)',
 #                            (user['id'], message_body))
-#             conn.commit()
+#             if conn: conn.commit()
 #             # Handle AI chat and set state to 'ai_chat' to continue the conversation
 #             handle_ai_chat(phone_number, message_body, button_id, conn)
 #             db.update_user_field(phone_number, {"state": "ai_chat"})
-#             conn.commit()
+#             if conn: conn.commit()
 #         elif user['state'] == 'selecting_quiz':
 #             handle_quiz_selection(phone_number, message_body, user, conn)
 #         elif user['state'].startswith('quiz_'):
@@ -5261,7 +5261,7 @@ def check_quiz_state(conn, user_id, quiz_name):
 #                 handle_quiz_selection(phone_number, message_body, user, conn)
 #             elif message_lower in ['records', 'record keeping']:
 #                 db.update_user_field(phone_number, {"state": "records"})
-#                 conn.commit()
+#                 if conn: conn.commit()
 #                 send_message(phone_number, f"Welcome {user['name']}, please upload your business record as an image or PDF.")
 #             elif message_lower == 'settings':
 #                 handle_settings_command(phone_number, user, conn)
@@ -5281,7 +5281,7 @@ def check_quiz_state(conn, user_id, quiz_name):
 #             new_name = message_body.strip()
 #             conn.execute('UPDATE users SET name = ?, state = ? WHERE phone_number = ?',
 #                         (new_name, user['previous_state'], phone_number))
-#             conn.commit()
+#             if conn: conn.commit()
 #             send_message(phone_number, f"Your name has been updated to: {new_name}")
 #             user = db.get_user_by_phone(phone_number,)
 #             present_options(phone_number, user, conn)
@@ -5295,7 +5295,7 @@ def check_quiz_state(conn, user_id, quiz_name):
 #                 return True
 #             conn.execute('UPDATE users SET name = ?, state = ? WHERE phone_number = ?',
 #                         (name, 'awaiting_age', phone_number))
-#             conn.commit()
+#             if conn: conn.commit()
 #             send_message(phone_number, f"Nice to meet you, {name}! Please enter your age as a number.")
 #             return True
 
@@ -5315,7 +5315,7 @@ def check_quiz_state(conn, user_id, quiz_name):
 #             log_image_event(f"Valid age received: {age}")
 #             conn.execute('UPDATE users SET age = ?, state = ? WHERE phone_number = ?',
 #                         (age, 'awaiting_gender', phone_number))
-#             conn.commit()
+#             if conn: conn.commit()
 #             send_message(phone_number, "Thank you! Please type your gender in the chat (male, female, or other).")
 #             return True
 
@@ -5327,7 +5327,7 @@ def check_quiz_state(conn, user_id, quiz_name):
             
 #             conn.execute('UPDATE users SET gender = ?, state = ? WHERE phone_number = ?',
 #                         (gender_input, 'awaiting_business_type', phone_number))
-#             conn.commit()
+#             if conn: conn.commit()
 #             send_message(phone_number, "Great! Please type in the chat the type of business or services you deal on?")
 #             return True
 
@@ -5338,7 +5338,7 @@ def check_quiz_state(conn, user_id, quiz_name):
 #                 return True
 #             conn.execute('UPDATE users SET business_type = ?, state = ? WHERE phone_number = ?',
 #                         (business_type, 'awaiting_location', phone_number))
-#             conn.commit()
+#             if conn: conn.commit()
 #             send_message(phone_number, "Thank you! Type in the chat where your business is located?")
 #             return True
 
@@ -5349,49 +5349,49 @@ def check_quiz_state(conn, user_id, quiz_name):
 #                 return True
 #             conn.execute('UPDATE users SET location = ?, state = ? WHERE phone_number = ?',
 #                         (location, 'awaiting_business_size', phone_number))
-#             conn.commit()
+#             if conn: conn.commit()
 #             handle_business_size_selection(phone_number, user, conn)
 #             return True
 
 #         elif user['state'] == 'awaiting_business_size':
 #             conn.execute('UPDATE users SET business_size = ?, state = ? WHERE phone_number = ?',
 #                         (message_body, 'awaiting_financial_status', phone_number))
-#             conn.commit()
+#             if conn: conn.commit()
 #             handle_financial_status_selection(phone_number, user, conn)
 #             return True
 
 #         elif user['state'] == 'awaiting_financial_status':
 #             conn.execute('UPDATE users SET financial_status = ?, state = ? WHERE phone_number = ?',
 #                         (message_body, 'awaiting_main_challenge', phone_number))
-#             conn.commit()
+#             if conn: conn.commit()
 #             handle_main_challenge_selection(phone_number, user, conn)
 #             return True
 
 #         elif user['state'] == 'awaiting_main_challenge':
 #             conn.execute('UPDATE users SET main_challenge = ?, state = ? WHERE phone_number = ?',
 #                         (message_body, 'awaiting_record_keeping', phone_number))
-#             conn.commit()
+#             if conn: conn.commit()
 #             handle_record_keeping_selection(phone_number, user, conn)
 #             return True
 
 #         elif user['state'] == 'awaiting_record_keeping':
 #             conn.execute('UPDATE users SET record_keeping = ?, state = ? WHERE phone_number = ?',
 #                         (message_body, 'awaiting_growth_goal', phone_number))
-#             conn.commit()
+#             if conn: conn.commit()
 #             handle_growth_goal_selection(phone_number, user, conn)
 #             return True
 
 #         elif user['state'] == 'awaiting_growth_goal':
 #             conn.execute('UPDATE users SET growth_goal = ?, state = ? WHERE phone_number = ?',
 #                         (message_body, 'awaiting_funding_need', phone_number))
-#             conn.commit()
+#             if conn: conn.commit()
 #             handle_funding_need_selection(phone_number, user, conn)
 #             return True
 
 #         elif user['state'] == 'awaiting_funding_need':
 #             conn.execute('UPDATE users SET funding_need = ?, state = ? WHERE phone_number = ?',
 #                         (message_body, 'awaiting_choice', phone_number))
-#             conn.commit()
+#             if conn: conn.commit()
 #             send_message(phone_number, "Thank you! We now understand your business better. What would you like to do next?")
 #             present_options(phone_number, user, conn)
 #             return True
@@ -5405,10 +5405,10 @@ def check_quiz_state(conn, user_id, quiz_name):
 #             cursor = conn.cursor()
 #             cursor.execute('INSERT INTO followup_questions (user_id, question) VALUES (?, ?)',
 #                          (user['id'], message_body))
-#             conn.commit()
+#             if conn: conn.commit()
 #             handle_ai_chat(phone_number, message_body, conn)
 #             db.update_user_field(phone_number, {"state": "ai_chat"})
-#             conn.commit()
+#             if conn: conn.commit()
 #             return True
 
 #         # Handle different states
@@ -5481,7 +5481,7 @@ def check_quiz_state(conn, user_id, quiz_name):
 #                 quiz_in_review = ?
 #             WHERE phone_number = ?
 #         """, ('reviewing_question', json.dumps(review_data), quiz_name, phone_number))
-#         conn.commit()
+#         if conn: conn.commit()
         
 #         send_review_question(phone_number, review_data['questions'][0], 1, review_data['total_questions'])
         
@@ -5537,7 +5537,7 @@ def handle_quiz_review(phone_number, quiz_name, user, conn):
                 current_question = ?
             WHERE phone_number = ?
         """, ('reviewing_question', quiz_name, review_data['current_index'], phone_number))
-        conn.commit()
+        if conn: conn.commit()
         
         # Call send_next_question with the first question
         send_next_question(phone_number, user, conn)
@@ -5772,7 +5772,7 @@ def clean_quoted_names_in_database():
             logging.info(f"Fixed user {user_id} ({phone}): '{old_name}' → '{new_name}'")
             fixed_count += 1
         
-        conn.commit()
+        if conn: conn.commit()
         logging.info(f"Successfully cleaned {fixed_count} user names")
         return fixed_count
         
@@ -5967,7 +5967,7 @@ def handle_text_message(phone_number, message_body, user, conn):
                 cursor = conn.cursor()
                 cursor.execute('INSERT INTO followup_questions (user_id, question) VALUES (?, ?)',
                                (user['id'], message_body))
-                conn.commit()
+                if conn: conn.commit()
             handle_ai_chat(phone_number, message_body, conn)
             db.update_user_field(phone_number, {"state": "ai_chat"})
 
@@ -6085,7 +6085,7 @@ def send_ai_intro(phone_number):
 #             log_image_event(f"Found {len(incorrect_questions)} incorrect questions for user {user['id']}")
 #             conn.execute('UPDATE users SET state = ?, current_question = ? WHERE phone_number = ?',
 #                          ('ai_chat', 0, phone_number))
-#             conn.commit()
+#             if conn: conn.commit()
 #             send_next_question(phone_number, user, conn)
 #         else:
 #             log_image_event(f"No incorrect questions found for user {user['id']}")
@@ -6134,7 +6134,7 @@ def send_ai_intro(phone_number):
 #             # Change the state to 'awaiting_explanation' instead of 'ai_chat'
 #             conn.execute('UPDATE users SET state = ?, current_question = ? WHERE phone_number = ?',
 #                          ('awaiting_explanation', 0, phone_number))
-#             conn.commit()
+#             if conn: conn.commit()
 #             # The existing send_next_question function will handle prompting for explanation
 #             send_next_question(phone_number, user, conn)
 #         else:
@@ -6426,7 +6426,7 @@ def handle_settings_command(phone_number, user, conn, page=1):
 #     try:
 #         conn.execute('UPDATE users SET state = ?, previous_state = ? WHERE phone_number = ?',
 #                      ('settings', previous_state, phone_number))
-#         conn.commit()
+#         if conn: conn.commit()
 #         cursor = conn.cursor()
 #         # Fetch and update user-related data
 #         cursor.execute("SELECT name FROM users WHERE phone_number = ?", (phone_number,))
@@ -6449,7 +6449,7 @@ def handle_settings_command(phone_number, user, conn, page=1):
 #             "scores": scores_serialized
 #         })
 #         db.update_user_field(phone_number, {"temp_data": temp_data})
-#         conn.commit()
+#         if conn: conn.commit()
 #         log_image_event(f"Settings command handled successfully for user {phone_number}.")
 #     except Exception as e:
 #         log_image_event(f"Error in settings command for user {phone_number}: {e}")
@@ -6587,7 +6587,7 @@ def remove_user_account(phone_number, conn):
             for step in deletion_steps:
                 cursor.execute(step['query'], step['params'])
 
-            conn.commit()
+            if conn: conn.commit()
             send_message(phone_number,
                 "✅ Your account has been completely removed.\n\n"
                 "You can create a new account anytime by messaging us again.")
@@ -6710,7 +6710,7 @@ def handle_records_command(phone_number, user, conn):
 #         present_options(phone_number, user, conn)
 
 #     db.update_user_field(phone_number, {"state": "selecting_quiz"})
-#     conn.commit()
+#     if conn: conn.commit()
    
 
   
@@ -6772,7 +6772,7 @@ def handle_records_command(phone_number, user, conn):
 #     send_interactive_message(phone_number, "What would you like to do?", buttons)
 
 #     db.update_user_field(phone_number, {"state": "selecting_quiz"})
-#     conn.commit()
+#     if conn: conn.commit()
 
     
   
@@ -7038,7 +7038,7 @@ def start_or_resume_quiz(phone_number, user, conn, selected_quiz):
 #         db.update_user_field(phone_number, {"state": "awaiting_choice", "current_quiz": ""})
 #         conn.execute("UPDATE quiz_states SET question_index = -1 WHERE user_id = ? AND quiz_name = ?",
 #                      (user['id'], current_quiz))
-#         conn.commit()
+#         if conn: conn.commit()
        
 #         log_image_event(f"Database updated for user {user['id']} after finishing quiz {current_quiz}")
        
@@ -7066,7 +7066,7 @@ def start_or_resume_quiz(phone_number, user, conn, selected_quiz):
 #         # Ensure the user's state is reset even if an error occurs
 #         try:
 #             db.update_user_field(phone_number, {"state": "awaiting_choice", "current_quiz": ""})
-#             conn.commit()
+#             if conn: conn.commit()
 #         except Exception as e:
 #             log_image_event(f"Error resetting user state in finish_quiz for user {user['id']}: {str(e)}")
            
@@ -7123,7 +7123,7 @@ def finish_quiz(phone_number, user, conn, current_quiz, num_questions):
                 "UPDATE quiz_states SET question_index = -1 WHERE user_id = ? AND quiz_name = ?",
                 (user['id'], current_quiz)
             )
-            conn.commit()
+            if conn: conn.commit()
 
         log_image_event(f"Database updated for user {user['id']} after finishing quiz {current_quiz}")
 
@@ -7364,7 +7364,7 @@ def send_interactive_message(phone_number, message, buttons=None, options=None):
 #         log_image_event(f"Error loading quiz data for {current_quiz}: {str(e)}")
 #         send_message(phone_number, "There was an error with the quiz. Please type 'quiz' to start over.")
 #         db.update_user_field(phone_number, {"state": "awaiting_choice", "current_quiz": ""})
-#         conn.commit()
+#         if conn: conn.commit()
 #         return
 
 #     state = user['state']
@@ -7395,7 +7395,7 @@ def send_interactive_message(phone_number, message, buttons=None, options=None):
 #             db.update_user_field(phone_number, {"state": f'quiz_{question_index}'})
 #             conn.execute("UPDATE quiz_states SET question_index = ? WHERE user_id = ? AND quiz_name = ?",
 #                          (question_index, user['id'], current_quiz))
-#             conn.commit()
+#             if conn: conn.commit()
 #             send_quiz_question(phone_number, question_index, conn, current_quiz)
 #         else:
 #             try:
@@ -7407,7 +7407,7 @@ def send_interactive_message(phone_number, message, buttons=None, options=None):
 #     else:
 #         send_message(phone_number, "Invalid question number. Type 'quiz' to start a new quiz.")
 #         db.update_user_field(phone_number, {"state": "awaiting_choice", "current_quiz": ""})
-#         conn.commit()
+#         if conn: conn.commit()
        
        
  
@@ -7475,7 +7475,7 @@ def handle_quiz_response(phone_number, response, user, conn):
                 "INSERT INTO responses (user_id, question_number, response, correct, quiz) VALUES (?, ?, ?, ?, ?)",
                 (user['id'], question_number, response, int(is_correct), current_quiz)
             )
-            conn.commit()
+            if conn: conn.commit()
 
         log_image_event(f"Inserted response: question {question_number}, correct={is_correct}, quiz={current_quiz}")
         feedback = "Correct!" if is_correct else f"Wrong! The correct answer was {correct_answer.upper()}."
@@ -7498,7 +7498,7 @@ def handle_quiz_response(phone_number, response, user, conn):
                     "UPDATE quiz_states SET question_index = ? WHERE user_id = ? AND quiz_name = ?",
                     (question_index, user['id'], current_quiz)
                 )
-                conn.commit()
+                if conn: conn.commit()
             send_quiz_question(phone_number, question_index, conn, current_quiz)
         else:
             finish_quiz(phone_number, user, conn, current_quiz, len(QUIZ_QUESTIONS))
@@ -7588,7 +7588,7 @@ def send_quiz_question(phone_number, question_index, conn, quiz_name, retries=3)
         logging.error(traceback.format_exc())
         send_message(phone_number, f"There was an error loading the quiz. Please type 'quiz' to try again.")
         db.update_user_field(phone_number, {"state": "awaiting_choice", "current_quiz": ""})
-        conn.commit()
+        if conn: conn.commit()
         return
 
 
@@ -7642,7 +7642,7 @@ def send_quiz_question(phone_number, question_index, conn, quiz_name, retries=3)
                 if attempt == retries - 1:
                     send_message(phone_number, "There was an error sending the question. Please type 'quiz' to try again.")
                     db.update_user_field(phone_number, {"state": "awaiting_choice", "current_quiz": ""})
-                    conn.commit()
+                    if conn: conn.commit()
                 else:
                     time.sleep(2 ** attempt)  # Exponential backoff
     else:
@@ -8585,7 +8585,7 @@ def update_question_route():
                 'UPDATE questions SET question=?, options=?, answer=? WHERE quiz=? AND question_number=?',
                 (updates['question'], json.dumps(updates['options']), updates['answer'], quiz, question_number)
             )
-            conn.commit()
+            if conn: conn.commit()
             conn.close()
 
         return jsonify({'success': True})
@@ -8618,7 +8618,7 @@ def add_question_route():
                 'INSERT INTO questions (quiz, question, options, answer, question_number) VALUES (?,?,?,?,?)',
                 (new_q['quiz'], new_q['question'], json.dumps(new_q['options']), new_q['answer'], new_q['question_number'])
             )
-            conn.commit()
+            if conn: conn.commit()
             conn.close()
 
         return jsonify(new_q)
@@ -8641,7 +8641,7 @@ def delete_question_route():
         else:
             conn = get_db_connection()
             conn.execute('DELETE FROM questions WHERE quiz=? AND question_number=?', (quiz, question_number))
-            conn.commit()
+            if conn: conn.commit()
             conn.close()
 
         return jsonify({'success': True})
