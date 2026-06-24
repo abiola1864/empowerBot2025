@@ -7493,15 +7493,18 @@ def send_quiz_question(phone_number, question_index, conn, quiz_name, retries=3)
         current_question = QUIZ_QUESTIONS[question_index]
         options = current_question['options']
 
-        # send media if stored in MongoDB
+        # send media if stored in MongoDB — image+question together as caption
+        _media_sent = False
         if USE_MONGODB:
             try:
                 from db_mongo import get_mongo_db
                 _mdb = get_mongo_db()
                 _qdoc = _mdb.questions.find_one({"quiz": quiz_name, "question_number": question_index + 1})
-                if _qdoc and _qdoc.get('media_url'):
-                    send_image_message(phone_number, _qdoc['media_url'],
-                        caption="Reference image for question " + str(question_index + 1))
+                if _qdoc and _qdoc.get("media_url"):
+                    send_image_message(phone_number, _qdoc["media_url"],
+                        caption=question_message.strip())
+                    _media_sent = True
+                    time.sleep(1.5)
             except Exception as _me:
                 logging.warning(f"Could not send media: {_me}")
         question_message = f"Question {question_index + 1} out of {len(QUIZ_QUESTIONS)}:\n\n{current_question['question']}\n\n"
@@ -7520,7 +7523,8 @@ def send_quiz_question(phone_number, question_index, conn, quiz_name, retries=3)
        
         for attempt in range(retries):
             try:
-                success = send_interactive_message(phone_number, question_message, buttons)
+                msg_body = "Choose your answer:" if _media_sent else question_message
+                success = send_interactive_message(phone_number, msg_body, buttons)
                 if success:
                     logging.info(f"Successfully sent question for {quiz_name}, index {question_index}")
                     return
