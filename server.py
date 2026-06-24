@@ -4670,6 +4670,11 @@ def handle_message(message):
                         remove_user_account(phone_number, None)
                     elif button_id == 'cancel_remove':
                         handle_settings_command(phone_number, user, None)
+                    elif button_id in ('gender_male', 'gender_female', 'gender_other'):
+                        _gmap = {'gender_male':'Male','gender_female':'Female','gender_other':'Prefer not to say'}
+                        _g = _gmap[button_id]
+                        db.update_user_field(phone_number, {'gender': _g, 'state': 'awaiting_business_type'})
+                        send_interactive_message(phone_number, '{"type":"list","header":{"type":"text","text":"Business type"},"body":{"text":"What type of business or service do you run?"},"footer":{"text":"Scroll to see all options"},"action":{"button":"See options","sections":[{"title":"Select business type","rows":[{"id":"biz_food","title":"Food & Beverages"},{"id":"biz_fashion","title":"Fashion & Clothing"},{"id":"biz_beauty","title":"Hair Salon & Beauty"},{"id":"biz_trading","title":"Trading & Merchandise"},{"id":"biz_transport","title":"Transport & Logistics"},{"id":"biz_agric","title":"Agriculture & Farming"},{"id":"biz_health","title":"Healthcare & Pharmacy"},{"id":"biz_education","title":"Education & Training"},{"id":"biz_ict","title":"ICT & Digital Services"},{"id":"biz_others","title":"Others (type your own)"}]}]}}')
                     else:
                         handle_button_response(phone_number, button_id, button_text, user, None)
 
@@ -4680,6 +4685,15 @@ def handle_message(message):
 
                     if list_id == 'remove_account':
                         handle_remove_account_request(phone_number, user, None)
+                    elif list_id.startswith('biz_'):
+                        _bmap = {"biz_food":"Food & Beverages","biz_fashion":"Fashion & Clothing","biz_beauty":"Hair Salon & Beauty","biz_trading":"Trading & Merchandise","biz_transport":"Transport & Logistics","biz_agric":"Agriculture & Farming","biz_health":"Healthcare & Pharmacy","biz_education":"Education & Training","biz_ict":"ICT & Digital Services"}
+                        if list_id == 'biz_others':
+                            db.update_user_field(phone_number, {'state': 'awaiting_custom_biz_type'})
+                            send_message(phone_number, 'Please type your business type:')
+                        else:
+                            _biz = _bmap.get(list_id, list_title)
+                            db.update_user_field(phone_number, {'business_type': _biz, 'state': 'awaiting_location'})
+                            handle_location_selection(phone_number, user, None)
                     else:
                         handle_button_response(phone_number, list_id, list_title, user, None)
 
